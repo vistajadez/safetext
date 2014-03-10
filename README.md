@@ -17,6 +17,41 @@ PHP Engine for driving the web client and server components of an encrypted safe
       - Insert Username & Password
       - App in stand by Username is grayed out only insert password
       - If password is incorrect user has to enter Username & Password
+  7. Quick Uninstall
+      - Removes application from the phone
+      - All messages and other data is not removed from database
+  8. Once Authenticated
+      -  Read, send and delete messages
+      -  Update address book
+  9. Insert/update/delete
+  10. Update account settings
+      - Change username
+      - Change password
+      - Change/remove email address
+      - Forgot Password: Send temporary password to email if provided, if no email on file password cannot be reset
+      - If Temporary password is used all messages and contacts are deleted
+  11. Logout/standby
+  12. Link to Mobile Website (opens mobile browser)
 
-
+**_Project Requirement Specifications for Web Client:_**
+  1. All communication for Website and Mobile Application will be using SSL
+  2. All database queries will be stored procedures
+  3. Account sign up is via website only
+  4. Consolidation of configuration variables for application config
+  5. Installation of Google Analytics to track website traffic statistics
+  6. Create Account
+      - Create unused username
+      - Set password
+      - Email address optional (if not entered then no way to recover lost password)
+  7. Login
+      - Read, send and delete messages
+      - Update address book
+  8. Insert/update/delete
+  9. Update account settings
+      - Change username
+      - Change password
+      - Change/remove email address
+      - Payment Processing. User subscription membership with support for monthly or annual payments.
+      - Forgot Password: Send temporary password to email if provided, if no email on file password cannot be reset
+      - If Temporary password is used all messages and contacts are deleted
 
