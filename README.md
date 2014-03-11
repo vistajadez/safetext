@@ -54,4 +54,10 @@ PHP Engine for driving the web client and server components of an encrypted safe
       - Payment Processing. User subscription membership with support for monthly or annual payments.
       - Forgot Password: Send temporary password to email if provided, if no email on file password cannot be reset
       - If Temporary password is used all messages and contacts are deleted
-
+  10. Messages auto-expire. Default is 24 hours; sender can opt for a shorter timespan.
+  
+**_Subscription Options_**
+- $5 monthly
+- $15 for six months
+- $25 for one year (promo $20)
+- $35 for two years (promo $30)
