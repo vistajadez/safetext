@@ -1,10 +1,16 @@
-<div style="margin:5px;">
-	<h1>404: Doh</h1>
-	<div style="margin-top:10px;">
-		<strong>Sorry, that doesn't appear to be available (our bad) ...</strong>
+<div data-role="page" class="safetext-page">
+	<?php echo $this->render('front/_leftpanel.phtml'); ?>
+	<?php echo $this->render('front/_header_no_nav.phtml'); ?>
+	    	
+	<div data-role="content" class="safetext-content safetext-backsplash" data-theme="a">
+	    <div class="safetext-placeholder">
+	    	<h2>404: Not Found</h2>
+	    	<p><strong>Try another page or contact us<br />for assistance</strong></p>
+	    	<!-- ERROR CODE: Invalid Controller -->
+	    </div>
 	</div>
-	<!--
-		Error Code:
-		Invalid controller
-	-->
-</div>
+		    	
+	
+	<?php echo $this->render('front/_footer.phtml'); ?>
+		
+</div> <!--/page-->

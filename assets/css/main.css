@@ -68,13 +68,17 @@ textarea {
 
 
 /* ==========================================================================
-   Author's custom styles
+   SafeText custom styles
    ========================================================================== */
 
 /* header nav bar */
 .safetext-header {
 	overflow: hidden;
 
+}
+
+.safetext-nav {
+	display: none;	
 }
 
 /* content */
@@ -273,6 +277,29 @@ textarea[contenteditable] {
 	    visibility: hidden;
     }
     
+    /* Enable Desktop-style Nav */
+	.safetext-nav{
+		display:inline-block;
+		margin-left:125px;
+		margin-top:5px;
+	}
+	
+	.add-button {
+		display: inline;
+	}
+	
+	.safetext-nav li {
+		display: inline;
+		float: left;
+		padding:10px 20px 10px 20px;
+		border-left: 1px solid #dddddd;
+	}
+	.safetext-nav li:last-child {
+		border-right: 1px solid #dddddd;
+	}
+	.safetext-nav li a {
+		text-decoration: none;
+	}    
 
     
     /* content */

@@ -24,9 +24,8 @@ class DefaultController extends MsController {
 			return; // terminate controller action
 		}
 		
-		// Testing: store view values as follows:
-		$viewObject->setTitle('SafeText - Coming Soon!');
-		
+		// TODO: Test if user is logged in. If so, forward to dashboard. Otherwise, forward to login. For now shunt everything to login
+		$this->forward($viewObject, 'login', 'auth');
 	 }
 	
 	 

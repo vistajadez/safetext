@@ -1,0 +1,22 @@
+<!-- header - with front site nav -->
+<div data-role="header" class="safetext-header">
+	<h1><?php echo $this->title; ?></h1>
+	
+	<div class="safetext-nav clearfix">
+        <ul class="clearfix">
+           <li><a href="/story" data-transition="fade"><?php echo $this->t('Our Story'); ?></a></li>  
+		   <li><a href="/product" data-transition="fade"><?php echo $this->t('Our Product'); ?></a></li>  
+		   <li><a href="/rules" data-transition="fade"><?php echo $this->t('Our Rules'); ?></a></li>
+		   <li><a href="/answers" data-transition="fade"><?php echo $this->t('Our Answers'); ?></a></li>
+		   <?php if ($this->getValue('user') instanceof SafetextUser) : ?>
+		   		<li><a href="/auth/logout" data-ajax="false"><?php echo $this->t('Log Out'); ?></a></li>
+		   <?php else: ?>
+		   		<li><a href="/auth/login" data-transition="fade"><?php echo $this->t('Login'); ?></a></li>
+		   <?php endif; ?>
+        </ul>
+    </div>
+	
+    <a data-role="button" onclick="$('.leftpanel:visible').panel('open');" href="#" data-icon="bars"
+		data-iconpos="notext" class="ui-btn-left">Menu</a>
+</div>
+<!-- /header -->

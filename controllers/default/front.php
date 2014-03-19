@@ -24,10 +24,20 @@ class FrontController extends MsController {
 			return; // terminate controller action
 		}
 		
+		// see if user is logged in
+		// TODO
+		
+		
 		// determine which view script to render
-		array_key_exists('page', $this->params) ? $page = $this->params['page'] : $page = 'index';
-		if ($page != 'index' && !file_exists(MS_PATH_BASE . DS . 'views' . DS . MS_MODULE . DS . 'scripts' . DS . 'front' . DS . page . '.phtml')) {
-			$this->forward('nocontroller', 'notfound');
+		array_key_exists('page', $this->params) ? $page = $this->params['page'] : $page = '';
+		if ($page === '') { // default if logged in is dashboard, otherwise login page
+			
+			// TODO
+			
+			
+		}
+		if ($page != 'index' && !file_exists(MS_PATH_BASE . DS . 'views' . DS . MS_MODULE . DS . 'scripts' . DS . 'front' . DS . $page . '.phtml')) {
+			$this->forward($viewObject, 'nocontroller', 'notfound');
 			return;
 		}
 		
@@ -35,9 +45,9 @@ class FrontController extends MsController {
 		
 		// set title
 		if ($page === 'index') $viewObject->setTitle($this->config['productName']);
-			else $viewObject->setTitle($this->config['productName'] . ' - ' . strtoupper($page));
+			else $viewObject->setTitle($this->config['productName'] . ' - ' . ucfirst($page));
 		
-		// see if user is logged in
+		
 		
 		
 		// set view data

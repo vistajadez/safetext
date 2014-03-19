@@ -2,10 +2,10 @@
 <div data-role="footer" data-theme="b">
 	<div data-role="navbar" class="safetext-footer-nav">
         <ul>
-            <li><a href="#"><?php echo $this->t('About Us'); ?></a></li>
-            <li><a href="#"><?php echo $this->t('FAQs'); ?></a></li>
-            <li><a href="#"><?php echo $this->t('Privacy'); ?></a></li>
-            <li><a href="#"><?php echo $this->t('Contact Us'); ?></a></li>
+            <li><a href="/about"<?php if ($this->getValue('page') === 'about') { ?> class="ui-btn-active" <?php } ?>><?php echo $this->t('About Us'); ?></a></li>
+            <li><a href="/faq"<?php if ($this->getValue('page') === 'faq') { ?> class="ui-btn-active" <?php } ?>><?php echo $this->t('FAQs'); ?></a></li>
+            <li><a href="/privacy"<?php if ($this->getValue('page') === 'privacy') { ?> class="ui-btn-active" <?php } ?>><?php echo $this->t('Privacy'); ?></a></li>
+            <li><a href="/contact"<?php if ($this->getValue('page') === 'contact') { ?> class="ui-btn-active" <?php } ?>><?php echo $this->t('Contact Us'); ?></a></li>
         </ul>
     </div><!-- /footer navbar -->
     
