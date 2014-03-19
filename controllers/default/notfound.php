@@ -18,7 +18,13 @@ class NotfoundController extends MsController {
 	 *
 	 */
 	 public function nocontrollerAction($viewObject) {
-		  $viewObject->setTitle('404: Doh!');
+		 // catchall: try to render the front-facing website page whose name (url) is being passed in the controller slot'
+		 if (file_exists(MS_PATH_BASE . DS . 'views' . DS . MS_MODULE . DS . 'scripts' . DS . 'front' . DS . MS_CONTROLLER . '.phtml')) {
+			 $this->params['page'] = MS_CONTROLLER; // MS_CONTROLLER contains name of the original controller that was called
+			 $this->forward($viewObject, 'default', 'front');
+		 } else {
+			 $viewObject->setTitle('404: Doh!');
+		 }
 	 }
 	 
 	/**

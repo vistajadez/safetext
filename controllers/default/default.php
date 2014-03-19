@@ -6,8 +6,7 @@
  *
  */
 class DefaultController extends MsController {
-	
-	
+
 	/**
 	 * Default Action.
 	 * 
@@ -18,18 +17,15 @@ class DefaultController extends MsController {
 	 */
 	 public function defaultAction(&$viewObject) {
 		// ensure we're using https
-		/*
 		if (MS_PROTOCOL !== 'https') {
 			$redirect = "https://".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
 			header("Location: $redirect");
 				
 			return; // terminate controller action
 		}
-		*/
 		
 		// Testing: store view values as follows:
 		$viewObject->setTitle('SafeText - Coming Soon!');
-		$viewObject->setValue('testval', 'Sweet, we\'re up and running!');
 		
 	 }
 	

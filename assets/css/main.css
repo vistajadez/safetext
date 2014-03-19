@@ -78,14 +78,6 @@ textarea {
 }
 
 /* content */
-.ui-body-bg {
-	
-}
-
-.safetext-content {
-	
-}
-
 .safetext-placeholder {
 	text-align: center;
 	margin-top:10px;
@@ -98,12 +90,29 @@ textarea {
     margin-left: 20px;
 	margin-right: 20px;
 	color: #8c9eb1;
+	font-size: smaller;
+	font-weight: normal;
+}
+.safetext-footer-nav {
+	display: none;
 }
 
-
-
-
-
+/* login grid - hide the a & c columns, which contain nav links. All nav will go in the slideout menu for mobile */
+.safetext-login-grid {
+	margin-top: 0px;
+}
+.safetext-login-grid .ui-body {
+	text-align: left;
+}
+.safetext-login-grid .ui-block-a {
+	display: none;
+}
+.safetext-login-grid .ui-block-b {
+	width:100%;
+}
+.safetext-login-grid .ui-block-c {
+	display: none;
+}
 
 
 
@@ -239,9 +248,12 @@ textarea[contenteditable] {
     
     /* splash screen */
     .safetext-backsplash{
-		height:620px;
+		height:500px;
 		background-color: #ffffff !important;
-		background: url(/assets/images/splash_cropped.png) no-repeat center;
+		background: url(/assets/images/splash_cropped.png);
+		background-repeat: no-repeat;
+		background-position:center top;
+		background-position-y: -85px;
     }
     
     /* header nav bar */
@@ -261,16 +273,9 @@ textarea[contenteditable] {
 	    visibility: hidden;
     }
     
-    .safetext-page {
-	    width:100%;
-	    
-    }
+
     
     /* content */
-    .ui-body-bg {
-	   
-    }
-    
     .safetext-content {
     	max-width: 1000px;
 		margin-left: auto;
@@ -292,7 +297,29 @@ textarea[contenteditable] {
 		padding-right:20px;
 		max-width: 1000px;
 	}
-    
+	.safetext-footer-nav {
+		display: block;
+	}
+	
+	
+	/* login grid - display all columns on page */
+	.safetext-login-grid {
+		margin-top:100px;
+	}
+	.safetext-login-grid .ui-body {
+		text-align: center;
+	}
+	.safetext-login-grid .ui-block-a {
+		display: block;
+		margin-top:55px;
+	}
+	.safetext-login-grid .ui-block-b {
+		width:33%;
+	}
+	.safetext-login-grid .ui-block-c {
+		display: block;
+		margin-top:55px;
+	}
 }
 
 @media only screen and (-webkit-min-device-pixel-ratio: 1.5),

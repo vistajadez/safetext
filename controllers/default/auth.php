@@ -16,25 +16,23 @@ class AuthController extends MsController {
 	 */
 	 public function loginAction(&$viewObject) {
 	 	// ensure we're using https
-		/*
 		if (MS_PROTOCOL !== 'https') {
 			$redirect = "https://".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
 			header("Location: $redirect");
 				
 			return; // terminate controller action
 		}
-		*/
 		
 		// validate input and persist the login form fields
 		array_key_exists('redirect', $this->params) ? $redirect = $this->params['redirect'] : $redirect = 'home';
-		array_key_exists('login', $this->params) ? $login = trim(strtolower($this->params['login'])) : $login = '';
+		array_key_exists('username', $this->params) ? $login = trim(strtolower($this->params['username'])) : $username = '';
 		array_key_exists('pass', $this->params) ? $pass = trim($this->params['pass']) : $pass = '';
 		
 		$viewObject->setValue('redirect', $redirect);
-		$viewObject->setValue('login', $login);
+		$viewObject->setValue('username', $username);
 		
 		// Page title
-		$viewObject->setTitle($this->config['productName']);
+		$viewObject->setTitle($this->config['productName'] . ' - ' . $viewObject->t('Login'));
 			
 		if ($login == '') {
 			$viewObject->setValue('feedback', $viewObject->t('Please enter your email address to login'));

@@ -1,29 +1,41 @@
-<div data-role="page" class="safetext-page">
-	<div class="ui-body-bg safetext-backsplash">
+<div data-role="page" class="safetext-page safetext-login">
 		
-		<div data-role="header" class="safetext-header">
-			<h1><?php echo $this->title; ?></h1>
-		    <a data-role="button" onclick="$('.leftpanel:visible').panel('open');" href="#" data-icon="bars"
-	    		data-iconpos="notext" class="ui-btn-left">Menu</a>
-		</div><!-- /header -->
+		<?php echo $this->render('front/_leftpanel.phtml'); ?>
+		<?php echo $this->render('front/_header_no_nav.phtml'); ?>
 	
-	    	
-	    <div data-role="content" class="safetext-content" data-theme="a">
-	    	<div style="text-align:center; margin-top:200px;">
-	    		<h2>Coming Soon!</h2>
-	    	</div>
-	    </div>
-		    	
-	</div>
-
+	    <div data-role="content" class="safetext-content safetext-backsplash" data-theme="a">
+	    	<!-- login grid -->
+			<div class="ui-grid-b safetext-login-grid">
+			    <div class="ui-block-a"><div class="ui-body ui-body-d">
+			    	<a href="#" class="ui-btn ui-icon-carat-r ui-btn-icon-right ui-corner-all ui-shadow"><?php echo $this->t('Our Story'); ?></a>
+			    	<a href="#" class="ui-btn ui-icon-carat-r ui-btn-icon-right ui-corner-all ui-shadow"><?php echo $this->t('Our Product'); ?></a>
+			    	<a href="#" class="ui-btn ui-btn-inline ui-icon-carat-r ui-corner-all ui-mini" style="margin-top:25px;"><?php echo $this->t('New User Registration'); ?></a>
+			    </div></div>
+			    <div class="ui-block-b"><div class="ui-body ui-body-d">
+			   		<h2><?php echo $this->t('Safe Login'); ?></h2>
+			    	<form class="safetext-login-form">
+						<div>
+							<label for="name" class="ui-hidden-accessible"><?php echo $this->t('Username'); ?>:</label>
+							<input type="text" name="name" value="<?php echo $this->getValue('username'); ?>" placeholder="<?php echo $this->t('Username'); ?>" data-clear-btn="true" />
+						</div>
+						<div>
+							<label for="password" class="ui-hidden-accessible"><?php echo $this->t('Password'); ?>:</label>
+							<input type="text" name="password" value="" placeholder="<?php echo $this->t('Password'); ?>" data-clear-btn="true" />
+						</div>
+						
+						<div data-role="fieldcontain">
+							<a href="#" class="ui-btn ui-btn-inline ui-icon-carat-r ui-btn-icon-right ui-corner-all"><?php echo $this->t('Login'); ?></a>
+						</div>
+					</form>
+			    </div></div>
+			    <div class="ui-block-c"><div class="ui-body ui-body-d">
+			    	<a href="#" class="ui-btn ui-icon-carat-r ui-btn-icon-right ui-corner-all ui-shadow"><?php echo $this->t('Our Rules'); ?></a>
+			    	<a href="#" class="ui-btn ui-icon-carat-r ui-btn-icon-right ui-corner-all ui-shadow"><?php echo $this->t('Our Answers'); ?></a>
+			    	<a href="#" class="ui-btn ui-btn-inline ui-icon-carat-r ui-corner-all ui-mini" style="margin-top:25px;"><?php echo $this->t('Recover Password / Username'); ?></a>
+			    </div></div>
+			</div><!-- /login grid -->
+	    </div><!-- /content -->
 	
-	<div class="ui-body-bg safetext-disclaimer">
-		Disclaimer: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas adipiscing ultricies molestie. Aliquam erat volutpat. Nullam id urna ante.
-		Mauris odio metus, ultricies consectetur magna quis, volutpat pulvinar ligula.
-	</div>
-	
-	<div data-role="footer" data-position="fixed" data-theme="b">
-		<h3>&copy; <?php echo date('Y'); ?> Safe-Text. All rights reserved</h3>
-	</div>
+	<?php echo $this->render('front/_footer.phtml'); ?>
 		
 </div> <!--/page-->

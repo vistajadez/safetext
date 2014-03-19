@@ -1,28 +1,53 @@
 <div data-role="page" class="safetext-page">
-	<div class="ui-body-bg safetext-backsplash">
-		
-		<div data-role="header" class="safetext-header">
-			<h1><?php echo $this->title; ?></h1>
-		    <a data-role="button" onclick="$('.leftpanel:visible').panel('open');" href="#" data-icon="bars"
-	    		data-iconpos="notext" class="ui-btn-left">Menu</a>
-		</div><!-- /header -->
-	
+	<!-- left panel - front site mobile nav  -->
+	<div data-role="panel" class="leftpanel" data-position="left" data-display="reveal" data-theme="b">
+		<div>
+			<p><?php if ($this->getValue('user') instanceof SafetextUser) echo $this->getValue('user')->fullName(); ?></p>
+			
+			<ul data-role="listview">
+				<?php if (!$this->getValue('user') instanceof SafetextUser) : ?>
+					<li><a href="#" data-transition="fade"><?php echo $this->t('Login'); ?></a></li>
+					<li><a href="#" data-transition="fade"><?php echo $this->t('New User Registration'); ?></a></li>
+					<li><a href="#" data-transition="fade"><?php echo $this->t('Recover Password'); ?></a></li>
+				<?php else : ?>
+					<li><a href="#" data-ajax="false"><?php echo $this->t('My Dashboard'); ?></a></li>
+					<li><a href="#" data-ajax="false"><?php echo $this->t('Log Out'); ?></a></li>
+				<?php endif; ?>
+				<li data-role="list-divider"></li>
+				<li><a href="#" data-transition="fade"><?php echo $this->t('Home'); ?></a></li>  
+				<li><a href="#" data-transition="fade"><?php echo $this->t('Our Story'); ?></a></li>  
+				<li><a href="#" data-transition="fade"><?php echo $this->t('Our Product'); ?></a></li>
+				<li><a href="#" data-transition="fade"><?php echo $this->t('Our Rules'); ?></a></li>
+				<li><a href="#" data-transition="fade"><?php echo $this->t('Our Answers'); ?></a></li>
+				<li><a href="#" data-transition="fade"><?php echo $this->t('About Us'); ?></a></li>
+				<li><a href="#" data-transition="fade"><?php echo $this->t('FAQs'); ?></a></li>
+				<li><a href="#" data-transition="fade"><?php echo $this->t('Privacy'); ?></a></li>
+				<li><a href="#" data-transition="fade"><?php echo $this->t('Contact Us'); ?></a></li>
+			</ul>
+		</div>
+	</div><!-- /left panel -->
+
+	<div data-role="header" class="safetext-header">
+		<h1><?php echo $this->title; ?></h1>
+		<a data-role="button" onclick="$('.leftpanel:visible').panel('open');" href="#" data-icon="bars"
+	    	data-iconpos="notext" class="ui-btn-left">Menu</a>
+	</div><!-- /header -->
 	    	
-	    <div data-role="content" class="safetext-content" data-theme="a">
-	    	<div class="safetext-placeholder">
-	    		<h2>Coming Soon!</h2>
-	    	</div>
+	<div data-role="content" class="safetext-content safetext-backsplash" data-theme="a">
+	    <div class="safetext-placeholder">
+	    	<h2>Coming Soon!</h2>
 	    </div>
-		    	
 	</div>
+		    	
 
 	
-	<div class="ui-body-bg safetext-disclaimer">
-		Disclaimer: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas adipiscing ultricies molestie. Aliquam erat volutpat. Nullam id urna ante.
-		Mauris odio metus, ultricies consectetur magna quis, volutpat pulvinar ligula.
-	</div>
 	
-	<div data-role="footer" data-position="fixed" data-theme="b">
+	
+	<div data-role="footer" data-theme="b">
+		<div class="ui-body-bg safetext-disclaimer">
+			Disclaimer: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas adipiscing ultricies molestie. Aliquam erat volutpat. Nullam id urna ante.
+			Mauris odio metus, ultricies consectetur magna quis, volutpat pulvinar ligula.
+		</div>
 		<h3>&copy; <?php echo date('Y'); ?> Safe-Text. All rights reserved</h3>
 	</div>
 		
