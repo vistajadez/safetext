@@ -1,0 +1,1 @@
+// SafeText Main JS Startup File
