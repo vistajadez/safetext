@@ -257,7 +257,7 @@ textarea[contenteditable] {
 		background: url(/assets/images/splash_cropped.png);
 		background-repeat: no-repeat;
 		background-position:center top;
-		background-position-y: -85px;
+		
     }
     
     /* header nav bar */
@@ -267,8 +267,7 @@ textarea[contenteditable] {
     	background-color: #ffffff !important;
     	background: url(/assets/images/logo.jpg);
     	background-repeat: no-repeat;
-    	background-position-x: 20px;
-    	background-position-y: 5px;
+    	background-position: 20px 5px;
     }
     .safetext-header > h1 {
 	    visibility:hidden;
