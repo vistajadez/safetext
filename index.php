@@ -59,7 +59,7 @@ if ($ms_config['addCookiesToParams']) {
 }
 // JSON in the RAW POST data?
 if (MS_CONTENT_TYPE == 'application/json') {
-	$jsonRequest = json_decode(file_get_contents('php://input'));
+	$jsonRequest = json_decode(file_get_contents('php://input'), true);
 	if ($jsonRequest !== NULL) foreach ($jsonRequest as $key => $val) $params[$key] = $val;
 }
 
