@@ -85,7 +85,7 @@ class SafetextUser extends MsModel {
 	// Class Methods
 	
 	/**
-	  * Authenticate.
+	  * Authenticate By Hashcode.
 	  *
 	  * @param String $idHash Encrypted user ID code, typically stored in a cookie.
 	  * @param String $responseType (Optional) If this is set to 'json', no cookies will be set. Default is 'html'.
@@ -121,4 +121,36 @@ class SafetextUser extends MsModel {
 		return $user;
 		
 	}
+	
+	/**
+	  * Generate Token.
+	  * Generates an auth token for a particular user and device. If the device already has a token, it is un-initialized and 
+	  * any existing sync records are removed.
+	  *
+	  * @param String username
+	  * @param String password
+	  * @param String deviceSig
+	  * @param String deviceDesc
+	  * @param MsDb	$db (Optional) Database connection. If none is passed, a new connection will be made.
+	  * @param mixed[] $config Configuration array.
+	  *
+	  * @return mixed[] Array: id=>user_id (or 0 if unsuccessful), token=>device auth token, msg=>error message (nor null if successful)
+	  *
+	  */
+	public static function generateToken($username, $password, $deviceSig, $deviceDesc, $db='', $config) {
+		// make sure we have a db connection
+		if (!$db instanceof MsDb) $db = new MsDb($config['dbHost'], $config['dbUser'], $config['dbPass'], $config['dbName']);
+	
+		// required params
+		if ($username === '' || $password === '' || $deviceSig === '' || $deviceDesc === '') 
+			return array('id' => 0, 'msg' => 'Missing parameters before sending to stored procedure');
+	
+		// stored procedure call
+		$result = $db->query("CALL generateToken('$username','$password','$deviceSig','$deviceDesc')")->fetch_assoc();
+		
+		return $result;
+	}
+	
+	
+	
 }
