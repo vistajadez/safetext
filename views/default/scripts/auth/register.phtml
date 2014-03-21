@@ -1,0 +1,50 @@
+<div data-role="page" class="safetext-page safetext-register">
+		
+		<?php echo $this->render('front/_leftpanel.phtml'); ?>
+		<?php echo $this->render('front/_header.phtml'); ?>
+	
+	    <div data-role="content">
+			<div class="ui-body ui-body-bg">
+	            <?php if ($this->getValue('feedback') != '') : ?>
+	                <!-- Login feedback -->
+	                <div class="ui-body ui-body-c" style="margin-top:10px; text-align:center;">
+	                    <?php echo $this->getValue('feedback'); ?>
+	                </div>
+	            <?php endif; ?>
+	            
+				<div class="ui-body ui-body-b safetext-login-form ui-corner-all ui-shadow">
+					<h3><?php echo $this->t('Register a New Account'); ?></h3>
+					<p><?php echo $this->t('Get the most secure messaging service available'); ?>!</p>
+	            	
+					<form class="safetext-register-form">
+						<div>
+							<label for="name" class="ui-hidden-accessible"><?php echo $this->t('Full Name'); ?>:</label>
+							<input type="text" name="name" placeholder="<?php echo $this->t('Full Name'); ?>" data-clear-btn="true" data-theme="a" />
+						</div>
+						
+						<div>
+							<label for="username" class="ui-hidden-accessible"><?php echo $this->t('User Name'); ?>:</label>
+							<input type="text" name="username" placeholder="<?php echo $this->t('Select a User Name'); ?>" data-clear-btn="true" data-theme="a" />
+						</div>
+					
+						<div>
+							<label for="email" class="ui-hidden-accessible"><?php echo $this->t('Email'); ?>:</label>
+							<input type="text" name="email" placeholder="<?php echo $this->t('Email (optional)'); ?>" data-clear-btn="true" data-theme="a" />
+						</div>
+						
+						<div>
+							<label for="password" class="ui-hidden-accessible"><?php echo $this->t('Select a Password'); ?>:</label>
+							<input type="text" name="password" placeholder="<?php echo $this->t('Select a Password'); ?>" data-clear-btn="true" data-theme="a" />
+						</div>
+						
+						<div data-role="fieldcontain" style="text-align:center;">
+							<input type="button" class="safetext-register-button" value="<?php echo $this->t('Register'); ?>" data-icon="carat-r" data-iconpos="right">
+						</div>
+					</form>
+				</div><!--/form-body-->
+			</div>
+		</div><!--/content-body-->
+	
+	<?php echo $this->render('front/_footer.phtml'); ?>
+		
+</div> <!--/page-->

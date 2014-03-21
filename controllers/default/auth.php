@@ -25,7 +25,7 @@ class AuthController extends MsController {
 		
 		// validate input and persist the login form fields
 		array_key_exists('redirect', $this->params) ? $redirect = $this->params['redirect'] : $redirect = 'home';
-		array_key_exists('username', $this->params) ? $login = trim(strtolower($this->params['username'])) : $username = '';
+		array_key_exists('username', $this->params) ? $username = trim(strtolower($this->params['username'])) : $username = '';
 		array_key_exists('pass', $this->params) ? $pass = trim($this->params['pass']) : $pass = '';
 		
 		$viewObject->setValue('redirect', $redirect);
@@ -48,8 +48,29 @@ class AuthController extends MsController {
 		}
 
 	 }
+	
 	 
-	 
+	/**
+	 * Register Action.
+	 * 
+	 * Registration form.
+	 * 
+	 * @param MsView $viewobject
+	 * @return void
+	 */
+	 public function registerAction(&$viewObject) {
+	 	// ensure we're using https
+		if (MS_PROTOCOL !== 'https') {
+			$redirect = "https://".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+			header("Location: $redirect");
+				
+			return; // terminate controller action
+		}
+		
+		// Page title
+		$viewObject->setTitle($this->config['productName'] . ' - ' . $viewObject->t('Register'));
+
+	 }
 
 
 	 
