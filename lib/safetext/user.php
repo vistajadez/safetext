@@ -151,6 +151,26 @@ class SafetextUser extends MsModel {
 		return $result;
 	}
 	
+	/**
+	  * Expire Token.
+	  * Expires a user's auth token.
+	  *
+	  * @param String token
+	  *
+	  * @return void
+	  *
+	  */
+	public static function expireToken($token, $db='', $config) {
+		// make sure we have a db connection
+		if (!$db instanceof MsDb) $db = new MsDb($config['dbHost'], $config['dbUser'], $config['dbPass'], $config['dbName']);
+	
+		// required params
+		if ($token === '') return;
+	
+		// stored procedure call
+		$db->query("CALL expireToken('$token')");
+	}
+	
 	
 	
 }

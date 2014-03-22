@@ -51,12 +51,12 @@ class ApiController extends MsController {
 			if (MS_REQUEST_METHOD === 'POST') {
 				if (array_key_exists('HTTP_X_SAFETEXT_USERNAME', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_USERNAME'] !== '') {
 					if (array_key_exists('HTTP_X_SAFETEXT_PASSWORD', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_PASSWORD'] !== '') {
-						if (array_key_exists('device_signature', $this->params) && $this->param['device_signature'] !== '') {
-							if (array_key_exists('device_description', $this->params) && $this->param['device_description'] !== '') {
+						if (array_key_exists('device_signature', $this->params) && $this->params['device_signature'] !== '') {
+							if (array_key_exists('device_description', $this->params) && $this->params['device_description'] !== '') {
 								// Create a database connection to share
 								$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
 			
-								// first authenticate the username/password pair via db stored procedure
+								// generate token via db stored procedure
 								require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
 								$tokenDetails = SafetextUser::generateToken($_SERVER['HTTP_X_SAFETEXT_USERNAME'], $_SERVER['HTTP_X_SAFETEXT_PASSWORD'], $this->params['device_signature'], $this->params['device_description'], $db, $this->config);
 								
@@ -89,6 +89,46 @@ class ApiController extends MsController {
 			} else { // non-POST request
 				$viewObject->setValue('status', 'fail');
 				$viewObject->setValue('data', array('message' => MS_REQUEST_METHOD . ' requests are not supported for auth'));
+			}
+		} else { // insecure
+			$viewObject->setValue('status', 'fail');
+			$viewObject->setValue('data', array('message' => 'Insecure (non-HTTPS) access denied'));
+		}
+	}
+
+
+	/**
+	 * Expire Auth Action.
+	 * 
+	 * When a user opts to logout, the server will expire the auth token and the mobile app should remove the auth token from the device 
+	 * completely. The user will be required to login again (authenticate again) for the mobile app to make subsequent API calls.
+	 *
+	 * @link https://github.com/deztopia/safetext/wiki/Authentication
+	 *
+	 * @param MsView $viewObject
+	 * @return void
+	 */
+	 public function expireauthAction(&$viewObject) {
+		$viewObject->setResponseType('json');
+		
+		// ensure we're using https
+		if (MS_PROTOCOL === 'https') {
+			if (MS_REQUEST_METHOD === 'POST') {
+				if (array_key_exists('token', $this->params) && $this->params['token'] !== '') {
+					
+					// expire token via db stored procedure
+					require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
+					SafetextUser::expireToken($this->params['token'], $db, $this->config);
+				
+					$viewObject->setValue('status', 'success');
+
+				} else { // no username
+					$viewObject->setValue('status', 'fail');
+					$viewObject->setValue('data', array('message' => 'Missing auth token'));
+				}
+			} else { // non-POST request
+				$viewObject->setValue('status', 'fail');
+				$viewObject->setValue('data', array('message' => MS_REQUEST_METHOD . ' requests are not supported for expireauth'));
 			}
 		} else { // insecure
 			$viewObject->setValue('status', 'fail');

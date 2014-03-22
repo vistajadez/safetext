@@ -58,4 +58,16 @@ BEGIN
 
 	SELECT @userId AS id, @token AS token, @msg AS msg;
 
+END $$
+
+
+-- --------------------------------------------------------------------------------
+-- Expire Token
+-- Clears a user's auth token.
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE DEFINER=`maxdistrodb`@`%.%.%.%` PROCEDURE `expireToken`(IN tokenIn VARCHAR(64))
+BEGIN
+	UPDATE sync_device SET `token`='', `token_expires`= CURDATE() WHERE `token` = tokenIn LIMIT 1; 
 END
