@@ -137,7 +137,65 @@ class ApiController extends MsController {
 	}
 		
 		
+	/**
+	 * Sync Action.
+	 * 
+	 * SafeText facilitates messaging between two users. When one user adds another user as a contact, messages can then be sent 
+	 * between the two users. The SafeText web service maintains every user's contact list (the list of users added to their account 
+	 * as contacts), as well as every user's active messages.
+	 *
+	 * When new users are added to a contact list on the web client or messages are sent from the web client, this information 
+	 * needs to be sent to the appropriate users' mobile app on their device(s). Likewise, such updates that take place on the mobile app 
+	 * need to be sent to the web service.
+	 *
+	 * Synchronization is a two-way protocol that is always initiated by the mobile app.
+	 *
+	 * Synchronization begins with the mobile app sending a sync request to the web client REST server. All records which have been 
+	 * added, edited, or marked for deletion since the last sync should be passed in this request. The server then returns a JSON response 
+	 * containing any records which have been added, edited, or deleted on the web client.
+	 *
+	 * @link https://github.com/deztopia/safetext/wiki/Sync-Protocol
+	 *
+	 * @param MsView $viewObject
+	 * @return void
+	 */
+	 public function syncAction(&$viewObject) {
+		$viewObject->setResponseType('json');
 		
+		// ensure we're using https
+		if (MS_PROTOCOL === 'https') {
+			if (MS_REQUEST_METHOD === 'POST') {
+				if (array_key_exists('HTTP_X_SAFETEXT_TOKEN', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_TOKEN'] !== '') {
+				
+					// authenticate token with stored procedure
+					require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
+					$user = SafetextUser::tokenToUser($_SERVER['HTTP_X_SAFETEXT_TOKEN'], $db, $this->config);
+					
+					if ($user instanceof SafetextUser && $user->isValid()) {
+						$viewObject->setValue('status', 'fail');
+						$viewObject->setValue('data', array('message' => 'Not yet implemented. Token: ' . $user->getRelationship('device')->token));
+					
+					
+					
+					
+					
+					} else { // no username
+						$viewObject->setValue('status', 'fail');
+						$viewObject->setValue('data', array('message' => 'That auth token is not valid'));
+					}
+				} else { // no username
+					$viewObject->setValue('status', 'fail');
+					$viewObject->setValue('data', array('message' => 'Missing SafeText auth token. Please log in'));
+				}
+			} else { // non-POST request
+				$viewObject->setValue('status', 'fail');
+				$viewObject->setValue('data', array('message' => MS_REQUEST_METHOD . ' requests are not supported for sync'));
+			}
+		} else { // insecure
+			$viewObject->setValue('status', 'fail');
+			$viewObject->setValue('data', array('message' => 'Insecure (non-HTTPS) access denied'));
+		}
+	}
  
 	 
 	 

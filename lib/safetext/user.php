@@ -78,6 +78,77 @@ class SafetextUser extends MsModel {
 	 }
 	
 	
+	/**
+	  * Save.
+	  *
+	  * Persist updated column values and relationships to database. Overridden to use prepared statement
+	  * @return void
+	  *
+	  */
+	public function save()
+	{
+		if (($this->isValid()) && (sizeof($this->changedColumns) > 0)) {
+			// save ONLY changed columns
+			$values = array();
+			foreach ($this->changedColumns as $col) $values[$col] = $this->$col;
+//			$this->db->insert($this->dbTable, $this->columnValues, true);
+			
+			// reset change tracker
+			$this->unchanged();
+/*			
+		$trace = debug_backtrace();
+				trigger_error(
+					'Saving to ' . $this->dbTable . '...',
+					E_USER_NOTICE);
+*/
+		}
+	}
+	
+	
+	/**
+	  * Save New.
+	  *
+	  * Persist updated column values as a new database row. Overridden to use prepared statement
+	  *
+	  * @param bool $allowOverwrite (Optional) True to use "REPLACE INTO" instead of "INSERT INTO" to overwrite any existing model. Default is false.
+	  *
+	  * @return int Id of new row if it has an autoincrement column. Returns 0 otherwise.
+	  *
+	  */
+	public function saveNew($allowOverwrite = false)
+	{
+		if (($this->isValid()) && (sizeof($this->changedColumns) > 0)) {
+			
+			// save to db
+//			$newId = $this->db->insert($this->dbTable, $this->columnValues, $allowOverwrite);
+			
+			// reset change tracker
+			$this->unchanged();
+			
+			return $newId;
+		}
+		return false;
+	}
+	
+	
+	/**
+	  * Relate.
+	  *
+	  * Sets up a relationship with another model. Overridden to simplify by merely passing a pre-loaded model
+	  *
+	  * @param string $label Label to associate this relationship with.
+	  * @param MsModel $relatedModel
+	  *
+	  * @return void
+	  *
+	  */
+	public function relate($label, &$relatedModel)
+	{
+		$this->relationships[$label] = array(
+			'model' => $relatedModel
+		);
+	}
+	
 	
 	
 	
@@ -169,6 +240,50 @@ class SafetextUser extends MsModel {
 	
 		// stored procedure call
 		$db->query("CALL expireToken('$token')");
+	}
+	
+	
+	/**
+	  * Token to User.
+	  *
+	  * Given an auth token, calls a stored procedure to validate the token and return the associated user fields, along
+	  * with fields of user dependency objects. Returns a SafetxtUser instance representing the data.
+	  *
+	  * If the token does not validate, returns an empty (invalid) SafetextUser instance.
+	  *
+	  * @param String token
+	  *
+	  * @return SafetextUser with linked relationship: SafetextDevice.
+	  *
+	  */
+	public static function tokenToUser($token, $db='', $config) {
+		// make sure we have a db connection
+		if (!$db instanceof MsDb) $db = new MsDb($config['dbHost'], $config['dbUser'], $config['dbPass'], $config['dbName']);
+	
+		// required params
+		if ($token === '') return;
+	
+		// stored procedure call
+		$result = $db->query("CALL tokenToUser('$token')")->fetch_assoc();
+		
+		// instantiate the user and dependencies
+		require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'device.php' );
+		$user = new SafetextUser($config, $db);
+		$device = new SafetextDevice($config, $db);
+		if (!array_key_exists('id', $result) || $result['id'] === '') return $user; // invalid token
+		
+		// load user & dependency details
+		foreach ($result as $column => $val) {
+			if (strpos($column, '.') === false) $user->setValue($column, $val);
+			else if (strpos($column, 'device.') !== false) $device->setValue(str_replace('device.', '', $column), $val);
+		}
+		$user->unchanged();
+		$device->unchanged();
+		
+		// set up relationship in model
+		$user->relate('device',$device);
+		
+		return $user;
 	}
 	
 	
