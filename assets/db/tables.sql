@@ -1,7 +1,6 @@
 --
 -- Table structure for table `contacts`
 --
-
 DROP TABLE IF EXISTS `contacts`;
 CREATE TABLE IF NOT EXISTS `contacts` (
   `user_id` int(10) unsigned NOT NULL,
@@ -11,7 +10,7 @@ CREATE TABLE IF NOT EXISTS `contacts` (
   `phone` varchar(32) NOT NULL,
   `is_whitelist` tinyint(1) unsigned NOT NULL,
   `is_blocked` tinyint(1) unsigned NOT NULL,
-  KEY `user_id` (`user_id`,`contact_user_id`)
+  UNIQUE KEY `user_id_2` (`user_id`,`contact_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------

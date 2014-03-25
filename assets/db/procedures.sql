@@ -136,3 +136,73 @@ BEGIN
 	END IF;
 
 END
+
+
+-- --------------------------------------------------------------------------------
+-- Sync Contact Delete.
+-- Sync's a delete contact event to all devices of a particular user, including the web client.
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE `syncContactDelete` (IN userId int unsigned, IN contactUserId int unsigned)
+BEGIN
+	DECLARE deviceId int unsigned;
+	DECLARE done INT DEFAULT FALSE;
+	DECLARE cur CURSOR FOR SELECT id FROM sync_device WHERE `user_id`=userId AND is_initialized=1;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+	/* Delete the contact */
+	DELETE FROM contacts WHERE `user_id`=userId AND `contact_user_id`=contactUserId LIMIT 1;
+
+	/* Delete any sync records queued for this contact */
+	DELETE FROM sync_queue WHERE `user_id`=userId AND `pk`=contactUserId AND tablename='contacts';
+
+	/* Queue a delete record for every device */
+	OPEN cur;
+		read_loop: LOOP
+			FETCH cur INTO deviceId;			
+			IF done THEN
+				LEAVE read_loop;
+			END IF;
+			
+			INSERT INTO sync_queue (id,user_id,device_id,date_added,tablename,pk,vals,is_pulled) VALUES (null,userId,deviceId,NOW(),'contacts',contactUserId,'{"is_deleted":"1"}',0);
+
+		END LOOP;
+	CLOSE cur;
+
+END
+
+
+-- --------------------------------------------------------------------------------
+-- Sync Contact.
+-- Sync's a contact add/update to all devices of a particular user, including the web client.
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE `syncContact` (IN userId int unsigned, IN contactUserId int unsigned, IN nameIn VARCHAR(64), IN emailIn VARCHAR(64), IN phoneIn VARCHAR(32), isWhitelistIn tinyint(1) unsigned, isBlockedIn tinyint(1) unsigned)
+BEGIN
+	DECLARE deviceId int unsigned;
+	DECLARE done INT DEFAULT FALSE;
+	DECLARE cur CURSOR FOR SELECT id FROM sync_device WHERE `user_id`=userId AND is_initialized=1;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+	/* Update/Create the contact */
+	REPLACE INTO contacts (user_id,contact_user_id,name,email,phone,is_whitelist,is_blocked) VALUES (userId,contactUserId,nameIn,emailIn,phoneIn,isWhitelistIn,isBlockedIn);
+
+	/* Delete any sync records queued for this contact */
+	DELETE FROM sync_queue WHERE `user_id`=userId AND `pk`=contactUserId AND tablename='contacts';
+
+	/* Queue a pull record for every device */
+	OPEN cur;
+		read_loop: LOOP
+			FETCH cur INTO deviceId;			
+			IF done THEN
+				LEAVE read_loop;
+			END IF;
+			
+			INSERT INTO sync_queue (id,user_id,device_id,date_added,tablename,pk,vals,is_pulled) VALUES (null,userId,deviceId,NOW(),'contacts',contactUserId,CONCAT_WS('','{"key":"',contactUserId,'","name":"',nameIn,'","email":"',emailIn,'","phone":"',phoneIn,'","is_whitelist":"',isWhitelistIn,'","is_blocked":"',isBlockedIn,'","is_updated":"0","is_deleted":"0"}'),0);
+
+		END LOOP;
+	CLOSE cur;
+
+END
