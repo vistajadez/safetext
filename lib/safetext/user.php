@@ -5,7 +5,7 @@
  * Represents an application user.
  *
  */
-class SafetextUser extends MsModel {
+class SafetextUser extends SafetextModel {
 	// Database
 	public $dbTable = 'user'; // corresponding tablename
 	
@@ -53,101 +53,6 @@ class SafetextUser extends MsModel {
 	 }
 	
 	
-	/**
-	  * Purge.
-	  *
-	  * Deletes this instance and all related dependencies.
-	  *
-	  * @return bool
-	  *
-	  */
-	 public function purge() {
-		if (!$this->isValid()) return false;
-		
-		// sanity check
-		if ($this->id == '') return false;
-		
-		// delete dependencies
-//		$this->addRelationship('relationship_label', 'SafetextRelationshipClass', array('id' => 'fk'));
-//		$dependency =$this->getRelationship('relationship_label');
-//		$dependency->purge();
-		
-		
-		// delete this user's db entry
-		return parent::purge();
-	 }
-	
-	
-	/**
-	  * Save.
-	  *
-	  * Persist updated column values and relationships to database. Overridden to use prepared statement
-	  * @return void
-	  *
-	  */
-	public function save()
-	{
-		if (($this->isValid()) && (sizeof($this->changedColumns) > 0)) {
-			// save ONLY changed columns
-			$values = array();
-			foreach ($this->changedColumns as $col) $values[$col] = $this->$col;
-//			$this->db->insert($this->dbTable, $this->columnValues, true);
-			
-			// reset change tracker
-			$this->unchanged();
-/*			
-		$trace = debug_backtrace();
-				trigger_error(
-					'Saving to ' . $this->dbTable . '...',
-					E_USER_NOTICE);
-*/
-		}
-	}
-	
-	
-	/**
-	  * Save New.
-	  *
-	  * Persist updated column values as a new database row. Overridden to use prepared statement
-	  *
-	  * @param bool $allowOverwrite (Optional) True to use "REPLACE INTO" instead of "INSERT INTO" to overwrite any existing model. Default is false.
-	  *
-	  * @return int Id of new row if it has an autoincrement column. Returns 0 otherwise.
-	  *
-	  */
-	public function saveNew($allowOverwrite = false)
-	{
-		if (($this->isValid()) && (sizeof($this->changedColumns) > 0)) {
-			
-			// save to db
-//			$newId = $this->db->insert($this->dbTable, $this->columnValues, $allowOverwrite);
-			
-			// reset change tracker
-			$this->unchanged();
-			
-			return $newId;
-		}
-		return false;
-	}
-	
-	
-	/**
-	  * Relate.
-	  *
-	  * Sets up a relationship with another model. Overridden to simplify by merely passing a pre-loaded model
-	  *
-	  * @param string $label Label to associate this relationship with.
-	  * @param MsModel $relatedModel
-	  *
-	  * @return void
-	  *
-	  */
-	public function relate($label, &$relatedModel)
-	{
-		$this->relationships[$label] = array(
-			'model' => $relatedModel
-		);
-	}
 	
 	
 	
@@ -277,6 +182,7 @@ class SafetextUser extends MsModel {
 			if (strpos($column, '.') === false) $user->setValue($column, $val);
 			else if (strpos($column, 'device.') !== false) $device->setValue(str_replace('device.', '', $column), $val);
 		}
+		$device->setValue('user_id', $user->id);
 		$user->unchanged();
 		$device->unchanged();
 		

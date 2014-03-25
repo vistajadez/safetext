@@ -32,6 +32,8 @@ require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'ms' . DS . 'helper.php' );
 require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'ms' . DS . 'model.php' );
 require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'ms' . DS . 'modelcollection.php' );
 require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'ms' . DS . 'db.php' );
+require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'model.php' );
+require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'log.php' );
 
 // parse route
 $urlArray = explode('?', trim($_SERVER['REQUEST_URI']));
@@ -65,6 +67,10 @@ if (MS_CONTENT_TYPE == 'application/json') {
 
 
 $params['domain'] = str_replace('www.', '', $_SERVER['HTTP_HOST']);	// Remove 'www' from domain i.e. mysite.com, or m.mysite.com instead of www.mysite.com or www.m.mysite.com
+
+// logging
+$log = new SafetextLog();
+$ms_config['log'] = $log;
 
 // route module based on the URL (or you can adjust to base on a parameter). THIS IS OPTIONAL - you may not need to separate your application into modules
 //if ($params['domain'] == $ms_config['otherModuleUrl']) define('MS_MODULE', 'othermodule' );

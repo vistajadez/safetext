@@ -62,9 +62,11 @@ class ApiController extends MsController {
 								
 								if ($tokenDetails['id'] > 0) {
 								
-										$viewObject->setValue('status', 'success');
-										$viewObject->setValue('data', array('token' => $tokenDetails['token'], 'user' => $tokenDetails['id']));
-			
+									$viewObject->setValue('status', 'success');
+									$viewObject->setValue('data', array('token' => $tokenDetails['token'], 'user' => $tokenDetails['id']));
+									
+									// log the auth request
+									$this->config['log']->write('User: ' . $tokenDetails['id'] . ', Token: ' . $tokenDetails['token'] . ' (' . $this->params['device_description'] . ')', 'Auth Request');
 		
 								} else { // unsuccessful auth token generation
 									$viewObject->setValue('status', 'fail');
@@ -121,6 +123,9 @@ class ApiController extends MsController {
 					SafetextUser::expireToken($this->params['token'], $db, $this->config);
 				
 					$viewObject->setValue('status', 'success');
+					
+					// log the expireauth request
+					$this->config['log']->write('Token: ' . $tokenDetails['token'], 'Expire Auth Request');
 
 				} else { // no username
 					$viewObject->setValue('status', 'fail');
@@ -172,14 +177,25 @@ class ApiController extends MsController {
 					$user = SafetextUser::tokenToUser($_SERVER['HTTP_X_SAFETEXT_TOKEN'], $db, $this->config);
 					
 					if ($user instanceof SafetextUser && $user->isValid()) {
-						$viewObject->setValue('status', 'fail');
-						$viewObject->setValue('data', array('message' => 'Not yet implemented. Token: ' . $user->getRelationship('device')->token));
+						if ($user->getRelationship('device') instanceof SafetextDevice && $user->getRelationship('device')->isValid()) {
+							// log the sync request
+							$this->config['log']->write('User: ' . $user->id . ' (' . $user->username . '), Data: ' . json_encode($this->params['data']), 'Sync Request');
+						
+							// execute sync (pass mobile device records to server and obtain records to send to mobile device)
+							$recordsOut = $user->getRelationship('device')->sync($this->params['data']);
+							// log the output
+							if (sizeof($recordsOut) > 0) $this->config['log']->write('Records Out: ' . json_encode($recordsOut));
+
+							// load output into view
+							$viewObject->setValue('status', 'success');
+							$viewObject->setValue('token', $user->getRelationship('device')->token);
+							$viewObject->setValue('data', $recordsOut);
 					
-					
-					
-					
-					
-					} else { // no username
+						} else { // invalid device
+							$viewObject->setValue('status', 'fail');
+							$viewObject->setValue('data', array('message' => 'Problem trying to load device details for that token'));
+						}
+					} else { // invalid token
 						$viewObject->setValue('status', 'fail');
 						$viewObject->setValue('data', array('message' => 'That auth token is not valid'));
 					}

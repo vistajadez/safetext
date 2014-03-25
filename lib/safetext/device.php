@@ -5,7 +5,7 @@
  * Represents an application user's mobile device.
  *
  */
-class SafetextDevice extends MsModel {
+class SafetextDevice extends SafetextModel {
 	// Database
 	public $dbTable = 'sync_device'; // corresponding tablename
 	
@@ -22,73 +22,76 @@ class SafetextDevice extends MsModel {
 	
 	
 	
-	
 	// Methods unique to Device Object
-	
-	
 	/**
-	  * Purge.
+	  * Sync.
 	  *
-	  * Deletes this instance and all related dependencies.
+	  * Performs a sync operation with the server
 	  *
-	  * @return bool
+	  * @param mixed[] Array representing records from device to server
+	  *
+	  * @return mixed[] Array representing records from server to device
 	  *
 	  */
-	 public function purge() {
+	public function sync($recordsIn)
+	{
+		/* PUSH SYNC */	
+		// push each record
+		foreach ($recordsIn as $this_record) {
+			if (!is_array($record)) return;
+
+			if (array_key_exists('table', $record)) $table = strtolower(trim($record['table']));
+				else $table = NULL;
+			if (array_key_exists('values', $record)) $values = $record['values'];
+				else $values = NULL;
+			if ($table !== NULL) {
+				if (is_array($values)) {
+					if (array_key_exists('key', $value) && $values['key'] > 0) {
+						if ($table === 'contacts' || $table === 'messages') {
+							$this->config['log']->write('PUSHING RECORD, table: ' . $table . ', key: ' . $values['key']);
+								if ($table === 'contacts') {
+									// push a contact
+									if (array_key_exists('is_deleted', $values) && $values['is_deleted'] == '1') {
+										// stored procedure call for deleting a contact
+										$this->config['log']->write('This is a DELETE');
+										$db->query("CALL syncContactDelete('" . $this->getValue('user_id') . "','" . $values['key'] . "')")->fetch_assoc();
+									} else if (array_key_exists('is_updated', $values) && $values['is_updated'] == '1') {
+										// stored procedure call for adding/updating a contact
+										$this->config['log']->write('This is an ADD/UPDATE');
+										array_key_exists('name', $values)? $name = $values['name']: $name = '';
+										array_key_exists('email', $values)? $email = $values['email']: $email = '';
+										array_key_exists('phone', $values)? $phone = $values['phone']: $phone = '';
+										array_key_exists('is_whitelist', $values)? $is_whitelist = $values['is_whitelist']: $is_whitelist = '0';
+										array_key_exists('is_blocked', $values)? $is_blocked = $values['is_blocked']: $is_blocked = '0';
+										$db->query("CALL syncContact('" . $this->getValue('user_id') . "','" . $values['key'] . 
+											"','$name','$email','$phone','$is_whitelist','$is_blocked',)")->fetch_assoc();
+									}
+								} else if ($table === 'messages') {
+									// TODO
+									
+									
+									
+									
+								}
+				
+				
+						} // end if table is supported
+					} // end if key exists
+				} // end if values are correctly specified
+			} // end if table is specified	
+		} // end iterating through each push record
 		
-	 }
+		
+		/* PULL SYNC */	
+		
+		
 	
-	/**
-	  * Save.
-	  *
-	  * Persist updated column values and relationships to database. Overridden to use prepared statement
-	  * @return void
-	  *
-	  */
-	public function save()
-	{
-		if (($this->isValid()) && (sizeof($this->changedColumns) > 0)) {
-			// save ONLY changed columns
-			$values = array();
-			foreach ($this->changedColumns as $col) $values[$col] = $this->$col;
-//			$this->db->insert($this->dbTable, $this->columnValues, true);
-			
-			// reset change tracker
-			$this->unchanged();
-/*			
-		$trace = debug_backtrace();
-				trigger_error(
-					'Saving to ' . $this->dbTable . '...',
-					E_USER_NOTICE);
-*/
-		}
+		return array();
 	}
 	
 	
-	/**
-	  * Save New.
-	  *
-	  * Persist updated column values as a new database row. Overridden to use prepared statement
-	  *
-	  * @param bool $allowOverwrite (Optional) True to use "REPLACE INTO" instead of "INSERT INTO" to overwrite any existing model. Default is false.
-	  *
-	  * @return int Id of new row if it has an autoincrement column. Returns 0 otherwise.
-	  *
-	  */
-	public function saveNew($allowOverwrite = false)
-	{
-		if (($this->isValid()) && (sizeof($this->changedColumns) > 0)) {
-			
-			// save to db
-//			$newId = $this->db->insert($this->dbTable, $this->columnValues, $allowOverwrite);
-			
-			// reset change tracker
-			$this->unchanged();
-			
-			return $newId;
-		}
-		return false;
-	}
+	
+	
 	
 	
 	
