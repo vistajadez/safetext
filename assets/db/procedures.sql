@@ -193,6 +193,9 @@ BEGIN
 	DELETE FROM sync_queue WHERE `user_id`=userId AND `pk`=contactUserId AND tablename='contacts';
 
 	/* Queue a pull record for every device */
+	SET nameIn = REPLACE(nameIn, '\\', '\\\\'); /* JSON encoding for \ */
+	SET nameIn = REPLACE(nameIn, '"', '\\"'); /* JSON encoding for " */
+	
 	OPEN cur;
 		read_loop: LOOP
 			FETCH cur INTO deviceId;			
@@ -200,9 +203,132 @@ BEGIN
 				LEAVE read_loop;
 			END IF;
 			
-			INSERT INTO sync_queue (id,user_id,device_id,date_added,tablename,pk,vals,is_pulled) VALUES (null,userId,deviceId,NOW(),'contacts',contactUserId,CONCAT_WS('','{"key":"',contactUserId,'","name":"',nameIn,'","email":"',emailIn,'","phone":"',phoneIn,'","is_whitelist":"',isWhitelistIn,'","is_blocked":"',isBlockedIn,'","is_updated":"0","is_deleted":"0"}'),0);
+			INSERT INTO sync_queue (id,user_id,device_id,date_added,tablename,pk,vals,is_pulled) VALUES (null,userId,deviceId,NOW(),'contacts',contactUserId,CONCAT_WS('','{"name":"',nameIn,'","email":"',emailIn,'","phone":"',phoneIn,'","is_whitelist":"',isWhitelistIn,'","is_blocked":"',isBlockedIn,'","is_updated":"0","is_deleted":"0"}'),0);
 
 		END LOOP;
 	CLOSE cur;
 
 END
+
+
+-- --------------------------------------------------------------------------------
+-- Sync Message Delete.
+-- Sync's a delete message event to all devices of a particular user, including the web client.
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE `syncMessageDelete` (IN messageId int unsigned)
+BEGIN
+	DECLARE deviceId, userId int unsigned;
+	DECLARE done INT DEFAULT FALSE;
+	DECLARE cur CURSOR FOR SELECT sync_device.id, sync_device.user_id FROM sync_device, participants WHERE participants.message_id =messageId AND participants.contact_id = sync_device.user_id AND sync_device.is_initialized=1;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+	/* Delete the message */
+	DELETE FROM messages WHERE `id`=messageId LIMIT 1;
+
+	/* Delete any sync records queued for this message */
+	DELETE FROM sync_queue WHERE `pk`=messageId AND tablename='messages';
+
+	/* Queue a delete record for every device of every participant */
+	OPEN cur;
+		read_loop: LOOP
+			FETCH cur INTO deviceId, userId;			
+			IF done THEN
+				LEAVE read_loop;
+			END IF;
+			
+			INSERT INTO sync_queue (id,user_id,device_id,date_added,tablename,pk,vals,is_pulled) VALUES (null,userId,deviceId,NOW(),'messages',messageId,'{"is_deleted":"1"}',0);
+
+		END LOOP;
+	CLOSE cur;
+
+	/* Delete the participants records */
+	DELETE FROM participants WHERE `message_id`=messageId;
+
+END
+
+
+-- --------------------------------------------------------------------------------
+-- Sync Message.
+-- Sync's a message *update* to all devices of each participant of the message
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE `syncMessage` (IN userIdIn int unsigned, IN messageId int unsigned, IN isImportantIn tinyint(1) unsigned, IN isDraftIn tinyint(1) unsigned, IN isReadIn tinyint(1) unsigned)
+BEGIN
+	DECLARE deviceId, userId, senderId int unsigned;
+	DECLARE isImportant, isDraft, isRead tinyint(1) unsigned;
+	DECLARE readDate, sentDate, expireDate datetime;
+	DECLARE msgContent text;
+	DECLARE done INT DEFAULT FALSE;
+	DECLARE cur CURSOR FOR SELECT sync_device.id, sync_device.user_id FROM sync_device, participants WHERE participants.message_id =messageId AND participants.contact_id = sync_device.user_id AND sync_device.is_initialized=1;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+	/* Get the message's current values */
+	SELECT content,is_important,is_draft,is_read,read_date,sent_date,expire_date
+		INTO msgContent,isImportant,isDraft,isRead,readDate,sentDate,expireDate
+		FROM messages WHERE id=messageId;
+	
+	/* Get the sender ID */
+	SET senderId = (SELECT `contact_id` FROM participants WHERE `message_id` = messageId AND `is_sender` = 1);
+	
+	/* Determine what can be changed based on this user's role (sender/recipient) */
+	IF userIdIn = senderId THEN
+		SET isImportant = isImportantIn;
+		SET isDraft = isDraftIn;
+	ELSE
+		SET isRead = isReadIn;
+		IF isRead = 1 AND readDate = '0000-00-00 00:00:00' THEN
+			SET readDate=NOW();
+		END IF;
+	END IF;
+
+	/* Update the message */
+	UPDATE messages set is_important=isImportant, is_draft=isDraft, is_read=isRead, read_date=readDate WHERE id=messageId LIMIT 1;
+
+	/* Delete any sync records queued for this message */
+	DELETE FROM sync_queue WHERE `pk`=messageId AND tablename='messages';
+
+	/* Queue a pull record for every device */
+	SET msgContent = REPLACE(msgContent, '\\', '\\\\'); /* JSON encoding for \ */
+	SET msgContent = REPLACE(msgContent, '"', '\\"'); /* JSON encoding for " */
+
+	OPEN cur;
+		read_loop: LOOP
+			FETCH cur INTO deviceId, userId;			
+			IF done THEN
+				LEAVE read_loop;
+			END IF;
+			
+			INSERT INTO sync_queue (id,user_id,device_id,date_added,tablename,pk,vals,is_pulled) VALUES (null,userId,deviceId,NOW(),'messages',messageId,CONCAT_WS('','{"content":"',msgContent,'","is_read":"',isRead,'","is_important":"',isImportant,'","is_draft":"',isDraft,'","sent_date":"',sentDate,'","read_date":"',readDate,'","expire_date":"',expireDate,'","is_updated":"0","is_deleted":"0"}'),0);
+
+		END LOOP;
+	CLOSE cur;
+
+END
+
+
+-- --------------------------------------------------------------------------------
+-- Sync Pull.
+-- Returns sync records from the server for a particular device.
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE DEFINER=`maxdistrodb`@`%.%.%.%` PROCEDURE `syncPull`(IN userId int unsigned, IN deviceId int unsigned)
+BEGIN
+
+	/* Remove any previously pulled queue records */
+	DELETE FROM sync_queue WHERE user_id=userId AND device_id=deviceId AND is_pulled=1;
+
+	/* Flag unpulled records as pulled, since we're going to pull them now */
+	UPDATE sync_queue SET is_pulled=1 WHERE user_id=userId AND device_id=deviceId;
+
+	/* Pull the flagged records */
+	SELECT tablename,pk,vals FROM sync_queue WHERE user_id=userId AND device_id=deviceId AND is_pulled=1 ORDER BY id;
+
+END
+
+
+
+
