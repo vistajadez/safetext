@@ -122,7 +122,7 @@ class SafetextUser extends SafetextModel {
 			return array('id' => 0, 'msg' => 'Missing parameters before sending to stored procedure');
 	
 		// stored procedure call
-		$result = $db->query("CALL generateToken('$username','$password','$deviceSig','$deviceDesc')")->fetch_assoc();
+		$result = current($db->call("generateToken('$username','$password','$deviceSig','$deviceDesc')"));
 		
 		return $result;
 	}
@@ -144,7 +144,7 @@ class SafetextUser extends SafetextModel {
 		if ($token === '') return;
 	
 		// stored procedure call
-		$db->query("CALL expireToken('$token')");
+		$db->call("expireToken('$token')");
 	}
 	
 	
@@ -169,7 +169,7 @@ class SafetextUser extends SafetextModel {
 		if ($token === '') return;
 	
 		// stored procedure call
-		$result = $db->query("CALL tokenToUser('$token')")->fetch_assoc();
+		$result = current($db->CALL("tokenToUser('$token')"));
 		
 		// instantiate the user and dependencies
 		require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'device.php' );

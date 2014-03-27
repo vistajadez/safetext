@@ -117,7 +117,9 @@ class ApiController extends MsController {
 		if (MS_PROTOCOL === 'https') {
 			if (MS_REQUEST_METHOD === 'POST') {
 				if (array_key_exists('token', $this->params) && $this->params['token'] !== '') {
-					
+					// Create a database connection to share
+					$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+								
 					// expire token via db stored procedure
 					require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
 					SafetextUser::expireToken($this->params['token'], $db, $this->config);
@@ -171,7 +173,10 @@ class ApiController extends MsController {
 		if (MS_PROTOCOL === 'https') {
 			if (MS_REQUEST_METHOD === 'POST') {
 				if (array_key_exists('HTTP_X_SAFETEXT_TOKEN', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_TOKEN'] !== '') {
-				
+					
+					// Create a database connection to share
+					$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+								
 					// authenticate token with stored procedure
 					require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
 					$user = SafetextUser::tokenToUser($_SERVER['HTTP_X_SAFETEXT_TOKEN'], $db, $this->config);
@@ -213,6 +218,27 @@ class ApiController extends MsController {
 		}
 	}
  
-	 
+	
+	
+	public function testAction(&$viewObject) {
+		$viewObject->setResponseType('json');
+		
+		$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+		$result = $db->call("syncPull('3','8');");
+		
+		$test = '';
+		if (is_array($result)) {
+			foreach ($result as $row) {
+				foreach ($row as $key=>$val) {
+					$test .= "$key=$val,";
+				} 
+			}
+		} else{
+			$test = $result;
+		}
+		
+		$viewObject->setValue('Test', $test);
+		
+	} 
 	 
 }

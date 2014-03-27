@@ -66,6 +66,38 @@ class MsDb
 		}
 	}
 	
+	
+	/**
+	 * Call.
+	 * Calls a stored procedure. Only compatible with mysqli.
+	 * 
+	 * @param string $query SQL query string.
+	 *
+	 * @return mixed[] Array of all rows returned.
+	 */
+	public function call($query) {
+		$returnArray = array();
+		
+		if (!$this->connection) return $returnArray;
+		$query = trim($query);
+		if ($query == '') return $returnArray;
+
+		if (class_exists('mysqli')) {
+			// Only Use MySQLi
+			$this->connection->multi_query('CALL ' . $query);
+			do {
+			    if ($res = $this->connection->store_result()) {
+			    	while ($this_result = $res->fetch_assoc()) {
+			    		$returnArray[] = $this_result;
+			    	}
+			        $res->free();
+			    }
+			} while ($this->connection->more_results() && $this->connection->next_result());			
+		}
+		
+		return $returnArray;
+	}
+	
 	/**
 	 * Insert.
 	 * 
