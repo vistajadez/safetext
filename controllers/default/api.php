@@ -173,7 +173,7 @@ class ApiController extends MsController {
 					if ($user instanceof SafetextUser && $user->isValid()) {
 						if ($user->getRelationship('device') instanceof SafetextDevice && $user->getRelationship('device')->isValid()) {
 							if (array_key_exists('recipients', $this->params) && is_array($this->params['recipients'])) {
-								if (array_key_exists('content', $this->params) && is_array($this->params['content']) !== '') {
+								if (array_key_exists('content', $this->params) && $this->params['content'] !== '') {
 									// check all message options
 									array_key_exists('is_important', $this->params)? $is_important = $this->params['is_important']: $is_important = '0';
 									array_key_exists('is_draft', $this->params)? $is_draft = $this->params['is_draft']: $is_draft = '0';
@@ -453,6 +453,78 @@ class ApiController extends MsController {
 		}
 	}
 	
+	
+	/**
+	 * Contacts Lookup Action.
+	 * 
+	 * SafeText users send messages to their contacts. Every contact is another SafeText user. In order to add contacts to their
+	 * contact list, the users' mobile app must be able to perform a query at the web service to retrieve records that match a
+	 * search criteria. Currently, the only supported search criteria is full name.
+	 *
+	 * @link https://github.com/deztopia/safetext/wiki/Contacts-Lookup
+	 *
+	 * @param MsView $viewObject
+	 * @return void
+	 */
+	 public function contactsAction(&$viewObject) {
+		$viewObject->setResponseType('json');
+		
+		// ensure we're using https
+		if (MS_PROTOCOL === 'https') {
+			if (MS_REQUEST_METHOD === 'GET') {
+				if (array_key_exists('HTTP_X_SAFETEXT_TOKEN', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_TOKEN'] !== '') {
+					
+					// Create a database connection to share
+					$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+								
+					// authenticate token with stored procedure
+					require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
+					$user = SafetextUser::tokenToUser($_SERVER['HTTP_X_SAFETEXT_TOKEN'], $db, $this->config);
+					
+					if ($user instanceof SafetextUser && $user->isValid()) {
+						if ($user->getRelationship('device') instanceof SafetextDevice && $user->getRelationship('device')->isValid()) {
+							if (array_key_exists('q', $this->params) && $this->params['q'] !== '') {
+								if (strpos($this->params['q'], ' ') !== false) {
+						
+									// execute contacts lookup stored DB procedure
+									$recordsOut = $db->CALL("contactLookup('" . $user->id . "','" . $this->params['q'] . "')");
+		
+									// load output into view
+									$viewObject->setValue('status', 'success');
+									$viewObject->setValue('token', $user->getRelationship('device')->token);
+									$viewObject->setValue('data', $recordsOut);
+					
+								} else { // no query string
+									$viewObject->setValue('status', 'fail');
+									$viewObject->setValue('token', $user->getRelationship('device')->token);
+									$viewObject->setValue('data', array('message' => 'Both a first AND last name need to be passed in the query string'));
+								}
+							} else { // no query string
+								$viewObject->setValue('status', 'fail');
+								$viewObject->setValue('token', $user->getRelationship('device')->token);
+								$viewObject->setValue('data', array('message' => 'Missing search query'));
+							}
+						} else { // invalid device
+							$viewObject->setValue('status', 'fail');
+							$viewObject->setValue('data', array('message' => 'Problem trying to load device details for that token'));
+						}
+					} else { // invalid token
+						$viewObject->setValue('status', 'fail');
+						$viewObject->setValue('data', array('message' => 'That auth token is not valid'));
+					}
+				} else { // no username
+					$viewObject->setValue('status', 'fail');
+					$viewObject->setValue('data', array('message' => 'Missing SafeText auth token. Please log in'));
+				}
+			} else { // non-POST request
+				$viewObject->setValue('status', 'fail');
+				$viewObject->setValue('data', array('message' => MS_REQUEST_METHOD . ' requests are not supported for this web service'));
+			}
+		} else { // insecure
+			$viewObject->setValue('status', 'fail');
+			$viewObject->setValue('data', array('message' => 'Insecure (non-HTTPS) access denied'));
+		}
+	}
 	
 	
 	
