@@ -121,6 +121,12 @@ class SafetextUser extends SafetextModel {
 		if ($username === '' || $password === '' || $deviceSig === '' || $deviceDesc === '') 
 			return array('id' => 0, 'msg' => 'Missing parameters before sending to stored procedure');
 	
+		// cleanse input
+		$username = SafetextModel::escapeForDb($username);
+		$password = SafetextModel::escapeForDb($password);
+		$deviceSig = SafetextModel::escapeForDb($deviceSig);
+		$deviceDesc = SafetextModel::escapeForDb($deviceDesc);
+	
 		// stored procedure call
 		$result = current($db->call("generateToken('$username','$password','$deviceSig','$deviceDesc')"));
 		
@@ -142,6 +148,7 @@ class SafetextUser extends SafetextModel {
 	
 		// required params
 		if ($token === '') return;
+		$token = SafetextModel::escapeForDb($token);
 	
 		// stored procedure call
 		$db->call("expireToken('$token')");
@@ -169,13 +176,14 @@ class SafetextUser extends SafetextModel {
 		if ($token === '') return;
 	
 		// stored procedure call
+		$token = SafetextModel::escapeForDb($token);
 		$result = current($db->CALL("tokenToUser('$token')"));
 		
 		// instantiate the user and dependencies
 		require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'device.php' );
 		$user = new SafetextUser($config, $db);
 		$device = new SafetextDevice($config, $db);
-		if (!array_key_exists('id', $result) || $result['id'] === '') return $user; // invalid token
+		if (!array_key_exists('id', $result) || $result['id'] < 1) return $user; // invalid token
 		
 		// load user & dependency details
 		foreach ($result as $column => $val) {

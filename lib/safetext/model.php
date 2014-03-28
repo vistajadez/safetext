@@ -90,5 +90,17 @@ abstract class SafetextModel extends MsModel {
 		);
 	}
 	
+	
+	/**
+	 * Escape For DB.
+	 * Escapes a string to be sent to a DB stored procedure.
+	 *
+	 * @param String $val
+	 * @return String
+	 */
+	static function escapeForDb($val) {
+		return str_replace("'", "\'", $val);
+	}
+	
 		
 }

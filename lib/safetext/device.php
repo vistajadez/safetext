@@ -59,7 +59,7 @@ class SafetextDevice extends SafetextModel {
 									} else if (array_key_exists('is_updated', $values) && $values['is_updated'] == '1') {
 										// stored procedure call for adding/updating a contact
 										$this->config['log']->write('This is an ADD/UPDATE');
-										array_key_exists('name', $values)? $name = $values['name'] . '\\\\': $name = '';
+										array_key_exists('name', $values)? $name = $values['name']: $name = '';
 										array_key_exists('email', $values)? $email = $values['email']: $email = '';
 										array_key_exists('phone', $values)? $phone = $values['phone']: $phone = '';
 										array_key_exists('is_whitelist', $values)? $is_whitelist = $values['is_whitelist']: $is_whitelist = '0';
@@ -112,6 +112,37 @@ class SafetextDevice extends SafetextModel {
 		return $arrayOut;
 	}
 	
+	
+	/**
+	  * Last Pull.
+	  * Retrieves the records that were sent to this device in the most recent sync.
+	  *
+	  * @param mixed[] Array representing records from device to server.
+	  *
+	  * @return mixed[] Array representing records from server to device.
+	  *
+	  */
+	public function lastpull()
+	{
+		$arrayOut = array();
+		$pullRecords = $this->db->call("syncLastPull('" . $this->getValue('user_id') . "','" . $this->getValue('id') . "')");
+		
+		// package pull sync results in correct array structure for JSON output
+		foreach ($pullRecords as $this_record) {
+			if (array_key_exists('pk', $this_record) && $this_record['pk'] > 0) {
+				if (array_key_exists('vals', $this_record) && $this_record['vals'] != '') {
+					if (array_key_exists('tablename', $this_record) && $this_record['tablename'] != '') {
+						$values = json_decode($this_record['vals'], true);
+						$values['key'] = $this_record['pk'];
+						
+						$arrayOut[] = array('table' => $this_record['tablename'], 'values' => $values);
+					}
+				}
+			}
+		}
+		
+		return $arrayOut;
+	}
 	
 	
 	

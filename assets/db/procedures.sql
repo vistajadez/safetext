@@ -257,7 +257,7 @@ DELIMITER $$
 
 CREATE PROCEDURE `syncMessage` (IN userIdIn int unsigned, IN messageId int unsigned, IN isImportantIn tinyint(1) unsigned, IN isDraftIn tinyint(1) unsigned, IN isReadIn tinyint(1) unsigned)
 BEGIN
-	DECLARE deviceId, userId, senderId int unsigned;
+	DECLARE deviceId, userId, senderId, recipientId int unsigned;
 	DECLARE isImportant, isDraft, isRead tinyint(1) unsigned;
 	DECLARE readDate, sentDate, expireDate datetime;
 	DECLARE msgContent text;
@@ -272,6 +272,9 @@ BEGIN
 	
 	/* Get the sender ID */
 	SET senderId = (SELECT `contact_id` FROM participants WHERE `message_id` = messageId AND `is_sender` = 1);
+
+	/* Get the recipient ID */
+	SET recipientId = (SELECT `contact_id` FROM participants WHERE `message_id` = messageId AND `is_sender` = 0);
 	
 	/* Determine what can be changed based on this user's role (sender/recipient) */
 	IF userIdIn = senderId THEN
@@ -301,7 +304,7 @@ BEGIN
 				LEAVE read_loop;
 			END IF;
 			
-			INSERT INTO sync_queue (id,user_id,device_id,date_added,tablename,pk,vals,is_pulled) VALUES (null,userId,deviceId,NOW(),'messages',messageId,CONCAT_WS('','{"content":"',msgContent,'","is_read":"',isRead,'","is_important":"',isImportant,'","is_draft":"',isDraft,'","sent_date":"',sentDate,'","read_date":"',readDate,'","expire_date":"',expireDate,'","is_updated":"0","is_deleted":"0"}'),0);
+			INSERT INTO sync_queue (id,user_id,device_id,date_added,tablename,pk,vals,is_pulled) VALUES (null,userId,deviceId,NOW(),'messages',messageId,CONCAT_WS('','{"sender":"',senderId,',"recipients":["',recipientId,'"],","content":"',msgContent,'","is_read":"',isRead,'","is_important":"',isImportant,'","is_draft":"',isDraft,'","sent_date":"',sentDate,'","read_date":"',readDate,'","expire_date":"',expireDate,'","is_updated":"0","is_deleted":"0"}'),0);
 
 		END LOOP;
 	CLOSE cur;
@@ -330,5 +333,173 @@ BEGIN
 END
 
 
+-- --------------------------------------------------------------------------------
+-- Send Message.
+-- Sends a new message from one user to another. Returns newly generated message ID.
+-- --------------------------------------------------------------------------------
+DELIMITER $$
 
+CREATE PROCEDURE `sendMessage` (IN senderIdIn int unsigned, IN recipientIdIn int unsigned, IN contentIn text, IN isImportantIn tinyint(1) unsigned, IN isDraftIn tinyint(1) unsigned, IN lifetimeIn tinyint unsigned)
+BEGIN
+	DECLARE deviceId, userId, messageId int unsigned;
+	/*DECLARE newContactFirst, newContactLast, newContactPhone VARCHAR(32);
+	DECLARE newContactEmail VARCHAR(64);*/
+	DECLARE sentDate,expireDate datetime;
+	DECLARE done, isAllowed, isNewContact INT DEFAULT FALSE;
+	DECLARE cur CURSOR FOR SELECT id, user_id FROM sync_device WHERE (user_id = senderIdIn OR user_id=recipientIdIn) AND is_initialized=1;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+	/* make sure that this recipient allows messages from the sender */
+	SET @whitelistFlag = (SELECT whitelist_only FROM users WHERE id=recipientIdIn);
+	IF @whitelistFlag = 0 THEN
+		SET isAllowed = TRUE;
+    ELSE
+		SET @whitelistedUser = (SELECT contact_user_id FROM contacts WHERE user_id=recipientIdIn AND contact_user_id=senderIdIn AND is_whitelist=1);
+		IF @whitelistedUser = senderIdIn THEN
+			SET isAllowed = TRUE;
+		END IF;
+	END IF;
+
+	IF isAllowed THEN
+		/* make sure sender is not blocked */
+		SET @blockedUser = (SELECT contact_user_id FROM contacts WHERE user_id=recipientIdIn AND contact_user_id=senderIdIn AND is_blocked=1);
+		IF @blockedUser IS NULL THEN
+
+			/* if sender is not already a contact of the recipient, add the sender now as a new contact
+			IF isDraftIn != 1 THEN
+				SET @existingContact = (SELECT contact_user_id FROM contacts WHERE user_id=recipientIdIn AND contact_user_id=senderIdIn);
+				IF @existingContact IS NULL THEN
+					/* add sender as a new contact
+					SELECT firstname,lastname,email,phone
+					INTO newContactFirst,newContactLast,newContactEmail,newContactPhone
+					FROM users WHERE id=senderIdIn;
+
+					INSERT INTO contacts (`user_id`,`contact_user_id`,`name`,`email`,`phone`) VALUES(recipientIdIn,senderIdIn,CONCAT_WS(' ', newContactFirst, newContactLast), newContactEmail, newContactPhone);
+
+					SET isNewContact = TRUE;
+				END IF;
+			END IF;*/
+
+			/* send new message */
+			SET sentDate = NOW();
+			SET expireDate = DATE_ADD(NOW(),INTERVAL lifetimeIn HOUR);
+			INSERT INTO messages (`id`,`content`,`is_important`,`is_draft`,`sent_date`,`expire_date`) VALUES(NULL, contentIn,isImportantIn,isDraftIn,sentDate,expireDate);
+
+			/* obtain the new message ID */
+			SET messageId = LAST_INSERT_ID();
+			IF messageId IS NOT NULL THEN 
+
+				/* create sender participant record */
+				INSERT INTO participants (`message_id`,`contact_id`,`is_sender`) VALUES(messageId,senderIdIn,1);
+
+				/* create recipient participant record */
+				INSERT INTO participants (`message_id`,`contact_id`,`is_sender`) VALUES(messageId,recipientIdIn,0);
+
+				/* Queue a pull record for every device */
+				SET contentIn = REPLACE(contentIn, '\\', '\\\\'); /* JSON encoding for \ */
+				SET contentIn = REPLACE(contentIn, '"', '\\"'); /* JSON encoding for " */
+
+				OPEN cur;
+					read_loop: LOOP
+						FETCH cur INTO deviceId, userId;			
+						IF done THEN
+							LEAVE read_loop;
+						END IF;
+						
+						INSERT INTO sync_queue (id,user_id,device_id,date_added,tablename,pk,vals,is_pulled) VALUES (null,userId,deviceId,NOW(),'messages',messageId,CONCAT_WS('','{"sender":"',senderIdIn,'","recipients":["',recipientIdIn,'"],"content":"',contentIn,'","is_read":"0","is_important":"',isImportantIn,'","is_draft":"',isDraftIn,'","sent_date":"',sentDate,'","read_date":"0000-00-00 00:00:00","expire_date":"',expireDate,'","is_updated":"0","is_deleted":"0"}'),0);
+
+					END LOOP;
+				CLOSE cur;
+
+				/* send newly generated message ID */
+				SELECT messageId AS `key`;
+
+			ELSE
+				SELECT NULL AS `key`, 'There was an error trying to send that message' AS `msg`;
+			END IF;
+		ELSE
+			SELECT NULL AS `key`, 'That recipient is not accepting messages' AS `msg`; /* blocked sender */
+		END IF;
+	ELSE
+		SELECT NULL AS `key`, 'That recipient only accepts messages from contacts they have whitelisted' AS `msg`;
+	END IF;
+
+END
+
+
+-- --------------------------------------------------------------------------------
+-- Get Settings
+-- Returns a user's account settings
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE DEFINER=`maxdistrodb`@`%.%.%.%` PROCEDURE `getSettings`(IN userIdIn int unsigned)
+BEGIN
+	SELECT * FROM users where id=userIdIn;
+
+END
+
+
+-- --------------------------------------------------------------------------------
+-- Put settings
+-- Save a user's account settings
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE `putSettings` (IN userIdIn int unsigned, IN usernameIn VARCHAR(16), IN firstnameIn VARCHAR(32), IN lastnameIn VARCHAR(32), emailIn VARCHAR(64), phoneIn VARCHAR(32), passIn VARCHAR(16), languageIn VARCHAR(2), notificationsOnIn TINYINT(1) unsigned, whitelistOnlyIn TINYINT(1) unsigned, enablePanicIn TINYINT(1) unsigned)
+BEGIN
+	DECLARE curUsername, curPass VARCHAR(16);
+	DECLARE curDateLastPassUpdate datetime;
+	DECLARE existingUserId int unsigned;
+	
+	/* load current username & password */
+	SELECT username,pass,date_last_pass_update
+		INTO curUsername,curPass,curDateLastPassUpdate
+		FROM users WHERE id=userIdIn;
+	
+	IF curUsername IS NOT NULL THEN
+		/* by default, keep current username and password if none is provided */
+		IF usernameIn = '' THEN
+			SET usernameIn = curUsername;
+		END IF;
+		IF passIn = '' THEN
+			SET passIn = curPass;
+		END IF;
+
+		/* If we're changing the password, update the pasword changed date */
+		IF passIn != curPass THEN
+			SET curDateLastPassUpdate = NOW();
+		END IF;
+
+		/* If we're changing username, make sure that it doesn't already exist for another user */
+		IF usernameIn != curUsername THEN
+			SET existingUserId = (SELECT id FROM users WHERE username=usernameIn AND id != userIdIn);
+		END IF;
+		IF existingUserId IS NULL THEN
+			/* Save user settings */
+			UPDATE users SET `username`=usernameIn,`firstname`=firstnameIn,`lastname`=lastnameIn,`email`=emailIn,`phone`=phoneIn,`pass`=passIn,`date_last_pass_update`=curDateLastPassUpdate,`language`=languageIn,`notifications_on`=notificationsOnIn,`whitelist_only`=whitelistOnlyIn,`enable_panic`=enablePanicIn WHERE id=userIdIn LIMIT 1;
+
+			SELECT NULL AS `msg`;
+		ELSE
+			SELECT 'Username is already taken' AS `msg`;
+		END IF;
+	ELSE
+		SELECT 'Cannot locate that user record in database' AS `msg`;
+	END IF;
+
+END
+
+
+-- --------------------------------------------------------------------------------
+-- Sync Last Pull.
+-- Returns sync records that were previously sent to a particular device in its most recent sync
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE DEFINER=`maxdistrodb`@`%.%.%.%` PROCEDURE `syncLastPull`(IN userId int unsigned, IN deviceId int unsigned)
+BEGIN
+	/* Pull the flagged records */
+	SELECT tablename,pk,vals FROM sync_queue WHERE user_id=userId AND device_id=deviceId AND is_pulled=1 ORDER BY id;
+
+END
 
