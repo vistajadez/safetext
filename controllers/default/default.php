@@ -1,11 +1,12 @@
 <?php
+require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'clientcontroller.php' );
 
 /**
  * Default Controller.
  *
  *
  */
-class DefaultController extends MsController {
+class DefaultController extends SafetextClientController {
 
 	/**
 	 * Default Action.
@@ -16,16 +17,9 @@ class DefaultController extends MsController {
 	 * @return void
 	 */
 	 public function defaultAction(&$viewObject) {
-		// ensure we're using https
-		if (MS_PROTOCOL !== 'https') {
-			$redirect = "https://".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
-			header("Location: $redirect");
-				
-			return; // terminate controller action
-		}
-		
-		// TODO: Test if user is logged in. If so, forward to dashboard. Otherwise, forward to login. For now shunt everything to login
-		$this->forward($viewObject, 'login', 'auth');
+		// forward to the web client page if logged in, otherwise to the login page
+		if ($this->init($viewObject)) $this->forward($viewObject, 'home', 'webclient');
+			else $this->forward($viewObject, 'login', 'auth');
 	 }
 	
 	 

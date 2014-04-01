@@ -22,17 +22,20 @@ BEGIN
 				SET @token = CAST(MD5(CONCAT(CONCAT('SafeText-hashsalt', usernameIn), UNIX_TIMESTAMP())) AS CHAR);
 				UPDATE sync_device SET `token`=@token, `token_expires`=DATE_ADD(CURDATE(),INTERVAL 5 DAY), `description`=deviceDesc WHERE `user_id` = @userId AND `id` = @deviceId; 
 			ELSE
-				/* reset the init flag */
-				UPDATE sync_device SET `is_initialized`=0, `description`=deviceDesc WHERE `user_id` = @userId AND `id` = @deviceId;
-				/* clear the sync queue */
-				DELETE FROM sync_queue WHERE `user_id` = @userId AND `device_id` = @deviceId;
+				/* re-auth: a device which already has a valid token assigned to it is re-authenticating.*/
+				IF deviceSig != 'webclient' THEN
+					/* reset the init flag */
+					UPDATE sync_device SET `is_initialized`=0, `description`=deviceDesc WHERE `user_id` = @userId AND `id` = @deviceId;
+					/* clear the sync queue */
+					DELETE FROM sync_queue WHERE `user_id` = @userId AND `device_id` = @deviceId;
+				END IF;
 			END IF;
 			
 		ELSE
 			/* make sure that there aren’t too many devices already registered */
-			SET @numDevices = (SELECT COUNT(*) FROM `sync_device` WHERE user_id=@userId);
+			SET @numDevices = (SELECT COUNT(*) FROM `sync_device` WHERE user_id=@userId AND signature != 'webclient');
 
-			IF @numDevices < 2 THEN
+			IF @numDevices < 2 OR deviceSig = 'webclient' THEN
 				/* create new device entry */
 				SET @tokenString = CAST(MD5(CONCAT(CONCAT('SafeText-hashsalt', usernameIn), UNIX_TIMESTAMP())) AS CHAR);
 				INSERT INTO sync_device (id,user_id,signature,description,is_initialized,token,token_expires) VALUES('', @userId, deviceSig, deviceDesc, '0', @tokenString, DATE_ADD(CURDATE(),INTERVAL 5 DAY));

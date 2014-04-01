@@ -1,0 +1,17 @@
+<!-- header - with web client nav -->
+<div data-role="header" class="safetext-header">
+	<h1><?php echo $this->title; ?></h1>
+	
+	<div class="safetext-nav clearfix">
+        <ul class="clearfix">
+           <li><a href="#" data-transition="fade"><?php echo $this->getValue('user')->username; ?></a></li>  
+		   <li><a href="#" data-transition="fade"><?php echo $this->t('Account Settings'); ?></a></li>  
+		   <li><a href="#" data-transition="fade"><?php echo $this->t('Payment'); ?></a></li>
+		   <li><a href="/auth/logout" data-ajax="false"><?php echo $this->t('Logout'); ?></a></li>
+        </ul>
+    </div>
+	
+    <a data-role="button" onclick="$('.leftpanel:visible').panel('open');" href="#" data-icon="bars"
+		data-iconpos="notext" class="ui-btn-left">Menu</a>
+</div>
+<!-- /header -->

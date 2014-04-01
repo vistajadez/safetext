@@ -61,44 +61,6 @@ class SafetextUser extends SafetextModel {
 	// Class Methods
 	
 	/**
-	  * Authenticate By Hashcode.
-	  *
-	  * @param String $idHash Encrypted user ID code, typically stored in a cookie.
-	  * @param String $responseType (Optional) If this is set to 'json', no cookies will be set. Default is 'html'.
-	  * @param MsDb	$db (Optional) Database connection. If none is passed, a new connection will be made.
-	  * @param mixed[] $config Configuration array.
-	  *
-	  * @return SafetextUser Authenticated user object.
-	  *
-	  */
-	public static function authenticate($idHash, $responseType='html', $db='', $config) {
-		// validate auth hash
-		$idHash = trim($idHash);
-		if ($idHash == '') return false;
-		
-		$idHashArray = explode(':', $idHash);
-		if ($idHashArray[1] != MsUtils::authHash($idHashArray[0])) return false;
-
-		// make sure we have a db connection
-		if (!$db instanceof MsDb) $db = new MsDb($config['dbHost'], $config['dbUser'], $config['dbPass'], $config['dbName']);
-		
-		// Try to instantiate the user
-		require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
-		$user = new SafetextUser($config, $db);
-		$user->identify(array('id' => array('value' => $idHashArray[0], 'operator' => '=')));
-		if (!$user->isValid()) return false;
-		
-		// set cookie if response type is html
-		if ($responseType === 'html') {
-			array_key_exists('uid', $_COOKIE) ? $existingCookieId = $_COOKIE['uid'] : $existingCookieId = '';
-			if ($existingCookieId != $idHash) setcookie('uid', $idHash, time() + $config['loginCookieExpireSeconds'], '/'); // expire in 30 days
-		}
-		
-		return $user;
-		
-	}
-	
-	/**
 	  * Generate Token.
 	  * Generates an auth token for a particular user and device. If the device already has a token, it is un-initialized and 
 	  * any existing sync records are removed.

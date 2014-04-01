@@ -1,26 +1,25 @@
 <?php
+require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'clientcontroller.php' );
 
 /**
  * Auth Controller.
  *
  *
  */
-class AuthController extends MsController {
+class AuthController extends SafetextClientController {
 	/**
 	 * Login Action.
 	 * 
-	 * Process a login form. Task is to identify the viewer as a user profile.
+	 * Display a login form.
 	 * 
 	 * @param MsView $viewobject
 	 * @return void
 	 */
 	 public function loginAction(&$viewObject) {
-	 	// ensure we're using https
-		if (MS_PROTOCOL !== 'https') {
-			$redirect = "https://".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
-			header("Location: $redirect");
-				
-			return; // terminate controller action
+	 	// are we already logged in? If so, go to dashboard
+		if ($this->init($viewObject, $this->config['productName'] . ' - ' . $viewObject->t('Login'))) {
+			$this->forward($viewObject, 'home', 'webclient');
+			return;
 		}
 		
 		// validate input and persist the login form fields
@@ -30,30 +29,33 @@ class AuthController extends MsController {
 		
 		$viewObject->setValue('redirect', $redirect);
 		$viewObject->setValue('username', $username);
-		
-		// Page title
-		$viewObject->setTitle($this->config['productName'] . ' - ' . $viewObject->t('Login'));
-			
-		if ($login == '') {
-			$viewObject->setValue('feedback', $viewObject->t('Please enter your email address to login'));
-		} else if ($pass == '') {
-			$viewObject->setValue('feedback', $viewObject->t('Please enter your password to login'));
-		} else {
-			
-			
-			
-			
-			
-			
-		}
-
+	 }
+	 
+	/**
+	 * Logout Action.
+	 * 
+	 * Clear auth cookie and display login form.
+	 * 
+	 * @param MsView $viewobject
+	 * @return void
+	 */
+	 public function logoutAction(&$viewObject) {
+	 	// clear cookie
+	 	setcookie("token", "", time() - 3600, '/');
+	 	//unset($_COOKIE['token']);
+	 
+	 	// page title
+	 	$viewObject->setTitle($this->config['productName'] . ' - ' . $viewObject->t('Login'));
+	 
+	 	// reset view script to login view script
+	 	$viewObject->setViewScript( MS_PATH_BASE . DS .'views'. DS . MS_MODULE . DS . 'scripts' . DS . 'auth' . DS . 'login.phtml');
 	 }
 	
 	 
 	/**
 	 * Register Action.
 	 * 
-	 * Registration form.
+	 * Display a registration form.
 	 * 
 	 * @param MsView $viewobject
 	 * @return void

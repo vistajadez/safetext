@@ -9,7 +9,7 @@
 		   <li><a href="/rules" data-transition="fade"><?php echo $this->t('Our Rules'); ?></a></li>
 		   <li><a href="/answers" data-transition="fade"><?php echo $this->t('Our Answers'); ?></a></li>
 		   <?php if ($this->getValue('user') instanceof SafetextUser) : ?>
-		   		<li><a href="/auth/logout" data-ajax="false"><?php echo $this->t('Log Out'); ?></a></li>
+		   		<li><a href="/webclient/home" data-transition="fade"><?php echo $this->t('Dashboard'); ?></a></li>
 		   <?php else: ?>
 		   		<li><a href="/auth/login" data-transition="fade"><?php echo $this->t('Login'); ?></a></li>
 		   <?php endif; ?>

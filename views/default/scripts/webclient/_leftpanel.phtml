@@ -1,0 +1,15 @@
+<!-- left panel - webclient mobile nav  -->
+<div data-role="panel" class="leftpanel" data-position="left" data-display="reveal" data-theme="b">
+	<div>
+		<p><?php if ($this->getValue('user') instanceof SafetextUser) echo $this->getValue('user')->username; ?></p>
+		
+		<ul data-role="listview">
+			<li><a href="#" data-transition="fade"><?php echo $this->t('Messages'); ?></a></li>  
+			<li><a href="#" data-transition="fade"><?php echo $this->t('Contacts'); ?></a></li>
+			<li data-role="list-divider"></li>
+			<li><a href="#" data-transition="fade"><?php echo $this->t('Account Settings'); ?></a></li>  
+			<li><a href="#" data-transition="fade"><?php echo $this->t('Payment'); ?></a></li>
+			<li><a href="/auth/logout" data-ajax="false"><?php echo $this->t('Log Out'); ?></a></li>			
+		</ul>
+	</div>
+</div><!-- /left panel -->

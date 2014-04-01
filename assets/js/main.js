@@ -7,7 +7,32 @@
 		window["Safetext"] = {};	// global Object container to create namespace
 	}
 	
-	/* MsPageManager
+	
+	/**
+	 *	Cookie Handling
+	 */
+	function setCookie(c_name, value, exdays) {
+	    var exdate = new Date();
+	    exdate.setDate(exdate.getDate() + exdays);
+	    var c_value = escape(value) + ((exdays == null) ? "" : "; expires=" + exdate.toUTCString());
+	    document.cookie = c_name + "=" + c_value;
+	}
+	
+	function getCookie(c_name) {
+	    var i, x, y, ARRcookies = document.cookie.split(";");
+	    for (i = 0; i < ARRcookies.length; i++) {
+	        x = ARRcookies[i].substr(0, ARRcookies[i].indexOf("="));
+	        y = ARRcookies[i].substr(ARRcookies[i].indexOf("=") + 1);
+	        x = x.replace(/^\s+|\s+$/g, "");
+	        if (x == c_name) {
+	            return unescape(y);
+	        }
+	    }
+	}
+	
+	
+	/**
+	 * MsPageManager
 	 * Object to dynamically load JS and CSS files at run-time (i.e. after Ajax calls)
 	 */
 	function MsPageManager() {
@@ -77,26 +102,21 @@
 	 * Authenticates and logs a user into Safetext.
 	 */
 	$(document).on('click', '.safetext-login .safetext-login-button', function() {
-		alert('Safe-Text is not currently accepting logins. Check back soon!');
-		return false;
-	
-		var thisForm = $(".kit-register-form");
+		var thisForm = $(".safetext-login-form");
 	
 		if (thisForm.find('input[name="name"]').val() == '') {
-			alert("Your name is required"); 
-			return false;
-		}
-		if (thisForm.find('input[name="email"]').val() == '') {
-			alert("Your email address is required"); 
+			alert("Enter your account name"); 
 			return false;
 		}
 		if (thisForm.find('input[name="password"]').val() == '') {
-			alert("Please select a password"); 
+			alert("Enter your password"); 
 			return false;
 		}
-	
-		$.ajax({url: '/auth/processregistration',
-			data: thisForm.serialize(),
+
+			
+		$.ajax({url: '/api/auth',
+			data: 'device_signature=webclient&device_description=Web+Client',
+			headers: {'x-safetext-username': thisForm.find('input[name="name"]').val(),'x-safetext-password': thisForm.find('input[name="password"]').val()},
 			type: 'post',               
 			async: 'true',
 			dataType: 'json',
@@ -110,14 +130,17 @@
 			},
 			success: function (result) {
 				if(result.status === 'success') {
-					alert('Thank you for registering! We have sent you an activation email to activate your account.');
+					console.log('Token: ' + result.data.token);
 					
-					// refresh page
-					$.mobile.pageContainer.pagecontainer("change", '/auth/login',{
-						reloadPage : true
+					// set the auth cookie
+					setCookie('token',result.data.token,7);
+					
+					// Go to dashboard
+					$.mobile.pageContainer.pagecontainer("change", '/webclient/home',{
+						reload : true,
+						dataUrl : '/webclient/home'
 					});
 					
-					//window.history.back();
 				} else {
 					alert('Unable to register. The server said: ' + result.data.message); 
 				}
@@ -141,7 +164,7 @@
 		alert('Safe-Text is not currently accepting registrations. Check back soon!');
 		return false;
 	
-		var thisForm = $(".kit-register-form");
+		var thisForm = $(".safetext-register-form");
 	
 		if (thisForm.find('input[name="name"]').val() == '') {
 			alert("Your name is required"); 

@@ -1,11 +1,12 @@
 <?php
+require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'clientcontroller.php' );
 
 /**
  * Front Website Controller.
  *
  *
  */
-class FrontController extends MsController {
+class FrontController extends SafetextClientController {
 
 	/**
 	 * Default Action.
@@ -16,16 +17,8 @@ class FrontController extends MsController {
 	 * @return void
 	 */
 	 public function defaultAction(&$viewObject) {
-		// ensure we're using https
-		if (MS_PROTOCOL !== 'https') {
-			$redirect = "https://".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
-			header("Location: $redirect");
-				
-			return; // terminate controller action
-		}
-		
-		// see if user is logged in
-		// TODO
+		// ensure we're using https and see if user is logged in
+		$this->init($viewObject);
 		
 		
 		// determine which view script to render
@@ -42,12 +35,6 @@ class FrontController extends MsController {
 		}
 		
 		$viewObject->setViewScript( MS_PATH_BASE . DS .'views'. DS . MS_MODULE . DS . 'scripts' . DS . 'front' . DS . $page . '.phtml');
-		
-		// set title
-		if ($page === 'index') $viewObject->setTitle($this->config['productName']);
-			else $viewObject->setTitle($this->config['productName'] . ' - ' . ucfirst($page));
-		
-		
 		
 		
 		// set view data
