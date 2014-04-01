@@ -527,6 +527,85 @@ class ApiController extends MsController {
 	}
 	
 	
+	/**
+	 * Users Action.
+	 * 
+	 * POST request creates a new user in SafeText. Only allowed from Web Client.
+	 *
+	 * @param MsView $viewObject
+	 * @return void
+	 */
+	 public function usersAction(&$viewObject) {
+		$viewObject->setResponseType('json');
+		
+		// ensure we're using https
+		if (MS_PROTOCOL === 'https') {
+			if (MS_REQUEST_METHOD === 'POST') {
+				if (array_key_exists('HTTP_X_SAFETEXT_USERNAME', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_USERNAME'] !== '') {
+					if (array_key_exists('HTTP_X_SAFETEXT_PASSWORD', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_PASSWORD'] !== '') {
+						if (array_key_exists('device_signature', $this->params) && $this->params['device_signature'] === 'webclient') {
+							if (array_key_exists('device_description', $this->params) && $this->params['device_description'] !== '') {
+								if (array_key_exists('name', $this->params) && $this->params['name'] !== '') {
+									if (strpos($this->params['name'], ' ') !== false) {
+										if (strlen($_SERVER['HTTP_X_SAFETEXT_USERNAME']) < 17 && strlen($_SERVER['HTTP_X_SAFETEXT_USERNAME']) > 2) {
+										
+											// Create a database connection to share
+											$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+						
+											// generate token via db stored procedure
+											array_key_exists('email', $this->params)? $email = $this->escapeForDb($this->params['email']): $email = '';
+											
+											require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
+											$tokenDetails = SafetextUser::newUser($_SERVER['HTTP_X_SAFETEXT_USERNAME'], $_SERVER['HTTP_X_SAFETEXT_PASSWORD'], $this->params['name'], $email, $this->params['device_signature'], $this->params['device_description'], $db, $this->config);
+											
+											if ($tokenDetails['id'] > 0) {
+											
+												$viewObject->setValue('status', 'success');
+												$viewObject->setValue('data', array('token' => $tokenDetails['token'], 'user' => $tokenDetails['id']));
+												
+											} else { // unsuccessful auth token generation
+												$viewObject->setValue('status', 'fail');
+												$viewObject->setValue('data', array('message' => $tokenDetails['msg']));
+											}
+										} else { // username too long
+											$viewObject->setValue('status', 'fail');
+											$viewObject->setValue('data', array('message' =>'Username must be between 3 and 16 characters'));
+										}
+									} else { // only one name was given
+										$viewObject->setValue('status', 'fail');
+										$viewObject->setValue('data', array('message' => 'Please include both your first and last name'));
+									}
+								} else { // no first/last name
+									$viewObject->setValue('status', 'fail');
+									$viewObject->setValue('data', array('message' => 'Please include your name'));
+								}
+							} else { // no device sig
+								$viewObject->setValue('status', 'fail');
+								$viewObject->setValue('data', array('message' => 'Missing device description'));
+							}
+						} else { // no device sig
+							$viewObject->setValue('status', 'fail');
+							$viewObject->setValue('data', array('message' => 'Device signature must match Web Client'));
+						}
+					} else { // no password
+						$viewObject->setValue('status', 'fail');
+						$viewObject->setValue('data', array('message' => 'Missing SafeText password'));
+					}
+				} else { // no username
+					$viewObject->setValue('status', 'fail');
+					$viewObject->setValue('data', array('message' => 'Missing SafeText username'));
+				}
+			} else { // non-POST request
+				$viewObject->setValue('status', 'fail');
+				$viewObject->setValue('data', array('message' => MS_REQUEST_METHOD . ' requests are not supported for this web service'));
+			}
+		} else { // insecure
+			$viewObject->setValue('status', 'fail');
+			$viewObject->setValue('data', array('message' => 'Insecure (non-HTTPS) access denied'));
+		}
+	}
+	
+	
 	
 	/**
 	 * Escape For DB.

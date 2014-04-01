@@ -15,7 +15,8 @@
 	    var exdate = new Date();
 	    exdate.setDate(exdate.getDate() + exdays);
 	    var c_value = escape(value) + ((exdays == null) ? "" : "; expires=" + exdate.toUTCString());
-	    document.cookie = c_name + "=" + c_value;
+	    document.cookie = c_name + "=" + c_value  + '; path=/;';
+	    
 	}
 	
 	function getCookie(c_name) {
@@ -136,13 +137,11 @@
 					setCookie('token',result.data.token,7);
 					
 					// Go to dashboard
-					$.mobile.pageContainer.pagecontainer("change", '/webclient/home',{
-						reload : true,
-						dataUrl : '/webclient/home'
-					});
+					window.location='/webclient/home';
+					
 					
 				} else {
-					alert('Unable to register. The server said: ' + result.data.message); 
+					alert('Unable to login. The server said: ' + result.data.message); 
 				}
 			},
 			error: function (request,error) {
@@ -161,17 +160,14 @@
 	 * Registers a new user.
 	 */
 	$(document).on('click', '.safetext-register .safetext-register-button', function() {
-		alert('Safe-Text is not currently accepting registrations. Check back soon!');
-		return false;
-	
 		var thisForm = $(".safetext-register-form");
 	
 		if (thisForm.find('input[name="name"]').val() == '') {
 			alert("Your name is required"); 
 			return false;
 		}
-		if (thisForm.find('input[name="email"]').val() == '') {
-			alert("Your email address is required"); 
+		if (thisForm.find('input[name="username"]').val() == '') {
+			alert("Please select a username"); 
 			return false;
 		}
 		if (thisForm.find('input[name="password"]').val() == '') {
@@ -179,8 +175,9 @@
 			return false;
 		}
 	
-		$.ajax({url: '/auth/processregistration',
-			data: thisForm.serialize(),
+		$.ajax({url: '/api/users',
+			data: 'device_signature=webclient&device_description=Web+Client&name=' + encodeURIComponent(thisForm.find('input[name="name"]').val()) + '&email=' + thisForm.find('input[name="email"]').val(),
+			headers: {'x-safetext-username': thisForm.find('input[name="username"]').val(),'x-safetext-password': thisForm.find('input[name="password"]').val()},
 			type: 'post',               
 			async: 'true',
 			dataType: 'json',
@@ -194,14 +191,14 @@
 			},
 			success: function (result) {
 				if(result.status === 'success') {
-					alert('Thank you for registering! We have sent you an activation email to activate your account.');
+					console.log('Token: ' + result.data.token);
 					
-					// refresh page
-					$.mobile.pageContainer.pagecontainer("change", '/auth/login',{
-						reloadPage : true
-					});
+					// set the auth cookie
+					setCookie('token',result.data.token,7);
 					
-					//window.history.back();
+					// Go to dashboard
+					window.location='/webclient/home';
+					
 				} else {
 					alert('Unable to register. The server said: ' + result.data.message); 
 				}

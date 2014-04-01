@@ -532,3 +532,50 @@ BEGIN
 END
 
 
+-- --------------------------------------------------------------------------------
+-- New User
+-- Adds a new user to SafeText
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE DEFINER=`maxdistrodb`@`%.%.%.%` PROCEDURE `newUser`(IN usernameIn VARCHAR(24), IN passIn VARCHAR(24), IN firstnameIn VARCHAR(32), IN lastnameIn VARCHAR(32), IN emailIn VARCHAR(64), IN deviceSig VARCHAR(64), IN deviceDesc VARCHAR(64))
+BEGIN
+	/* check username availability */
+	SET @userId = (SELECT `id` FROM users WHERE `username` = usernameIn);
+	SET @msg = NULL;
+	
+	IF @userId IS NULL THEN
+		/* add the user */
+		INSERT INTO users (`id`,`username`,`firstname`,`lastname`,`email`,`pass`,`date_added`,`date_last_pass_update`,`language`,`notifications_on`,`whitelist_only`,`enable_panic`) VALUES(NULL,usernameIn,firstnameIn,lastnameIn,emailIn,passIn,NOW(),NOW(),'en',1,0,1);
+
+		/* obtain the new user ID */
+		SET @userId = LAST_INSERT_ID();
+		IF @userId > 0 THEN
+			/* create new device entry */
+			SET @tokenString = CAST(MD5(CONCAT(CONCAT('SafeText-hashsalt', usernameIn), UNIX_TIMESTAMP())) AS CHAR);
+			INSERT INTO sync_device (id,user_id,signature,description,is_initialized,token,token_expires) VALUES('', @userId, deviceSig, deviceDesc, '0', @tokenString, DATE_ADD(CURDATE(),INTERVAL 5 DAY));
+			IF LAST_INSERT_ID() IS NOT NULL THEN
+				SET @token = @tokenString;
+			ELSE
+				SET @userId = 0;
+				SET @token = NULL;
+				SET @msg = "Unable to create new token";
+			END IF;
+		ELSE
+			/* unable to add new user */
+			SET @userId = 0;
+			SET @token = NULL;
+			SET @msg = "Unable to add your user details. Please contact us for assistance.";
+		END IF;
+	ELSE
+		/* username already exists */
+		SET @userId = 0;
+        SET @token = NULL;
+		SET @msg = "That username is already taken";
+    END IF;
+
+	SELECT @userId AS id, @token AS token, @msg AS msg;
+
+END
+
+

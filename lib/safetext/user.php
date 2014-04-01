@@ -163,5 +163,45 @@ class SafetextUser extends SafetextModel {
 	}
 	
 	
+	/**
+	  * New User.
+	  * Creates a new user and sets up a device for the user, then returns the device's auth token.
+	  *
+	  * @param String username
+	  * @param String password
+	  * @param String name
+	  * @param String email
+	  * @param String deviceSig
+	  * @param String deviceDesc
+	  * @param MsDb	$db (Optional) Database connection. If none is passed, a new connection will be made.
+	  * @param mixed[] $config Configuration array.
+	  *
+	  * @return mixed[] Array: id=>user_id (or 0 if unsuccessful), token=>device auth token, msg=>error message (nor null if successful)
+	  *
+	  */
+	public static function newUser($username, $password, $name, $email, $deviceSig, $deviceDesc, $db='', $config) {
+		// make sure we have a db connection
+		if (!$db instanceof MsDb) $db = new MsDb($config['dbHost'], $config['dbUser'], $config['dbPass'], $config['dbName']);
+	
+		// required params
+		if ($username === '' || $password === '' || $deviceSig === '' || $deviceDesc === '') 
+			return array('id' => 0, 'msg' => 'Missing parameters before sending to stored procedure');
+	
+		// cleanse input
+		$nameArray = explode(' ', $name, 2);
+		$username = SafetextModel::escapeForDb($username);
+		$password = SafetextModel::escapeForDb($password);
+		$firstname = SafetextModel::escapeForDb($nameArray[0]);
+		$lastname = SafetextModel::escapeForDb($nameArray[1]);
+		$email = SafetextModel::escapeForDb($email);
+		$deviceSig = SafetextModel::escapeForDb($deviceSig);
+		$deviceDesc = SafetextModel::escapeForDb($deviceDesc);
+	
+		// stored procedure call
+		$result = current($db->call("newUser('$username','$password','$firstname','$lastname','$email','$deviceSig','$deviceDesc')"));
+		
+		return $result;
+	}
+	
 	
 }
