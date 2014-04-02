@@ -531,6 +531,7 @@ class ApiController extends MsController {
 	 * Users Action.
 	 * 
 	 * POST request creates a new user in SafeText. Only allowed from Web Client.
+	 * DELETE request deletes an existing user from SafeText.
 	 *
 	 * @param MsView $viewObject
 	 * @return void
@@ -541,6 +542,7 @@ class ApiController extends MsController {
 		// ensure we're using https
 		if (MS_PROTOCOL === 'https') {
 			if (MS_REQUEST_METHOD === 'POST') {
+				// **** CREATE USER **** 
 				if (array_key_exists('HTTP_X_SAFETEXT_USERNAME', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_USERNAME'] !== '') {
 					if (array_key_exists('HTTP_X_SAFETEXT_PASSWORD', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_PASSWORD'] !== '') {
 						if (array_key_exists('device_signature', $this->params) && $this->params['device_signature'] === 'webclient') {
@@ -585,7 +587,7 @@ class ApiController extends MsController {
 							}
 						} else { // no device sig
 							$viewObject->setValue('status', 'fail');
-							$viewObject->setValue('data', array('message' => 'Device signature must match Web Client'));
+							$viewObject->setValue('data', array('message' => 'Only allowed for Web Client'));
 						}
 					} else { // no password
 						$viewObject->setValue('status', 'fail');
@@ -595,7 +597,37 @@ class ApiController extends MsController {
 					$viewObject->setValue('status', 'fail');
 					$viewObject->setValue('data', array('message' => 'Missing SafeText username'));
 				}
-			} else { // non-POST request
+			} else if (MS_REQUEST_METHOD === 'DELETE') { // non-POST request
+//				$viewObject->setValue('status', 'fail');
+//				$viewObject->setValue('data', array('message' => 'Delete requests not yet implemented'));
+				
+				// **** DELETE USER **** //
+				if (array_key_exists('HTTP_X_SAFETEXT_TOKEN', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_TOKEN'] !== '') {
+					// authenticate token with stored procedure
+					require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
+					$user = SafetextUser::tokenToUser($_SERVER['HTTP_X_SAFETEXT_TOKEN'], $db, $this->config);
+					
+					if ($user instanceof SafetextUser && $user->isValid()) {
+						if ($user->purge()) {
+				
+							$viewObject->setValue('status', 'success');
+				
+						} else { // error at stored procedure
+							$viewObject->setValue('status', 'fail');
+							$viewObject->setValue('data', array('message' => 'There was a problem trying to clear the database'));
+						}
+					} else { // no token
+						$viewObject->setValue('status', 'fail');
+						$viewObject->setValue('data', array('message' => 'That auth token is not valid'));
+					}
+				}  else { // unsupported request method
+					$viewObject->setValue('status', 'fail');
+					$viewObject->setValue('data', array('message' => 'Missing SafeText auth token. Please log in'));
+				}
+				
+				
+				
+			}  else { // non-POST request
 				$viewObject->setValue('status', 'fail');
 				$viewObject->setValue('data', array('message' => MS_REQUEST_METHOD . ' requests are not supported for this web service'));
 			}

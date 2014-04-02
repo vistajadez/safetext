@@ -579,3 +579,27 @@ BEGIN
 END
 
 
+-- --------------------------------------------------------------------------------
+-- Delete User
+-- Removes a user and all dependencies
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE `deleteUser` (IN userIdIn int unsigned)
+BEGIN
+	/* Delete contacts */
+	DELETE FROM contacts WHERE `user_id`=userIdIn;
+
+	/* Delete devices */
+	DELETE FROM sync_device WHERE `user_id`=userIdIn LIMIT 3;
+
+	/* Delete any sync records queued for this contact */
+	DELETE FROM sync_queue WHERE `user_id`=userIdIn;
+
+	/* Delete user record */
+	DELETE FROM users WHERE `id`=userIdIn LIMIT 1;
+
+	SELECT 'success' AS `status`;
+
+END
+

@@ -19,6 +19,19 @@ class SafetextUser extends SafetextModel {
 	
 	// Implementation Methods
 
+	/**
+	  * Purge.
+	  *
+	  * Deletes this instance and all related dependencies. Overridden to use stored procedure.
+	  *
+	  * @return bool
+	  *
+	  */
+	 public function purge() {
+		$result = current($this->db->CALL("deleteUser('" . $this->id . "')"));
+		if ($result['status'] === 'success') return true;
+			else return false;
+	 }
 	
 	
 	

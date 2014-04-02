@@ -68,7 +68,7 @@ abstract class SafetextModel extends MsModel {
 	  *
 	  */
 	 public function purge() {
-		
+		return false;
 	 }
 	 
 	 
