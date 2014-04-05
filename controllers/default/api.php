@@ -552,7 +552,6 @@ class ApiController extends MsController {
 					if ($user instanceof SafetextUser && $user->isValid()) {
 						if ($user->getRelationship('device') instanceof SafetextDevice && $user->getRelationship('device')->isValid()) {
 							if (array_key_exists('q', $this->params) && $this->params['q'] !== '') {
-								if (strpos($this->params['q'], ' ') !== false) {
 						
 									// execute contacts lookup stored DB procedure
 									$recordsOut = $db->CALL("contactLookup('" . $user->id . "','" . $this->params['q'] . "')");
@@ -562,11 +561,6 @@ class ApiController extends MsController {
 									$viewObject->setValue('token', $user->getRelationship('device')->token);
 									$viewObject->setValue('data', $recordsOut);
 					
-								} else { // no query string
-									$viewObject->setValue('status', 'fail');
-									$viewObject->setValue('token', $user->getRelationship('device')->token);
-									$viewObject->setValue('data', array('message' => 'Both a first AND last name need to be passed in the query string'));
-								}
 							} else { // no query string
 								$viewObject->setValue('status', 'fail');
 								$viewObject->setValue('token', $user->getRelationship('device')->token);

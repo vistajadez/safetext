@@ -380,11 +380,10 @@ DELIMITER $$
 
 CREATE PROCEDURE `sendMessage` (IN senderIdIn int unsigned, IN recipientIdIn int unsigned, IN contentIn text, IN isImportantIn tinyint(1) unsigned, IN isDraftIn tinyint(1) unsigned, IN lifetimeIn tinyint unsigned)
 BEGIN
-	DECLARE deviceId, userId, messageId int unsigned;
-	/*DECLARE newContactFirst, newContactLast, newContactPhone VARCHAR(32);
-	DECLARE newContactEmail VARCHAR(64);*/
+	DECLARE deviceId, userId, messageId, existingContact int unsigned;
+	DECLARE newcontactName, newcontactEmail, newContactPhone VARCHAR(64);
 	DECLARE sentDate,expireDate datetime;
-	DECLARE done, isAllowed, isNewContact INT DEFAULT FALSE;
+	DECLARE done, isAllowed INT DEFAULT FALSE;
 	DECLARE cur CURSOR FOR SELECT id, user_id FROM sync_device WHERE (user_id = senderIdIn OR user_id=recipientIdIn) AND is_initialized=1;
 	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
 
@@ -404,20 +403,19 @@ BEGIN
 		SET @blockedUser = (SELECT contact_user_id FROM contacts WHERE user_id=recipientIdIn AND contact_user_id=senderIdIn AND is_blocked=1);
 		IF @blockedUser IS NULL THEN
 
-			/* if sender is not already a contact of the recipient, add the sender now as a new contact
+			/* if sender is not already a contact of the recipient, add the sender now as a new contact */
 			IF isDraftIn != 1 THEN
-				SET @existingContact = (SELECT contact_user_id FROM contacts WHERE user_id=recipientIdIn AND contact_user_id=senderIdIn);
-				IF @existingContact IS NULL THEN
-					/* add sender as a new contact
-					SELECT firstname,lastname,email,phone
-					INTO newContactFirst,newContactLast,newContactEmail,newContactPhone
+				SET existingContact = (SELECT contact_user_id FROM contacts WHERE user_id=recipientIdIn AND contact_user_id=senderIdIn);
+				IF existingContact IS NULL THEN
+					/* add sender as a new contact */
+					SELECT CONCAT_WS(' ', firstname,lastname),email,phone
+					INTO newcontactName,newcontactEmail,newcontactPhone
 					FROM users WHERE id=senderIdIn;
 
-					INSERT INTO contacts (`user_id`,`contact_user_id`,`name`,`email`,`phone`) VALUES(recipientIdIn,senderIdIn,CONCAT_WS(' ', newContactFirst, newContactLast), newContactEmail, newContactPhone);
+					INSERT INTO contacts (`user_id`,`contact_user_id`,`name`,`email`,`phone`) VALUES(recipientIdIn,senderIdIn,newcontactName, newcontactEmail, newcontactPhone);
 
-					SET isNewContact = TRUE;
 				END IF;
-			END IF;*/
+			END IF;
 
 			/* send new message */
 			SET sentDate = NOW();
@@ -438,6 +436,12 @@ BEGIN
 				/* Queue a pull record for every device */
 				SET contentIn = REPLACE(contentIn, '\\', '\\\\'); /* JSON encoding for \ */
 				SET contentIn = REPLACE(contentIn, '"', '\\"'); /* JSON encoding for " */
+				SET newcontactName = REPLACE(newcontactName, '\\', '\\\\'); /* JSON encoding for \ */
+				SET newcontactName = REPLACE(newcontactName, '"', '\\"'); /* JSON encoding for " */
+				SET newcontactEmail = REPLACE(newcontactEmail, '\\', '\\\\'); /* JSON encoding for \ */
+				SET newcontactEmail = REPLACE(newcontactEmail, '"', '\\"'); /* JSON encoding for " */
+				SET newcontactPhone = REPLACE(newcontactPhone, '\\', '\\\\'); /* JSON encoding for \ */
+				SET newcontactPhone = REPLACE(newcontactPhone, '"', '\\"'); /* JSON encoding for " */
 
 				OPEN cur;
 					read_loop: LOOP
@@ -449,14 +453,14 @@ BEGIN
 						IF isDraftIn = 0 OR userId = senderIdIn THEN
 							INSERT INTO sync_queue (id,user_id,device_id,date_added,tablename,pk,vals,is_pulled) VALUES (null,userId,deviceId,NOW(),'messages',messageId,CONCAT_WS('','{"sender":"',senderIdIn,'","recipients":["',recipientIdIn,'"],"content":"',contentIn,'","is_read":"0","is_important":"',isImportantIn,'","is_draft":"',isDraftIn,'","sent_date":"',sentDate,'","read_date":"0000-00-00 00:00:00","expire_date":"',expireDate,'","is_updated":"0","is_deleted":"0"}'),0);
 						END IF;
+
+						IF existingContact IS NULL AND userId=recipientIdIn THEN
+							INSERT INTO sync_queue (id,user_id,device_id,date_added,tablename,pk,vals,is_pulled) VALUES (null,userId,deviceId,NOW(),'contacts',senderIdIn,CONCAT_WS('','{"name":"',newcontactName,'","email":"',newcontactEmail,'","phone":"',newcontactPhone,'","is_whitelist":"0","is_blocked":"0","is_updated":"0","is_deleted":"0"}'),0);
+						END IF;
+
 					END LOOP;
 				CLOSE cur;
 
-
-				/* send newly generated message ID */
-				SELECT messageId AS `key`;
-
-				END IF;
 
 				/* send newly generated message ID */
 				SELECT messageId AS `key`;
