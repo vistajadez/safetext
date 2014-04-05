@@ -182,7 +182,8 @@ class ApiController extends MsController {
 									$content = $this->escapeForDb($this->params['content']);
 									
 									// log the send message request
-									$this->config['log']->write('User: ' . $user->id . ": sendMessage('" . $user->id . "','" . current($this->params['recipients']) . "','" . $content . "','" . $is_important . "','" . $is_draft . "','" . $lifetime . "')", 'Send Message Request');
+									$this->config['log']->write('User: ' . $user->id . ", Device: " . $user->getRelationship('device')->id . ": sendMessage('" . $user->id . "','" . current($this->params['recipients']) . "','" . $content . "','" . $is_important . "','" . $is_draft . "','" . $lifetime . "')", 'Send Message Request');
+									$this->config['log']->write('Request body: ' . file_get_contents('php://input'));
 								
 									// execute send via stored procedure
 									$result = current($db->call("sendMessage('" . $user->id . "','" . current($this->params['recipients']) . "','" . $content . "','" . $is_important . "','" . $is_draft . "','" . $lifetime . "')"));
@@ -192,22 +193,26 @@ class ApiController extends MsController {
 										$viewObject->setValue('status', 'success');
 										$viewObject->setValue('token', $user->getRelationship('device')->token);
 										$viewObject->setValue('data', array('key' => $result['key']));
+										$this->config['log']->write('Successfully delivered. Message key ' . $result['key']);
 									} else {
 										// load error message output into view
 										$viewObject->setValue('status', 'fail');
 										$viewObject->setValue('token', $user->getRelationship('device')->token);
 										$viewObject->setValue('data', array('message' => $result['msg']));
+										$this->config['log']->write('Fail: ' . $result['msg']);
 									}
 					
 								} else { // no content
 									$viewObject->setValue('status', 'fail');
 									$viewObject->setValue('token', $user->getRelationship('device')->token);
 									$viewObject->setValue('data', array('message' => 'Empty message'));
+									$this->config['log']->write('Fail: Empty message');
 								}
 							} else { // no recipients listed
 								$viewObject->setValue('status', 'fail');
 								$viewObject->setValue('token', $user->getRelationship('device')->token);
 								$viewObject->setValue('data', array('message' => 'Recipient list should be passed as an array'));
+								$this->config['log']->write('Fail: Recipient list should be passed as an array');
 							}
 						} else { // invalid device
 							$viewObject->setValue('status', 'fail');
@@ -272,12 +277,13 @@ class ApiController extends MsController {
 					if ($user instanceof SafetextUser && $user->isValid()) {
 						if ($user->getRelationship('device') instanceof SafetextDevice && $user->getRelationship('device')->isValid()) {
 							// log the sync request
-							$this->config['log']->write('User: ' . $user->id . ' (' . $user->username . '), Data: ' . json_encode($this->params['data']), 'Sync Request');
+							$this->config['log']->write('User: ' . $user->id . ' (' . $user->username . '), Device: ' . $user->getRelationship('device')->id . ', Data: ' . json_encode($this->params['data']), 'Sync Request');
 						
 							// execute sync (pass mobile device records to server and obtain records to send to mobile device)
 							$recordsOut = $user->getRelationship('device')->sync($this->params['data']);
 							// log the output
 							if (sizeof($recordsOut) > 0) $this->config['log']->write('Records Out: ' . json_encode($recordsOut));
+								else $this->config['log']->write('No outgoing records');
 
 							// load output into view
 							$viewObject->setValue('status', 'success');

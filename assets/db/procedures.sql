@@ -324,15 +324,22 @@ DELIMITER $$
 CREATE DEFINER=`maxdistrodb`@`%.%.%.%` PROCEDURE `syncPull`(IN userId int unsigned, IN deviceId int unsigned)
 BEGIN
 
-	/* Remove any previously pulled queue records */
-	DELETE FROM sync_queue WHERE user_id=userId AND device_id=deviceId AND is_pulled=1;
-
-	/* Flag unpulled records as pulled, since we're going to pull them now */
-	UPDATE sync_queue SET is_pulled=1 WHERE user_id=userId AND device_id=deviceId;
-
-	/* Pull the flagged records */
-	SELECT tablename,pk,vals FROM sync_queue WHERE user_id=userId AND device_id=deviceId AND is_pulled=1 ORDER BY id;
-
+	/* Is this device initialized? */
+	SET @is_init = (SELECT `is_initialized` FROM sync_device WHERE `user_id` = @userId AND `id` = deviceId);
+	IF @is_init = 1 THEN
+		/* Remove any previously pulled queue records */
+		DELETE FROM sync_queue WHERE user_id=userId AND device_id=deviceId AND is_pulled=1;
+	
+		/* Flag unpulled records as pulled, since we're going to pull them now */
+		UPDATE sync_queue SET is_pulled=1 WHERE user_id=userId AND device_id=deviceId;
+	
+		/* Pull the flagged records */
+		SELECT tablename,pk,vals FROM sync_queue WHERE user_id=userId AND device_id=deviceId AND is_pulled=1 ORDER BY id;
+	ELSE
+		/* init device */
+		UPDATE sync_device SET is_initialized=1 WHERE user_id=userId AND id=deviceId;
+	END IF;
+	
 END
 
 
@@ -603,3 +610,79 @@ BEGIN
 
 END
 
+
+
+-- --------------------------------------------------------------------------------
+-- Messages
+-- Returns messages for a user
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE DEFINER=`maxdistrodb`@`%.%.%.%` PROCEDURE `messages`(IN userIdIn INT UNSIGNED, IN filterIn VARCHAR(12), IN startIn INT UNSIGNED, IN limitIn INT UNSIGNED)
+BEGIN
+
+	/* Create temporary table to work with, populated with all messages this user is a participant of */
+	IF filterIn = 'sent' THEN
+		PREPARE STMT FROM " CREATE TEMPORARY TABLE IF NOT EXISTS messages_lookup
+			(id INT UNSIGNED NOT NULL, content TEXT NOT NULL, is_read TINYINT(1) UNSIGNED NOT NULL, is_important TINYINT(1) UNSIGNED NOT NULL, is_draft TINYINT(1) UNSIGNED NOT NULL, sent_date DATETIME NOT NULL, read_date DATETIME NOT NULL, expire_date DATETIME NOT NULL, sender INT UNSIGNED NOT NULL, recipient INT UNSIGNED NOT NULL, PRIMARY KEY (id))
+			AS (SELECT messages.id, messages.content, messages.is_read, messages.is_important, messages.is_draft, messages.sent_date, messages.read_date, messages.expire_date, 0 AS sender, 0 AS recipient FROM messages,participants WHERE participants.message_id = messages.id AND participants.contact_id = ? AND participants.is_sender=1 ORDER BY messages.id LIMIT ?,?); ";
+	ELSEIF filterIn = 'received' THEN
+		PREPARE STMT FROM " CREATE TEMPORARY TABLE IF NOT EXISTS messages_lookup
+			(id INT UNSIGNED NOT NULL, content TEXT NOT NULL, is_read TINYINT(1) UNSIGNED NOT NULL, is_important TINYINT(1) UNSIGNED NOT NULL, is_draft TINYINT(1) UNSIGNED NOT NULL, sent_date DATETIME NOT NULL, read_date DATETIME NOT NULL, expire_date DATETIME NOT NULL, sender INT UNSIGNED NOT NULL, recipient INT UNSIGNED NOT NULL, PRIMARY KEY (id))
+			AS (SELECT messages.id, messages.content, messages.is_read, messages.is_important, messages.is_draft, messages.sent_date, messages.read_date, messages.expire_date, 0 AS sender, 0 AS recipient  FROM messages,participants WHERE participants.message_id = messages.id AND participants.contact_id = ? AND participants.is_sender=0 ORDER BY messages.id LIMIT ?,?); ";
+	ELSEIF filterIn = 'draft' THEN
+		PREPARE STMT FROM " CREATE TEMPORARY TABLE IF NOT EXISTS messages_lookup
+			(id INT UNSIGNED NOT NULL, content TEXT NOT NULL, is_read TINYINT(1) UNSIGNED NOT NULL, is_important TINYINT(1) UNSIGNED NOT NULL, is_draft TINYINT(1) UNSIGNED NOT NULL, sent_date DATETIME NOT NULL, read_date DATETIME NOT NULL, expire_date DATETIME NOT NULL, sender INT UNSIGNED NOT NULL, recipient INT UNSIGNED NOT NULL, PRIMARY KEY (id))
+			AS (SELECT messages.id, messages.content, messages.is_read, messages.is_important, messages.is_draft, messages.sent_date, messages.read_date, messages.expire_date, 0 AS sender, 0 AS recipient  FROM messages,participants WHERE participants.message_id = messages.id AND participants.contact_id = ? AND participants.is_sender=1 AND messages.is_draft=1 ORDER BY messages.id LIMIT ?,?); ";
+	ELSEIF filterIn = 'important' THEN
+		PREPARE STMT FROM " CREATE TEMPORARY TABLE IF NOT EXISTS messages_lookup
+			(id INT UNSIGNED NOT NULL, content TEXT NOT NULL, is_read TINYINT(1) UNSIGNED NOT NULL, is_important TINYINT(1) UNSIGNED NOT NULL, is_draft TINYINT(1) UNSIGNED NOT NULL, sent_date DATETIME NOT NULL, read_date DATETIME NOT NULL, expire_date DATETIME NOT NULL, sender INT UNSIGNED NOT NULL, recipient INT UNSIGNED NOT NULL, PRIMARY KEY (id))
+			AS (SELECT messages.id, messages.content, messages.is_read, messages.is_important, messages.is_draft, messages.sent_date, messages.read_date, messages.expire_date, 0 AS sender, 0 AS recipient  FROM messages,participants WHERE participants.message_id = messages.id AND participants.contact_id = ? AND participants.is_sender=0 AND messages.is_important=1 ORDER BY messages.id LIMIT ?,?); ";
+	ELSE
+		PREPARE STMT FROM " CREATE TEMPORARY TABLE IF NOT EXISTS messages_lookup
+			(id INT UNSIGNED NOT NULL, content TEXT NOT NULL, is_read TINYINT(1) UNSIGNED NOT NULL, is_important TINYINT(1) UNSIGNED NOT NULL, is_draft TINYINT(1) UNSIGNED NOT NULL, sent_date DATETIME NOT NULL, read_date DATETIME NOT NULL, expire_date DATETIME NOT NULL, sender INT UNSIGNED NOT NULL, recipient INT UNSIGNED NOT NULL, PRIMARY KEY (id))
+			AS (SELECT messages.id, messages.content, messages.is_read, messages.is_important, messages.is_draft, messages.sent_date, messages.read_date, messages.expire_date, 0 AS sender, 0 AS recipient  FROM messages,participants WHERE participants.message_id = messages.id AND participants.contact_id = ? ORDER BY messages.id LIMIT ?,?); ";
+	END IF;
+
+	SET @userId = userIdIn;
+	SET @start = startIn;
+	SET @limit = limitIn;
+	EXECUTE STMT USING @userId, @start, @limit;
+	DEALLOCATE PREPARE STMT;
+
+	/* Add sender */
+	UPDATE messages_lookup set sender=(SELECT contact_id FROM participants WHERE message_id=messages_lookup.id and is_sender=1);
+	
+	/* Add recipient. Only one recipient currently supported */
+	UPDATE messages_lookup set recipient=(SELECT contact_id FROM participants WHERE message_id=messages_lookup.id and is_sender=0);
+
+	/* return all table fields */
+	SELECT * FROM messages_lookup;
+
+	/* delete temporary table */
+	DROP TEMPORARY TABLE messages_lookup;
+
+
+END
+
+
+
+-- --------------------------------------------------------------------------------
+-- Contacts
+-- Returns contacts for a user
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE `contacts` (IN userIdIn INT UNSIGNED, IN orderIn VARCHAR(24), IN startIn INT UNSIGNED, limitIn INT UNSIGNED)
+BEGIN
+
+	PREPARE STMT FROM " SELECT * FROM contacts WHERE user_id=? ORDER BY ? LIMIT ?,? ";
+
+	SET @userId = userIdIn;
+	SET @orderBy = orderIn;
+	SET @start = startIn;
+	SET @limit = limitIn;
+	EXECUTE STMT USING @userId, @orderBy, @start, @limit;
+	DEALLOCATE PREPARE STMT;
+
+END

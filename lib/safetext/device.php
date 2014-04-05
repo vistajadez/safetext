@@ -33,7 +33,7 @@ class SafetextDevice extends SafetextModel {
 	  *
 	  */
 	public function sync($recordsIn)
-	{
+	{		
 		/* PUSH SYNC */	
 		if (is_array($recordsIn)) {
 			// push each record
@@ -92,24 +92,75 @@ class SafetextDevice extends SafetextModel {
 		} // end if push records are an array
 		
 		/* PULL SYNC */	
-		$arrayOut = array();
+		if ($this->getValue('is_initialized') !== '1') $arrayOut = $this->init(); // if device isn't yet initialized, pull ALL messages and contacts
+			else $arrayOut = array();
+		
 		$pullRecords = $this->db->call("syncPull('" . $this->getValue('user_id') . "','" . $this->getValue('id') . "')");
+		$this->config['log']->write('PULL SYNC: ' . sizeof($pullRecords) . ' records pulled');
 		
 		// package pull sync results in correct array structure for JSON output
 		foreach ($pullRecords as $this_record) {
 			if (array_key_exists('pk', $this_record) && $this_record['pk'] > 0) {
 				if (array_key_exists('vals', $this_record) && $this_record['vals'] != '') {
 					if (array_key_exists('tablename', $this_record) && $this_record['tablename'] != '') {
+						$this->config['log']->write('PULLING RECORD - pk: ' . $this_record['pk'] . ', table: ' . $this_record['tablename'] . ', vals: ' . $this_record['vals']);
 						$values = json_decode($this_record['vals'], true);
 						$values['key'] = $this_record['pk'];
 						
 						$arrayOut[] = array('table' => $this_record['tablename'], 'values' => $values);
+					} else {
+						$this->config['log']->write('FAIL: missing tablename');
 					}
+				} else {
+					$this->config['log']->write('FAIL: missing vals');
 				}
+			} else {
+				$this->config['log']->write('FAIL: missing pk');
 			}
 		}
 		
 		return $arrayOut;
+	}
+	
+	/**
+	  * Init.
+	  * Pulls all contacts and messages for the user associated with this device.
+	  *
+	  * @return mixed[] Array representing records from server to device.
+	  *
+	  */
+	public function init()
+	{
+		$array_out = array();
+		$messages = $this->db->call("messages('" . $this->getValue('user_id') . "','','0','999999')");
+		$contacts = $this->db->call("contacts('" . $this->getValue('user_id') . "','','0','999999')");
+		$this->config['log']->write('Initializing new device with ' . sizeof($messages) . ' existing messages and ' . sizeof($contacts) . ' existing contacts');
+		
+		// format returning records as queue entries
+		foreach ($messages as $this_message) {
+			$recipientsArray = array($this_message['recipient']);
+			unset($this_message['recipient']);
+			$this_message['recipients'] = $recipientsArray;
+			$this_message['key'] = $this_message['id'];
+			unset ($this_message['id']);
+			$this_message['is_updated'] = '0';
+			$this_message['is_deleted'] = '0';
+			
+			$array_out[] = array('table' => 'messages', 'values' => $this_message);
+		}
+		
+		foreach ($contacts as $this_contact) {
+			$this_contact['key'] = $this_contact['contact_user_id'];
+			unset ($this_contact['user_id']);
+			unset ($this_contact['contact_user_id']);
+			$this_contact['is_updated'] = '0';
+			$this_contact['is_deleted'] = '0';
+			
+			$array_out[] = array('table' => 'contacts', 'values' => $this_contact);
+		}
+		
+		
+		return $array_out;
 	}
 	
 	
