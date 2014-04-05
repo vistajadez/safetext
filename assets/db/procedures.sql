@@ -308,6 +308,11 @@ BEGIN
 	
 	/* Determine what can be changed based on this user's role (sender/recipient) */
 	IF userIdIn = senderId THEN
+		/* if a message has been changed from draft to active, reset the expire date */
+		IF isDraft = 1 AND isDraftIn = 0 then
+			UPDATE messages SET expireDate = DATE_ADD(NOW(),INTERVAL 24 HOUR) WHERE id=messageId LIMIT 1;
+		END IF;
+
 		SET isImportant = isImportantIn;
 		SET isDraft = isDraftIn;
 	ELSE
@@ -333,11 +338,9 @@ BEGIN
 			IF done THEN
 				LEAVE read_loop;
 			END IF;
-			
 			IF isDraft = 0 OR userId = senderId THEN
 				INSERT INTO sync_queue (id,user_id,device_id,date_added,tablename,pk,vals,is_pulled) VALUES (null,userId,deviceId,NOW(),'messages',messageId,CONCAT_WS('','{"sender":"',senderId,',"recipients":["',recipientId,'"],","content":"',msgContent,'","is_read":"',isRead,'","is_important":"',isImportant,'","is_draft":"',isDraft,'","sent_date":"',sentDate,'","read_date":"',readDate,'","expire_date":"',expireDate,'","is_updated":"0","is_deleted":"0"}'),0);
 			END IF;
-			
 		END LOOP;
 	CLOSE cur;
 
@@ -705,6 +708,35 @@ BEGIN
 
 
 END
+
+
+-- --------------------------------------------------------------------------------
+-- Message Cleanup
+-- Removes expired messages and dependencies
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE `messageCleanup` ()
+BEGIN
+
+	/* remove participants of expired messages */
+	DELETE FROM participants 
+		USING messages,participants 
+		WHERE participants.message_id = messages.id AND messages.is_draft = 0 AND messages.expire_date < NOW();
+
+	/* remove sync queue for expired messages */
+	DELETE FROM sync_queue 
+		USING messages,sync_queue 
+		WHERE sync_queue.tablename='messages' AND sync_queue.pk = messages.id AND messages.is_draft = 0 AND messages.expire_date < NOW();
+
+	/* remove the expired messages themselves, now that all dependencies have been cleared */
+	DELETE FROM messages WHERE is_draft = 0 AND expire_date < NOW();
+
+	/* return number of deleted messages */
+	SELECT ROW_COUNT() AS `num`;
+
+END
+
 
 
 -- --------------------------------------------------------------------------------
