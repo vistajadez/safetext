@@ -142,6 +142,62 @@ class ApiController extends MsController {
 			$viewObject->setValue('data', array('message' => 'Insecure (non-HTTPS) access denied'));
 		}
 	}
+	
+	
+	/**
+	 * Devices Action.
+	 * 
+	 * DELETE request completely deletes a user's device from SafeText.
+	 *
+	 * @link https://github.com/deztopia/safetext/wiki/Authentication
+	 *
+	 * @param MsView $viewObject
+	 * @return void
+	 */
+	 public function devicesAction(&$viewObject) {
+		$viewObject->setResponseType('json');
+		
+		// ensure we're using https
+		if (MS_PROTOCOL === 'https') {
+			if (MS_REQUEST_METHOD === 'DELETE') {
+				if (array_key_exists('HTTP_X_SAFETEXT_TOKEN', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_TOKEN'] !== '') {
+					// Create a database connection to share
+					$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+								
+					// authenticate token with stored procedure
+					require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
+					$user = SafetextUser::tokenToUser($_SERVER['HTTP_X_SAFETEXT_TOKEN'], $db, $this->config);
+					
+					if ($user instanceof SafetextUser && $user->isValid()) {
+						if ($user->getRelationship('device') instanceof SafetextDevice && $user->getRelationship('device')->isValid()) {
+							$user->getRelationship('device')->purge();
+							
+							$viewObject->setValue('status', 'success');
+							
+							// log the request
+							$this->config['log']->write('User: ' . $user->id . ' (' . $user->username . '), Device: ' . $user->getRelationship('device')->id, 'Unregister Device Request');
+
+						} else { // invalid device
+							$viewObject->setValue('status', 'fail');
+							$viewObject->setValue('data', array('message' => 'Problem trying to load device details for that token'));
+						}
+					} else { // invalid token
+						$viewObject->setValue('status', 'fail');
+						$viewObject->setValue('data', array('message' => 'That auth token is not valid'));
+					}
+				} else { // no token
+					$viewObject->setValue('status', 'fail');
+					$viewObject->setValue('data', array('message' => 'Missing auth token'));
+				}
+			} else { // non-POST request
+				$viewObject->setValue('status', 'fail');
+				$viewObject->setValue('data', array('message' => MS_REQUEST_METHOD . ' requests are not supported for this web service'));
+			}
+		} else { // insecure
+			$viewObject->setValue('status', 'fail');
+			$viewObject->setValue('data', array('message' => 'Insecure (non-HTTPS) access denied'));
+		}
+	}
 		
 		
 	/**
@@ -409,7 +465,10 @@ class ApiController extends MsController {
 						$viewObject->setValue('status', 'success');
 						$viewObject->setValue('token', $user->getRelationship('device')->token);
 						$viewObject->setValue('data', $result);
-					
+						
+						// log the request
+						$this->config['log']->write('User: ' . $user->id . ' (' . $user->username . '), Settings: ' . json_encode($result), 'Get Settings Request');
+							
 					} else if (MS_REQUEST_METHOD === 'POST') {
 						/* PUT SETTINGS */
 						array_key_exists('username', $this->params)? $username = $this->escapeForDb($this->params['username']): $username = '';
@@ -429,6 +488,9 @@ class ApiController extends MsController {
 							if (!$result['msg']) {
 								$viewObject->setValue('status', 'success');
 								$viewObject->setValue('token', $user->getRelationship('device')->token);
+								
+								// log the request
+								$this->config['log']->write('User: ' . $user->id . ' (' . $user->username . '), Settings: ' . $user->id . "','$username','$firstname','$lastname','$email','$phone','$pass','$language','$notifications_on','$whitelist_only','$enable_panic')", 'Put Settings Request');
 							} else {
 								$viewObject->setValue('status', 'fail');
 								$viewObject->setValue('token', $user->getRelationship('device')->token);

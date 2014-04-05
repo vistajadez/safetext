@@ -77,6 +77,33 @@ END
 
 
 -- --------------------------------------------------------------------------------
+-- Unregister Device
+-- Completely removes a user's device from SafeText
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE DEFINER=`maxdistrodb`@`%.%.%.%` PROCEDURE `unregisterDevice`(IN deviceIdIn INT UNSIGNED, IN tokenIn VARCHAR(64))
+BEGIN
+	/* If no device ID was passed, unregister using the token */
+	IF deviceIdIn = '' THEN
+		SET @deviceId = (SELECT `id` FROM sync_device WHERE `token` = tokenIn);
+	ELSE
+		SET @deviceId = deviceIdIn;
+	END IF;
+
+	IF @deviceId IS NOT NULL THEN
+		/* clear sync queue */
+		DELETE FROM sync_queue WHERE `device_id` = @deviceId;
+
+		/* clear device */
+		DELETE FROM sync_device WHERE `id` = @deviceId LIMIT 1;
+
+	END IF;
+
+END
+
+
+-- --------------------------------------------------------------------------------
 -- Token to User.
 -- Given an auth token, load the associated user and dependency fields
 -- --------------------------------------------------------------------------------
@@ -307,8 +334,10 @@ BEGIN
 				LEAVE read_loop;
 			END IF;
 			
-			INSERT INTO sync_queue (id,user_id,device_id,date_added,tablename,pk,vals,is_pulled) VALUES (null,userId,deviceId,NOW(),'messages',messageId,CONCAT_WS('','{"sender":"',senderId,',"recipients":["',recipientId,'"],","content":"',msgContent,'","is_read":"',isRead,'","is_important":"',isImportant,'","is_draft":"',isDraft,'","sent_date":"',sentDate,'","read_date":"',readDate,'","expire_date":"',expireDate,'","is_updated":"0","is_deleted":"0"}'),0);
-
+			IF isDraft = 0 OR userId = senderId THEN
+				INSERT INTO sync_queue (id,user_id,device_id,date_added,tablename,pk,vals,is_pulled) VALUES (null,userId,deviceId,NOW(),'messages',messageId,CONCAT_WS('','{"sender":"',senderId,',"recipients":["',recipientId,'"],","content":"',msgContent,'","is_read":"',isRead,'","is_important":"',isImportant,'","is_draft":"',isDraft,'","sent_date":"',sentDate,'","read_date":"',readDate,'","expire_date":"',expireDate,'","is_updated":"0","is_deleted":"0"}'),0);
+			END IF;
+			
 		END LOOP;
 	CLOSE cur;
 
@@ -405,6 +434,7 @@ BEGIN
 				/* create recipient participant record */
 				INSERT INTO participants (`message_id`,`contact_id`,`is_sender`) VALUES(messageId,recipientIdIn,0);
 
+
 				/* Queue a pull record for every device */
 				SET contentIn = REPLACE(contentIn, '\\', '\\\\'); /* JSON encoding for \ */
 				SET contentIn = REPLACE(contentIn, '"', '\\"'); /* JSON encoding for " */
@@ -416,10 +446,17 @@ BEGIN
 							LEAVE read_loop;
 						END IF;
 						
-						INSERT INTO sync_queue (id,user_id,device_id,date_added,tablename,pk,vals,is_pulled) VALUES (null,userId,deviceId,NOW(),'messages',messageId,CONCAT_WS('','{"sender":"',senderIdIn,'","recipients":["',recipientIdIn,'"],"content":"',contentIn,'","is_read":"0","is_important":"',isImportantIn,'","is_draft":"',isDraftIn,'","sent_date":"',sentDate,'","read_date":"0000-00-00 00:00:00","expire_date":"',expireDate,'","is_updated":"0","is_deleted":"0"}'),0);
-
+						IF isDraftIn = 0 OR userId = senderIdIn THEN
+							INSERT INTO sync_queue (id,user_id,device_id,date_added,tablename,pk,vals,is_pulled) VALUES (null,userId,deviceId,NOW(),'messages',messageId,CONCAT_WS('','{"sender":"',senderIdIn,'","recipients":["',recipientIdIn,'"],"content":"',contentIn,'","is_read":"0","is_important":"',isImportantIn,'","is_draft":"',isDraftIn,'","sent_date":"',sentDate,'","read_date":"0000-00-00 00:00:00","expire_date":"',expireDate,'","is_updated":"0","is_deleted":"0"}'),0);
+						END IF;
 					END LOOP;
 				CLOSE cur;
+
+
+				/* send newly generated message ID */
+				SELECT messageId AS `key`;
+
+				END IF;
 
 				/* send newly generated message ID */
 				SELECT messageId AS `key`;
@@ -664,7 +701,6 @@ BEGIN
 
 
 END
-
 
 
 -- --------------------------------------------------------------------------------

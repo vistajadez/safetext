@@ -18,7 +18,19 @@ class SafetextDevice extends SafetextModel {
 	
 	
 	// Implementation Methods
-
+	/**
+	  * Purge.
+	  *
+	  * Deletes this instance and all related dependencies.
+	  *
+	  * @return bool
+	  *
+	  */
+	 public function purge() {
+	 	$this->db->call("unregisterDevice('" . $this->getValue('id') . "','" . $this->getValue('token') . "')");
+	 
+		return true;
+	 }
 	
 	
 	
