@@ -339,7 +339,7 @@ BEGIN
 				LEAVE read_loop;
 			END IF;
 			IF isDraft = 0 OR userId = senderId THEN
-				INSERT INTO sync_queue (id,user_id,device_id,date_added,tablename,pk,vals,is_pulled) VALUES (null,userId,deviceId,NOW(),'messages',messageId,CONCAT_WS('','{"sender":"',senderId,',"recipients":["',recipientId,'"],","content":"',msgContent,'","is_read":"',isRead,'","is_important":"',isImportant,'","is_draft":"',isDraft,'","sent_date":"',sentDate,'","read_date":"',readDate,'","expire_date":"',expireDate,'","is_updated":"0","is_deleted":"0"}'),0);
+				INSERT INTO sync_queue (id,user_id,device_id,date_added,tablename,pk,vals,is_pulled) VALUES (null,userId,deviceId,NOW(),'messages',messageId,CONCAT_WS('','{"sender":"',senderId,'","recipients":["',recipientId,'"],"content":"',msgContent,'","is_read":"',isRead,'","is_important":"',isImportant,'","is_draft":"',isDraft,'","sent_date":"',sentDate,'","read_date":"',readDate,'","expire_date":"',expireDate,'","is_updated":"0","is_deleted":"0"}'),0);
 			END IF;
 		END LOOP;
 	CLOSE cur;
@@ -358,7 +358,10 @@ BEGIN
 
 	/* Is this device initialized? */
 	SET @is_init = (SELECT `is_initialized` FROM sync_device WHERE `user_id` = @userId AND `id` = deviceId);
-	IF @is_init = 1 THEN
+	IF @is_init = 0 THEN
+		/* init device */
+		UPDATE sync_device SET is_initialized=1 WHERE user_id=userId AND id=deviceId;
+	END IF;
 		/* Remove any previously pulled queue records */
 		DELETE FROM sync_queue WHERE user_id=userId AND device_id=deviceId AND is_pulled=1;
 	
@@ -367,10 +370,6 @@ BEGIN
 	
 		/* Pull the flagged records */
 		SELECT tablename,pk,vals FROM sync_queue WHERE user_id=userId AND device_id=deviceId AND is_pulled=1 ORDER BY id;
-	ELSE
-		/* init device */
-		UPDATE sync_device SET is_initialized=1 WHERE user_id=userId AND id=deviceId;
-	END IF;
 	
 END
 
@@ -711,7 +710,7 @@ END
 
 
 -- --------------------------------------------------------------------------------
--- Message Cleanup
+-- Message Cleanup (CRON)
 -- Removes expired messages and dependencies
 -- --------------------------------------------------------------------------------
 DELIMITER $$
