@@ -69,4 +69,41 @@ abstract class SafetextClientController extends MsController {
 		return false;
 	 }
 	 
+	/**
+	 * Load Folders.
+	 * 
+	 * Loads all messages and contacts into separate collections for each folder, and stores in the view.
+	 *
+	 * @param MsView $viewObject
+	 * @return Bool	False if there were issues with the init, otherwise true.
+	 */
+	 protected function _loadFolders(&$viewObject) {
+	 	// load all contacts and messages for current user
+		$inboxArray = $this->db->call("messages('" . $this->user->getValue('id') . "','received','0','999999')");
+		$sentArray = $this->db->call("messages('" . $this->user->getValue('id') . "','sent','0','999999')");
+		$importantArray = $this->db->call("messages('" . $this->user->getValue('id') . "','important','0','999999')");
+		$draftsArray = $this->db->call("messages('" . $this->user->getValue('id') . "','draft','0','999999')");
+		$contactsArray = $this->db->call("contacts('" . $this->user->getValue('id') . "','name','0','999999')");
+		
+		$inbox = new SafetextModelCollection('SafetextMessage', $this->config, $this->db);
+		$inbox->load($inboxArray);
+		$sent = new SafetextModelCollection('SafetextMessage', $this->config, $this->db);
+		$sent->load($sentArray);
+		$important = new SafetextModelCollection('SafetextMessage', $this->config, $this->db);
+		$important->load($importantArray);
+		$drafts = new SafetextModelCollection('SafetextMessage', $this->config, $this->db);
+		$drafts->load($draftsArray);
+
+		$contacts = new SafetextModelCollection('SafetextContact', $this->config, $this->db);
+		$contacts->load($contactsArray);
+		
+		
+		// store data in view
+		$viewObject->setValue('inbox', $inbox);
+		$viewObject->setValue('sent', $sent);
+		$viewObject->setValue('important', $important);
+		$viewObject->setValue('drafts', $drafts);
+		$viewObject->setValue('contacts', $contacts);
+	 }
+	 
 }

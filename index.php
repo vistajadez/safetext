@@ -33,6 +33,7 @@ require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'ms' . DS . 'model.php' );
 require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'ms' . DS . 'modelcollection.php' );
 require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'ms' . DS . 'db.php' );
 require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'model.php' );
+require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'modelcollection.php' );
 require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'log.php' );
 
 // parse route

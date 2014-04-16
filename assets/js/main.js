@@ -103,8 +103,7 @@
 	 * Authenticates and logs a user into Safetext.
 	 */
 	$(document).on('click', '.safetext-login .safetext-login-button', function() {
-		var thisForm = $(".safetext-login-form");
-	
+		var thisForm = $(".safetext-login-form").filter(":visible");
 		if (thisForm.find('input[name="name"]').val() == '') {
 			alert("Enter your account name"); 
 			return false;
@@ -160,7 +159,7 @@
 	 * Registers a new user.
 	 */
 	$(document).on('click', '.safetext-register .safetext-register-button', function() {
-		var thisForm = $(".safetext-register-form");
+		var thisForm = $(".safetext-register-form").filter(":visible");
 	
 		if (thisForm.find('input[name="name"]').val() == '') {
 			alert("Your name is required"); 

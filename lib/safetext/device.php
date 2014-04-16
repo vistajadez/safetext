@@ -145,7 +145,7 @@ class SafetextDevice extends SafetextModel {
 	{
 		$array_out = array();
 		$messages = $this->db->call("messages('" . $this->getValue('user_id') . "','','0','999999')");
-		$contacts = $this->db->call("contacts('" . $this->getValue('user_id') . "','','0','999999')");
+		$contacts = $this->db->call("contacts('" . $this->getValue('user_id') . "','name','0','999999')");
 		$this->config['log']->write('Initializing new device with ' . sizeof($messages) . ' existing messages and ' . sizeof($contacts) . ' existing contacts');
 		
 		// format returning records as queue entries

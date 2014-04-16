@@ -1,0 +1,43 @@
+<div data-role="page" class="safetext-page safetext-contacts" data-title="<?php echo $this->t('Contacts'); ?>">
+		
+		<?php echo $this->render('webclient/_leftpanel.phtml'); ?>
+		<?php echo $this->render('webclient/_header.phtml'); ?>
+	
+	    <div data-role="content" class="safetext-content" data-theme="a">
+	    	
+		    <div class="safetext-client-grid">
+		    	<!-- Left-hand Folder Column -->
+			    <div class="safetext-block-a">
+			    	<div class="ui-body ui-body-d">
+					    <div><a href="#" class="ui-btn ui-icon-comment ui-btn-icon-left ui-corner-all ui-shadow">Compose</a></div>
+					    <?php echo $this->render('webclient/_foldermenu.phtml'); ?>
+					</div>
+			    </div>
+			    
+			    <!-- Main Content Column -->
+			    <div class="safetext-block-b">
+			    	<div class="ui-body ui-body-d">
+				    	<div class="ui-grid-b safetext-mobile-hidden">
+						    <div class="ui-block-a"><a href="/webclient/home" class="ui-btn ui-corner-all ui-btn-icon-left ui-icon-mail">Messages</a></div>
+						    <div class="ui-block-b"><a href="#" class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-user ui-btn-active">Contacts</a></div>
+						    <div class="ui-block-c"><a href="#" class="ui-btn ui-corner-all ui-btn-icon-left ui-icon-gear">Settings</a></div>
+						</div>
+						
+						<div>
+						    <ul data-role="listview" data-autodividers="true" data-filter="true" data-inset="true">
+						    	<?php foreach ($this->getValue('contacts') as $this_contact) : ?>
+						    		<li><a href="#"><?php echo $this_contact->label(); ?></a></li>
+						    	<?php endforeach; ?>
+							</ul>
+						</div>
+						    
+			    	</div>
+			    </div>
+
+			</div>
+	    
+	    </div><!-- /content -->
+	
+	<?php echo $this->render('webclient/_footer.phtml'); ?>
+		
+</div> <!--/page-->

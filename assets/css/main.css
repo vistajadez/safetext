@@ -77,7 +77,8 @@ textarea {
 
 }
 
-.safetext-nav {
+.safetext-nav,
+.safetext-mobile-hidden {
 	display: none;	
 }
 
@@ -127,6 +128,36 @@ textarea {
 	margin-top:20px;
 	margin-bottom:20px;
 }
+
+/* Web Client layout styles */
+/* Base styles */
+.safetext-client-grid .ui-body {
+    text-align: left;
+    border-color: #ddd;
+}
+.safetext-client-grid p {
+    color: #777;
+    line-height: 140%
+}
+/* Stack all blocks to start, hide nav block */
+.safetext-client-grid .safetext-block-a {
+	display: none;
+}
+.safetext-client-grid .safetext-block-b {
+    width: 100%;
+    float: none;
+}
+/* Collapsing borders */
+.safetext-client-grid > div + div .ui-body {
+    border-top-width: 0;
+}
+
+
+
+
+
+
+
 
 
 
@@ -253,8 +284,13 @@ textarea[contenteditable] {
    Theses examples override the primary ('mobile first') styles.
    Modify as content requires.
    ========================================================================== */
+/* 1st breakpoint - For grids, float B and C, leave A full width on top */
+@media only screen and (min-width: 42em) {
+    
+}
 
-@media only screen and (min-width: 800px) {
+/* 2nd breakpoint - approx width of landscape on tablets */
+@media only screen and (min-width: 55em) {
     /* Style adjustments for viewports that meet the condition */
     
     /* splash screen */
@@ -279,8 +315,12 @@ textarea[contenteditable] {
     .safetext-header > h1 {
 	    visibility:hidden;
     }
-    .safetext-header .ui-btn-left {
+    .safetext-header .ui-btn-left,
+    .safetext-header .ui-btn-right{
 	    visibility: hidden;
+    }
+    .safetext-mobile-hidden {
+	    display: inline-block;
     }
     
     /* Enable Desktop-style Nav */
@@ -288,6 +328,9 @@ textarea[contenteditable] {
 		display:inline-block;
 		margin-left:125px;
 		margin-top:5px;
+	}
+	.safetext-mobile-hidden{
+		display:block;
 	}
 	
 	.add-button {
@@ -305,7 +348,7 @@ textarea[contenteditable] {
 	}
 	.safetext-nav li a {
 		text-decoration: none;
-	}    
+	}
 
     
     /* content */
@@ -353,9 +396,44 @@ textarea[contenteditable] {
 		display: block;
 		margin-top:55px;
 	}
+	
+	/* adjust Web Client grid */
+	.safetext-client-grid .ui-body {
+       min-height: 18em;
+    }
+    .safetext-client-grid .safetext-block-a {
+      display:inline-block;
+      float: left;
+      width: 25%;
+    }
+    .safetext-client-grid .safetext-block-b{
+      float: left;
+      width: 75%;
+    }
+    .safetext-client-grid > div:first-child .ui-body {
+        border-bottom-width: 1px;
+    }
+    .safetext-client-grid > div + div .ui-body {
+        border-left-width: 0;
+    }
+    
+    
+    /* folder menu */
+    .safetext-folder-menu {
+	    margin-top:20px;
+    }
+	
+	
 }
 
-@media only screen and (-webkit-min-device-pixel-ratio: 1.5),
-       only screen and (min-resolution: 144dpi) {
-    /* Style adjustments for viewports that meet the condition */
+/* 3rd breakpoint - Bump up font size at very wide screens */
+@media all and (min-width: 75em) {
+    .safetext-client-grid .ui-body {
+      font-size: 125%;
+    }
+    /* adjust Web Client grid */
+    .safetext-client-grid .safetext-block-a{
+    }
+    .safetext-client-grid .safetext-block-b{
+    }
 }
