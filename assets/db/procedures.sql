@@ -568,13 +568,19 @@ CREATE DEFINER=`maxdistrodb`@`%.%.%.%` PROCEDURE `contactLookup`(IN userIdIn int
 BEGIN
 	
 	/* create temporary table to hold results */
-	CREATE TEMPORARY TABLE IF NOT EXISTS results_table (id INT NOT NULL, firstname VARCHAR(32) NOT NULL, lastname VARCHAR(32) NOT NULL, email VARCHAR(64) NOT NULL, phone VARCHAR(64) NOT NULL, PRIMARY KEY (id)) AS (SELECT id,firstname,lastname,phone,email FROM users WHERE CONCAT_WS(' ',firstname,lastname) = queryStringIn AND whitelist_only = 0);
+	CREATE TEMPORARY TABLE IF NOT EXISTS results_table (id INT NOT NULL, username VARCHAR(16) NOT NULL, firstname VARCHAR(32) NOT NULL, lastname VARCHAR(32) NOT NULL, email VARCHAR(64) NOT NULL, phone VARCHAR(64) NOT NULL, PRIMARY KEY (id)) AS (SELECT id,username,firstname,lastname,phone,email FROM users WHERE (CONCAT_WS(' ',firstname,lastname) = queryStringIn OR username=queryStringIn) AND whitelist_only = 0);
 
 	/* add whitelist only users for whom this user is a whitelisted contact */
-	INSERT INTO results_table SELECT users.id,users.firstname,users.lastname,users.phone,users.email FROM users,contacts WHERE CONCAT_WS(' ',users.firstname,users.lastname) = queryStringIn AND users.whitelist_only = 1 AND contacts.user_id=users.id AND contacts.contact_user_id = userIdIn AND contacts.is_blocked=0 AND contacts.is_whitelist=1;
+	INSERT INTO results_table SELECT users.id,users.username,users.firstname,users.lastname,users.phone,users.email FROM users,contacts WHERE (CONCAT_WS(' ',users.firstname,users.lastname) = queryStringIn OR users.username=queryStringIn) AND users.whitelist_only = 1 AND contacts.user_id=users.id AND contacts.contact_user_id = userIdIn AND contacts.is_blocked=0 AND contacts.is_whitelist=1;
+
+	/* lookup by id */
+	INSERT INTO results_table SELECT id,username,firstname,lastname,phone,email FROM users WHERE id=queryStringIn;
+
+	/* use username in the cases where firstname and lastname are empty */
+	UPDATE results_table SET firstname=username WHERE firstname='' AND lastname='';
 
 	/* return stored hits */
-	SELECT * FROM results_table;
+	SELECT id AS `key`, TRIM(CONCAT_WS(' ',firstname,lastname)) AS `name`,phone,email FROM results_table;
 
 	/* remove the temporary table */
 	DROP TEMPORARY TABLE results_table;
