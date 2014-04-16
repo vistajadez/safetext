@@ -1,10 +1,10 @@
 <div class="safetext-folder-menu">
     <ul data-role="listview" data-count-theme="b" data-inset="true">
-	    <li><a href="#"><?php echo $this->t('Inbox'); ?> <span class="ui-li-count"><?php echo sizeof($this->getValue('inbox')); ?></span></a></li>
-	    <li><a href="#"><?php echo $this->t('Important'); ?> <span class="ui-li-count"><?php echo sizeof($this->getValue('important')); ?></span></a></li>
-	    <li><a href="#"><?php echo $this->t('Sent'); ?> <span class="ui-li-count"><?php echo sizeof($this->getValue('sent')); ?></span></a></li>
-	    <li><a href="#"><?php echo $this->t('Drafts'); ?> <span class="ui-li-count"><?php echo sizeof($this->getValue('drafts')); ?></span></a></li>
-	    <li><a href="#"><?php echo $this->t('Contacts'); ?> <span class="ui-li-count"><?php echo sizeof($this->getValue('contacts')); ?></span></a></li>
+	    <li><a href="/webclient/messages"><?php echo $this->t('Inbox'); ?> <span class="ui-li-count"><?php echo sizeof($this->getValue('inbox')); ?></span></a></li>
+	    <li><a href="/webclient/messages/folder/important"><?php echo $this->t('Important'); ?> <span class="ui-li-count"><?php echo sizeof($this->getValue('important')); ?></span></a></li>
+	    <li><a href="/webclient/messages/folder/sent"><?php echo $this->t('Sent'); ?> <span class="ui-li-count"><?php echo sizeof($this->getValue('sent')); ?></span></a></li>
+	    <li><a href="/webclient/messages/folder/drafts"><?php echo $this->t('Drafts'); ?> <span class="ui-li-count"><?php echo sizeof($this->getValue('drafts')); ?></span></a></li>
+	    <li><a href="/webclient/contacts"><?php echo $this->t('Contacts'); ?> <span class="ui-li-count"><?php echo sizeof($this->getValue('contacts')); ?></span></a></li>
 	    <li><a href="#"><?php echo $this->t('Black List'); ?> <span class="ui-li-count">0</span></a></li>
 	</ul>
 </div>

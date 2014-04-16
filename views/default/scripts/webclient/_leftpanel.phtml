@@ -4,10 +4,10 @@
 		<p><?php if ($this->getValue('user') instanceof SafetextUser) echo $this->getValue('user')->username; ?></p>
 		
 		<ul data-role="listview">
-			<li><a href="#" data-transition="fade"><?php echo $this->t('Inbox'); ?> <span class="ui-li-count"><?php echo sizeof($this->getValue('inbox')); ?></span></a></li>
-			<li><a href="#" data-transition="fade"><?php echo $this->t('Important'); ?> <span class="ui-li-count"><?php echo sizeof($this->getValue('important')); ?></span></a></li>
-			<li><a href="#" data-transition="fade"><?php echo $this->t('Sent'); ?> <span class="ui-li-count"><?php echo sizeof($this->getValue('sent')); ?></span></a></li>
-			<li><a href="#" data-transition="fade"><?php echo $this->t('Drafts'); ?> <span class="ui-li-count"><?php echo sizeof($this->getValue('drafts')); ?></span></a></li>
+			<li><a href="/webclient/messages" data-transition="fade"><?php echo $this->t('Inbox'); ?> <span class="ui-li-count"><?php echo sizeof($this->getValue('inbox')); ?></span></a></li>
+			<li><a href="/webclient/messages/folder/important" data-transition="fade"><?php echo $this->t('Important'); ?> <span class="ui-li-count"><?php echo sizeof($this->getValue('important')); ?></span></a></li>
+			<li><a href="/webclient/messages/folder/sent" data-transition="fade"><?php echo $this->t('Sent'); ?> <span class="ui-li-count"><?php echo sizeof($this->getValue('sent')); ?></span></a></li>
+			<li><a href="/webclient/messages/folder/drafts" data-transition="fade"><?php echo $this->t('Drafts'); ?> <span class="ui-li-count"><?php echo sizeof($this->getValue('drafts')); ?></span></a></li>
 			<li><a href="/webclient/contacts" data-transition="fade"><?php echo $this->t('Contacts'); ?> <span class="ui-li-count"><?php echo sizeof($this->getValue('contacts')); ?></span></a></li>
 			<li><a href="#" data-transition="fade"><?php echo $this->t('Black List'); ?> <span class="ui-li-count">0</span></a></li>
 			<li data-role="list-divider"></li>

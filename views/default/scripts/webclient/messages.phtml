@@ -1,0 +1,83 @@
+<div data-role="page" class="safetext-page safetext-messages" data-title="<?php echo $this->t('Messages'); ?>">
+		
+		<?php echo $this->render('webclient/_leftpanel.phtml'); ?>
+		<?php echo $this->render('webclient/_header.phtml'); ?>
+	
+	    <div data-role="content" class="safetext-content" data-theme="a">
+	    	
+		    <div class="safetext-client-grid">
+		    	<!-- Left-hand Folder Column -->
+			    <div class="safetext-block-a">
+			    	<div class="ui-body ui-body-d">
+					    <div><a href="#" class="ui-btn ui-icon-comment ui-btn-icon-left ui-corner-all ui-shadow">Compose</a></div>
+					    <?php echo $this->render('webclient/_foldermenu.phtml'); ?>
+					</div>
+			    </div>
+			    
+			    <!-- Main Content Column -->
+			    <div class="safetext-block-b">
+			    	<div class="ui-body ui-body-d">
+				    	<div class="ui-grid-b safetext-mobile-hidden">
+						    <div class="ui-block-a"><a href="/webclient/messages" class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-mail ui-btn-active">Messages</a></div>
+						    <div class="ui-block-b"><a href="/webclient/contacts" class="ui-btn ui-corner-all ui-btn-icon-left ui-icon-user">Contacts</a></div>
+						    <div class="ui-block-c"><a href="/webclient/settings" class="ui-btn ui-corner-all ui-btn-icon-left ui-icon-gear">Settings</a></div>
+						</div>
+						
+						<div>
+						    <ul data-role="listview" data-filter="true" data-inset="true">
+						    	<?php foreach ($this->getValue($this->getValue('folder')) as $this_message) : 
+							    	// get sender label
+							    	if ($this_message->sender === $this->getValue('user')->id) {
+							    		$sender = 'Me';
+							    	} else {
+							    		$contact = $this->getValue('contacts')->find('contact_user_id', $this_message->sender);
+							    		if ($contact instanceof SafetextContact) $sender = $contact->label();
+							    			else $sender = 'Unknown';
+							    	}
+							    	
+							    	// get recipient label
+							    	if ($this_message->recipient === $this->getValue('user')->id) {
+							    		$recipient = 'Me';
+							    	} else {
+							    		$contact = $this->getValue('contacts')->find('contact_user_id', $this_message->recipient );
+							    		if ($contact instanceof SafetextContact) $recipient = $contact->label();
+							    			else $recipient = 'Unknown';
+							    	}
+							    	
+							    	// get time to expire
+							    	$secsLeft = strtotime($this_message->expire_date) - time();
+							    	if ($secsLeft < 0) $secsLeft = 0;
+							    	$minsLeft = round($secsLeft /60, 0, PHP_ROUND_HALF_DOWN);
+							    	$hrsLeft = round($minsLeft /60, 0, PHP_ROUND_HALF_DOWN);
+							    	
+							    	if ($hrsLeft < 1) {
+							    		$timeLeft = $minsLeft . ' ' . $this->t('min');
+							    		if ($minsLeft > 1 || $minsLeft === 0) $timeLeft .= 's';
+							    	} else {
+							    		$timeLeft = $hrsLeft . ' ' . $this->t('hr');
+							    		if ($hrsLeft > 1) $timeLeft .= 's';
+							    	}
+						    	?>
+						    		<li><a href="#">
+						    			<?php if ($this_message->is_read === '0') : ?>
+						    				<p style="white-space:normal;"><strong><em><?php echo $sender; ?></em> <?php echo $this->t('to'); ?> <em><?php echo $recipient; ?></em></strong></p>
+						    			<?php else: ?>
+						    				<p style="white-space:normal;"><em><?php echo $sender; ?></em> <?php echo $this->t('to'); ?> <em><?php echo $recipient; ?></em></p>
+						    			<?php endif; ?>
+						    			<p><?php echo $this_message->content; ?></p>
+						    			<p class="ui-li-aside"><strong><?php echo $this->t('time left'); ?>: <?php echo $timeLeft; ?></strong></p>
+						    		</a></li>
+						    	<?php endforeach; ?>
+							</ul>
+						</div>
+						    
+			    	</div>
+			    </div>
+
+			</div>
+	    
+	    </div><!-- /content -->
+	
+	<?php echo $this->render('webclient/_footer.phtml'); ?>
+		
+</div> <!--/page-->

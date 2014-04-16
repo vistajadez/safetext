@@ -31,7 +31,7 @@ abstract class SafetextClientController extends MsController {
 		}
 		
 		// already init'd?
-		if ($viewObject->getvalue('user') instanceof SafetextUser) return true;
+		if ($this->user instanceof SafetextUser) return true;
 		
 		
 		// Create a database connection to share
@@ -78,32 +78,34 @@ abstract class SafetextClientController extends MsController {
 	 * @return Bool	False if there were issues with the init, otherwise true.
 	 */
 	 protected function _loadFolders(&$viewObject) {
-	 	// load all contacts and messages for current user
-		$inboxArray = $this->db->call("messages('" . $this->user->getValue('id') . "','received','0','999999')");
-		$sentArray = $this->db->call("messages('" . $this->user->getValue('id') . "','sent','0','999999')");
-		$importantArray = $this->db->call("messages('" . $this->user->getValue('id') . "','important','0','999999')");
-		$draftsArray = $this->db->call("messages('" . $this->user->getValue('id') . "','draft','0','999999')");
-		$contactsArray = $this->db->call("contacts('" . $this->user->getValue('id') . "','name','0','999999')");
-		
-		$inbox = new SafetextModelCollection('SafetextMessage', $this->config, $this->db);
-		$inbox->load($inboxArray);
-		$sent = new SafetextModelCollection('SafetextMessage', $this->config, $this->db);
-		$sent->load($sentArray);
-		$important = new SafetextModelCollection('SafetextMessage', $this->config, $this->db);
-		$important->load($importantArray);
-		$drafts = new SafetextModelCollection('SafetextMessage', $this->config, $this->db);
-		$drafts->load($draftsArray);
-
-		$contacts = new SafetextModelCollection('SafetextContact', $this->config, $this->db);
-		$contacts->load($contactsArray);
-		
-		
-		// store data in view
-		$viewObject->setValue('inbox', $inbox);
-		$viewObject->setValue('sent', $sent);
-		$viewObject->setValue('important', $important);
-		$viewObject->setValue('drafts', $drafts);
-		$viewObject->setValue('contacts', $contacts);
+	 	if ($this->db instanceof MsDb) {
+		 	// load all contacts and messages for current user
+			$inboxArray = $this->db->call("messages('" . $this->user->getValue('id') . "','received','0','999999')");
+			$sentArray = $this->db->call("messages('" . $this->user->getValue('id') . "','sent','0','999999')");
+			$importantArray = $this->db->call("messages('" . $this->user->getValue('id') . "','important','0','999999')");
+			$draftsArray = $this->db->call("messages('" . $this->user->getValue('id') . "','draft','0','999999')");
+			$contactsArray = $this->db->call("contacts('" . $this->user->getValue('id') . "','name','0','999999')");
+			
+			$inbox = new SafetextModelCollection('SafetextMessage', $this->config, $this->db);
+			$inbox->load($inboxArray);
+			$sent = new SafetextModelCollection('SafetextMessage', $this->config, $this->db);
+			$sent->load($sentArray);
+			$important = new SafetextModelCollection('SafetextMessage', $this->config, $this->db);
+			$important->load($importantArray);
+			$drafts = new SafetextModelCollection('SafetextMessage', $this->config, $this->db);
+			$drafts->load($draftsArray);
+	
+			$contacts = new SafetextModelCollection('SafetextContact', $this->config, $this->db);
+			$contacts->load($contactsArray);
+			
+			
+			// store data in view
+			$viewObject->setValue('inbox', $inbox);
+			$viewObject->setValue('sent', $sent);
+			$viewObject->setValue('important', $important);
+			$viewObject->setValue('drafts', $drafts);
+			$viewObject->setValue('contacts', $contacts);
+		}
 	 }
 	 
 }

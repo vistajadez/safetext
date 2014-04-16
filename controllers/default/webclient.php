@@ -67,4 +67,29 @@ class WebclientController extends SafetextClientController {
 			
 		}
 	 }
+	 
+	 
+	/**
+	 * Messages Action.
+	 * 
+	 * Render web client dashboard messages view.
+	 *
+	 * @param MsView $viewObject
+	 * @return void
+	 */
+	 public function messagesAction(&$viewObject) {
+		// forward to the web client page if logged in, otherwise to the login page
+		if (!$this->init($viewObject)) {
+			$this->forward($viewObject, 'login', 'auth');
+		} else {
+			// load all contacts and messages for current user
+			$this->_loadFolders($viewObject);
+			
+			// are we viewing a specific folder?
+			array_key_exists('folder', $this->params) ? $folder = $this->params['folder']: $folder = 'inbox';
+			
+			$viewObject->setValue('folder', $folder);
+			
+		}
+	 }
 }
