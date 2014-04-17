@@ -1,4 +1,4 @@
-<div data-role="page" class="safetext-page safetext-messages" data-title="<?php echo $this->t('Messages'); ?>">
+<div data-role="page" class="safetext-page safetext-messages folder_<?php echo $this->getValue('folder'); ?>" data-title="<?php echo ucfirst($this->getValue('folder')); ?>">
 		
 		<?php echo $this->render('webclient/_leftpanel.phtml'); ?>
 		<?php echo $this->render('webclient/_header.phtml'); ?>
@@ -58,8 +58,8 @@
 							    		if ($hrsLeft > 1) $timeLeft .= 's';
 							    	}
 						    	?>
-						    		<li><a href="#">
-						    			<?php if ($this_message->is_read === '0') : ?>
+						    		<li><a href="/webclient/conversation/contact/<?php echo $contact->contact_user_id; ?>">
+						    			<?php if ($this->getValue('folder') !== 'sent' && $this->getValue('folder') !== 'drafts' && $this_message->is_read === '0') : ?>
 						    				<p style="white-space:normal;"><strong><em><?php echo $sender; ?></em> <?php echo $this->t('to'); ?> <em><?php echo $recipient; ?></em></strong></p>
 						    			<?php else: ?>
 						    				<p style="white-space:normal;"><em><?php echo $sender; ?></em> <?php echo $this->t('to'); ?> <em><?php echo $recipient; ?></em></p>

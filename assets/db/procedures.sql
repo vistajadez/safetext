@@ -675,15 +675,15 @@ DELIMITER $$
 CREATE DEFINER=`maxdistrodb`@`%.%.%.%` PROCEDURE `messages`(IN userIdIn INT UNSIGNED, IN filterIn VARCHAR(12), IN startIn INT UNSIGNED, IN limitIn INT UNSIGNED)
 BEGIN
 
-		/* Create temporary table to work with, populated with all messages this user is a participant of */
+	/* Create temporary table to work with, populated with all messages this user is a participant of */
 	IF filterIn = 'sent' THEN
 		PREPARE STMT FROM " CREATE TEMPORARY TABLE IF NOT EXISTS messages_lookup
 			(id INT UNSIGNED NOT NULL, content TEXT NOT NULL, is_read TINYINT(1) UNSIGNED NOT NULL, is_important TINYINT(1) UNSIGNED NOT NULL, is_draft TINYINT(1) UNSIGNED NOT NULL, sent_date DATETIME NOT NULL, read_date DATETIME NOT NULL, expire_date DATETIME NOT NULL, sender INT UNSIGNED NOT NULL, recipient INT UNSIGNED NOT NULL, PRIMARY KEY (id))
-			AS (SELECT messages.id, messages.content, messages.is_read, messages.is_important, messages.is_draft, messages.sent_date, messages.read_date, messages.expire_date, 0 AS sender, 0 AS recipient FROM messages,participants WHERE participants.message_id = messages.id AND participants.contact_id = ? AND participants.is_sender=1 ORDER BY messages.id DESC LIMIT ?,?); ";
+			AS (SELECT messages.id, messages.content, messages.is_read, messages.is_important, messages.is_draft, messages.sent_date, messages.read_date, messages.expire_date, 0 AS sender, 0 AS recipient FROM messages,participants WHERE participants.message_id = messages.id AND participants.contact_id = ? AND participants.is_sender=1 AND messages.is_draft=0 ORDER BY messages.id DESC LIMIT ?,?); ";
 	ELSEIF filterIn = 'received' THEN
 		PREPARE STMT FROM " CREATE TEMPORARY TABLE IF NOT EXISTS messages_lookup
 			(id INT UNSIGNED NOT NULL, content TEXT NOT NULL, is_read TINYINT(1) UNSIGNED NOT NULL, is_important TINYINT(1) UNSIGNED NOT NULL, is_draft TINYINT(1) UNSIGNED NOT NULL, sent_date DATETIME NOT NULL, read_date DATETIME NOT NULL, expire_date DATETIME NOT NULL, sender INT UNSIGNED NOT NULL, recipient INT UNSIGNED NOT NULL, PRIMARY KEY (id))
-			AS (SELECT messages.id, messages.content, messages.is_read, messages.is_important, messages.is_draft, messages.sent_date, messages.read_date, messages.expire_date, 0 AS sender, 0 AS recipient  FROM messages,participants WHERE participants.message_id = messages.id AND participants.contact_id = ? AND participants.is_sender=0 ORDER BY messages.id DESC LIMIT ?,?); ";
+			AS (SELECT messages.id, messages.content, messages.is_read, messages.is_important, messages.is_draft, messages.sent_date, messages.read_date, messages.expire_date, 0 AS sender, 0 AS recipient  FROM messages,participants WHERE participants.message_id = messages.id AND participants.contact_id = ? AND participants.is_sender=0 AND messages.is_draft=0 ORDER BY messages.id DESC LIMIT ?,?); ";
 	ELSEIF filterIn = 'draft' THEN
 		PREPARE STMT FROM " CREATE TEMPORARY TABLE IF NOT EXISTS messages_lookup
 			(id INT UNSIGNED NOT NULL, content TEXT NOT NULL, is_read TINYINT(1) UNSIGNED NOT NULL, is_important TINYINT(1) UNSIGNED NOT NULL, is_draft TINYINT(1) UNSIGNED NOT NULL, sent_date DATETIME NOT NULL, read_date DATETIME NOT NULL, expire_date DATETIME NOT NULL, sender INT UNSIGNED NOT NULL, recipient INT UNSIGNED NOT NULL, PRIMARY KEY (id))
@@ -691,7 +691,7 @@ BEGIN
 	ELSEIF filterIn = 'important' THEN
 		PREPARE STMT FROM " CREATE TEMPORARY TABLE IF NOT EXISTS messages_lookup
 			(id INT UNSIGNED NOT NULL, content TEXT NOT NULL, is_read TINYINT(1) UNSIGNED NOT NULL, is_important TINYINT(1) UNSIGNED NOT NULL, is_draft TINYINT(1) UNSIGNED NOT NULL, sent_date DATETIME NOT NULL, read_date DATETIME NOT NULL, expire_date DATETIME NOT NULL, sender INT UNSIGNED NOT NULL, recipient INT UNSIGNED NOT NULL, PRIMARY KEY (id))
-			AS (SELECT messages.id, messages.content, messages.is_read, messages.is_important, messages.is_draft, messages.sent_date, messages.read_date, messages.expire_date, 0 AS sender, 0 AS recipient  FROM messages,participants WHERE participants.message_id = messages.id AND participants.contact_id = ? AND participants.is_sender=0 AND messages.is_important=1 ORDER BY messages.id DESC LIMIT ?,?); ";
+			AS (SELECT messages.id, messages.content, messages.is_read, messages.is_important, messages.is_draft, messages.sent_date, messages.read_date, messages.expire_date, 0 AS sender, 0 AS recipient  FROM messages,participants WHERE participants.message_id = messages.id AND participants.contact_id = ? AND participants.is_sender=0 AND messages.is_important=1 AND messages.is_draft=0 ORDER BY messages.id DESC LIMIT ?,?); ";
 	ELSE
 		PREPARE STMT FROM " CREATE TEMPORARY TABLE IF NOT EXISTS messages_lookup
 			(id INT UNSIGNED NOT NULL, content TEXT NOT NULL, is_read TINYINT(1) UNSIGNED NOT NULL, is_important TINYINT(1) UNSIGNED NOT NULL, is_draft TINYINT(1) UNSIGNED NOT NULL, sent_date DATETIME NOT NULL, read_date DATETIME NOT NULL, expire_date DATETIME NOT NULL, sender INT UNSIGNED NOT NULL, recipient INT UNSIGNED NOT NULL, PRIMARY KEY (id))
@@ -768,3 +768,115 @@ BEGIN
 	DEALLOCATE PREPARE STMT;
 
 END
+
+
+
+
+-- --------------------------------------------------------------------------------
+-- Conversations
+-- Returns the most recent message of each conversation. A conversation is the set of messages between one user and one contact.
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE DEFINER=`maxdistrodb`@`%.%.%.%` PROCEDURE `conversations`(IN userIdIn INT UNSIGNED, IN startIn INT UNSIGNED, IN limitIn INT UNSIGNED)
+BEGIN
+
+	/* Create temporary table to work with, populated with all messages this user is a participant of */
+	DROP TEMPORARY TABLE IF EXISTS conversations;
+	CREATE TEMPORARY TABLE IF NOT EXISTS conversations
+		(id INT UNSIGNED NOT NULL, content TEXT NOT NULL, is_read TINYINT(1) UNSIGNED NOT NULL, is_important TINYINT(1) UNSIGNED NOT NULL, is_draft TINYINT(1) UNSIGNED NOT NULL, sent_date DATETIME NOT NULL, read_date DATETIME NOT NULL, expire_date DATETIME NOT NULL, sender INT UNSIGNED NOT NULL, recipient INT UNSIGNED NOT NULL, PRIMARY KEY (id))
+		AS (SELECT messages.id, messages.content, messages.is_read, messages.is_important, messages.is_draft, messages.sent_date, messages.read_date, messages.expire_date, 0 AS sender, 0 AS recipient  FROM messages,participants WHERE participants.message_id = messages.id AND messages.is_draft=0 AND participants.contact_id = userIdIn ORDER BY messages.id DESC);
+
+	/* Add sender */
+	UPDATE conversations set sender=(SELECT contact_id FROM participants WHERE message_id=conversations.id and is_sender=1);
+	
+	/* Add recipient. Only one recipient currently supported */
+	UPDATE conversations set recipient=(SELECT contact_id FROM participants WHERE message_id=conversations.id and is_sender=0);
+
+	/* return a the most recent message for each conversation. we need to use a second temp table since mysql limitations don't allow mult references in one select */
+	CREATE TEMPORARY TABLE conversations2 SELECT * FROM conversations;
+	PREPARE STMT FROM " SELECT conversations.* FROM conversations, contacts
+		WHERE contacts.user_id=? AND (conversations.sender=contacts.contact_user_id OR conversations.recipient=contacts.contact_user_id) AND conversations.id = ( 
+			SELECT MAX( cv2.id ) 
+			FROM conversations2 cv2
+			WHERE cv2.sender = contacts.contact_user_id
+			OR cv2.recipient = contacts.contact_user_id 
+		)  ORDER BY conversations.id DESC LIMIT ?,?; ";
+	
+	SET @userId = userIdIn;
+	SET @start = startIn;
+	SET @limit = limitIn;
+	EXECUTE STMT USING @userId, @start, @limit;
+	DEALLOCATE PREPARE STMT;
+	
+	/* delete temporary table */
+	DROP TEMPORARY TABLE conversations;
+	DROP TEMPORARY TABLE conversations2;
+
+
+END
+
+
+
+-- --------------------------------------------------------------------------------
+-- Conversation
+-- Returns all messages in a conversation, i.e. between two particular users
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE `conversation` (IN userIdIn INT UNSIGNED, IN contactIdIn INT UNSIGNED, IN startIn INT UNSIGNED, IN limitIn INT UNSIGNED)
+BEGIN
+
+	DROP TEMPORARY TABLE IF EXISTS messages_lookup;
+	CREATE TEMPORARY TABLE IF NOT EXISTS messages_lookup
+		(id INT UNSIGNED NOT NULL, content TEXT NOT NULL, is_read TINYINT(1) UNSIGNED NOT NULL, is_important TINYINT(1) UNSIGNED NOT NULL, is_draft TINYINT(1) UNSIGNED NOT NULL, sent_date DATETIME NOT NULL, read_date DATETIME NOT NULL, expire_date DATETIME NOT NULL, sender INT UNSIGNED NOT NULL, recipient INT UNSIGNED NOT NULL, PRIMARY KEY (id))
+		AS (SELECT messages.id, messages.content, messages.is_read, messages.is_important, messages.is_draft, messages.sent_date, messages.read_date, messages.expire_date, 0 AS sender, 0 AS recipient  FROM messages,participants WHERE participants.message_id = messages.id AND messages.is_draft=0 AND participants.contact_id = userIdIn ORDER BY messages.id DESC);
+
+	/* Add sender */
+	UPDATE messages_lookup set sender=(SELECT contact_id FROM participants WHERE message_id=messages_lookup.id and is_sender=1);
+	
+	/* Add recipient. Only one recipient currently supported */
+	UPDATE messages_lookup set recipient=(SELECT contact_id FROM participants WHERE message_id=messages_lookup.id and is_sender=0);
+
+	/* return only those messages where the contact is a participant */
+	PREPARE STMT FROM " SELECT * FROM messages_lookup
+		WHERE (sender=? AND recipient=?) OR (sender=? AND recipient=?) ORDER BY messages_lookup.id DESC LIMIT ?,?; ";
+	
+	SET @userId = userIdIn;
+	SET @contactId = contactIdIn;	
+	SET @start = startIn;
+	SET @limit = limitIn;
+	EXECUTE STMT USING @userId, @contactId, @contactId, @userId, @start, @limit;
+	DEALLOCATE PREPARE STMT;
+	
+	/* delete temporary table */
+	DROP TEMPORARY TABLE messages_lookup;
+
+
+END
+
+
+-- --------------------------------------------------------------------------------
+-- Folder Stats
+-- Returns counts of folders and contacts that are commonly required for rendering count bubbles in the UI of client pages
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE `folderStats` (IN userIdIn INT UNSIGNED)
+BEGIN
+	SET @sent = (SELECT COUNT(*) FROM messages,participants WHERE participants.message_id = messages.id AND participants.contact_id = userIdIn AND messages.is_draft=0 AND participants.is_sender=1);
+
+	SET @inbox = (SELECT COUNT(*) FROM messages,participants WHERE participants.message_id = messages.id AND participants.contact_id = userIdIn AND messages.is_draft=0 AND participants.is_sender=0);
+
+	SET @drafts = (SELECT COUNT(*) FROM messages,participants WHERE participants.message_id = messages.id AND participants.contact_id = userIdIn AND participants.is_sender=1 AND messages.is_draft=1);
+
+	SET @important = (SELECT COUNT(*) FROM messages,participants WHERE participants.message_id = messages.id AND participants.contact_id = userIdIn AND participants.is_sender=0 AND messages.is_important=1 AND messages.is_draft=0);
+
+	SET @contacts = (SELECT COUNT(*) FROM contacts WHERE user_id=userIdIn);
+
+	SET @blacklist = (SELECT COUNT(*) FROM contacts WHERE user_id=userIdIn AND is_blocked=1);
+
+	SELECT @sent AS sent, @inbox AS inbox, @drafts AS drafts, @important AS important, @contacts as contacts, @blacklist AS blacklist;
+
+END
+

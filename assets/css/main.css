@@ -87,6 +87,9 @@ textarea {
 	text-align: center;
 	margin-top:10px;
 }
+.safetext-content {
+	background-color: transparent !important;
+}
 
 
 /* disclaimer footer */
@@ -153,11 +156,129 @@ textarea {
 }
 
 
+/* Conversations Bubbles */
+.bubble {
+	background-image: linear-gradient(bottom, rgb(210,244,254) 25%, rgb(149,194,253) 100%);
+	background-image: -o-linear-gradient(bottom, rgb(210,244,254) 25%, rgb(149,194,253) 100%);
+	background-image: -moz-linear-gradient(bottom, rgb(210,244,254) 25%, rgb(149,194,253) 100%);
+	background-image: -webkit-linear-gradient(bottom, rgb(210,244,254) 25%, rgb(149,194,253) 100%);
+	background-image: -ms-linear-gradient(bottom, rgb(210,244,254) 25%, rgb(149,194,253) 100%);
+	background-image: -webkit-gradient(
+	linear,
+	left bottom,
+	left top,
+	color-stop(0.25, rgb(210,244,254)),
+	color-stop(1, rgb(149,194,253))
+);
+	border: solid 1px rgba(0, 0, 0, 0.5);
+	/* vendor rules */
+	border-radius: 20px;
+	/* vendor rules */
+	box-shadow: inset 0 5px 5px rgba(255, 255, 255, 0.4), 0 1px 3px rgba(0, 0, 0, 0.2);
+	/* vendor rules */
+	box-sizing: border-box;
+	clear: both;
+	float: left;
+	margin-bottom: 0;
+	padding: 8px 30px;
+	position: relative;
+	text-shadow: 0 1px 1px rgba(255, 255, 255, 0.7);
+	width: auto;
+	max-width: 100%;
+	word-wrap: break-word;
+	font-size: 90%;
+}
+
+.bubble:before, .bubble:after {
+	border-radius: 20px / 10px;
+	content: '';
+	display: block;
+	position: absolute;
+}
+
+.bubble:before {
+	border: 10px solid transparent;
+	border-bottom-color: rgba(0, 0, 0, 0.5);
+	bottom: 0;
+	left: -7px;
+	z-index: -2;
+}
+
+.bubble:after {
+	border: 8px solid transparent;
+	border-bottom-color: #d2f4fe;
+	bottom: 1px;
+	left: -5px;
+}
+
+.bubble--alt {
+	background-image: linear-gradient(bottom, rgb(172,228,75) 25%, rgb(122,205,71) 100%);
+	background-image: -o-linear-gradient(bottom, rgb(172,228,75) 25%, rgb(122,205,71) 100%);
+	background-image: -moz-linear-gradient(bottom, rgb(172,228,75) 25%, rgb(122,205,71) 100%);
+	background-image: -webkit-linear-gradient(bottom, rgb(172,228,75) 25%, rgb(122,205,71) 100%);
+	background-image: -ms-linear-gradient(bottom, rgb(172,228,75) 25%, rgb(122,205,71) 100%);
+	background-image: -webkit-gradient(
+	linear,
+	left bottom,
+	left top,
+	color-stop(0.25, rgb(172,228,75)),
+	color-stop(1, rgb(122,205,71))
+);
+	float: right;
+}
+
+.bubble--alt:before {
+	border-bottom-color: rgba(0, 0, 0, 0.5);
+	border-radius: 20px / 10px;
+	left: auto;
+	right: -7px;
+}
+
+.bubble--alt:after {
+	border-bottom-color: #ace44b;
+	border-radius: 20px / 10px;
+	left: auto;
+	right: -5px;
+}
+
+/* Under-bubble time details */
+.safetext-timedetails-right,
+.safetext-timedetails-left {
+	clear: both;
+	font-size: 80%;
+	color: #ccc;
+	margin-bottom: 10px;
+}
+.safetext-timedetails-right {
+	float: right;
+}
+.safetext-timedetails-left {
+	float: left;
+}
 
 
+/* Conversation Container */
+.safetext-conversation-container {
+	padding:0 10px 0 10px;
+	overflow-y:auto;
+	overflow-x: hidden;
+	max-width: 100%;
+	max-height: 12em;	
+}
 
 
+/* Composer Footer */
+.safetext-footer-composer-input {
+	float: left;
+    width: 78%;
+    margin-right: 2%;
+}
 
+.safetext-footer-composer-button {
+	float: right;
+    width: 20%;
+    margin-top:4px;
+}
 
 
 
@@ -286,7 +407,10 @@ textarea[contenteditable] {
    ========================================================================== */
 /* 1st breakpoint - For grids, float B and C, leave A full width on top */
 @media only screen and (min-width: 42em) {
-    
+    /* Conversation Container */
+	.safetext-conversation-container {
+		max-height: 16em;	
+	}
 }
 
 /* 2nd breakpoint - approx width of landscape on tablets */
@@ -356,7 +480,6 @@ textarea[contenteditable] {
     	max-width: 1000px;
 		margin-left: auto;
 	    margin-right: auto;
-	    background-color: transparent !important;
     }
     
     .safetext-placeholder {
@@ -419,21 +542,31 @@ textarea[contenteditable] {
     
     
     /* folder menu */
-    .safetext-folder-menu {
+    .safetext-messages .safetext-folder-menu {
 	    margin-top:20px;
     }
+    
+    /* Conversation Container */
+	.safetext-conversation-container {
+		max-height: 18em;	
+	}
 	
 	
 }
 
 /* 3rd breakpoint - Bump up font size at very wide screens */
 @media all and (min-width: 75em) {
-    .safetext-client-grid .ui-body {
+	/* Conversation Container */
+	.safetext-conversation-container {
+		max-height: 20em;	
+	}
+	
+    /*.safetext-client-grid .ui-body {
       font-size: 125%;
     }
-    /* adjust Web Client grid */
+    /* adjust Web Client grid
     .safetext-client-grid .safetext-block-a{
     }
     .safetext-client-grid .safetext-block-b{
-    }
+    } */
 }

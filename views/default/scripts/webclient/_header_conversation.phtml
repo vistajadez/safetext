@@ -1,4 +1,4 @@
-<!-- header - with web client nav -->
+<!-- header - with web client conversation view nav -->
 <div data-role="header" class="safetext-header" data-position="fixed">
 	<h1><?php echo $this->title; ?></h1>
 	
@@ -11,9 +11,7 @@
         </ul>
     </div>
 	
-    <a data-role="button" onclick="$('.leftpanel:visible').panel('open');" href="#" data-icon="bars"
-		data-iconpos="notext" class="ui-btn-left">Menu</a>
-	<a data-role="button" href="#" data-icon="comment"
-		data-iconpos="notext" class="ui-btn-right">Compose</a>
+    <a data-role="button" href="#" data-rel="back" data-icon="carat-l"
+		data-iconpos="notext" class="ui-btn-left">Back</a>
 </div>
 <!-- /header -->
