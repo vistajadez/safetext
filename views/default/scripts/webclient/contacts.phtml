@@ -24,7 +24,7 @@
 						</div>
 						
 						<div>
-						    <ul data-role="listview" data-autodividers="true" data-filter="true" data-inset="true">
+						    <ul data-role="listview" data-autodividers="true" data-split-icon="edit" data-filter="true" data-inset="true">
 						    	<?php foreach ($this->getValue('contacts') as $this_contact) : ?>
 						    		<li><a href="/webclient/conversation/contact/<?php echo $this_contact->contact_user_id; ?>">
 						    			<h2><?php echo $this_contact->label(); ?></h2>
@@ -33,8 +33,9 @@
 						    			<?php endif; ?>
 						    			<?php if ($this_contact->email !== '') : ?>
 						    				<p style="float:left;"><strong><?php echo $this->t('Email'); ?>:</strong> <?php echo $this_contact->email; ?></p>
-						    			<?php endif; ?>
-						    		</a></li>
+						    			<?php endif; ?></a>
+										<a href="/webclient/contact/id/<?php echo $this_contact->contact_user_id; ?>"></a>
+						    		</li>
 						    	<?php endforeach; ?>
 							</ul>
 						</div>

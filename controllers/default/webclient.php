@@ -175,4 +175,48 @@ class WebclientController extends SafetextClientController {
 		}
 	 }
 	 
+	 
+	/**
+	 * Contact Action.
+	 * 
+	 * Renders edit contact view.
+	 *
+	 * @param MsView $viewObject
+	 * @return void
+	 */
+	 public function contactAction(&$viewObject) {
+		// forward to the login page if not logged in
+		if (!$this->init($viewObject)) {
+			$this->forward($viewObject, 'login', 'auth');
+		} else {
+			array_key_exists('id', $this->params) ? $contact = $this->params['id']: $contact = '';
+			
+			// load stats for all contacts and messages for current user
+			$folderStats = current($this->db->call("folderStats('" . $this->user->getValue('id') . "')"));
+			
+			// load contacts
+			$contactsArray = $this->db->call("contacts('" . $this->user->getValue('id') . "','name','0','999999')");
+			$contacts = new SafetextModelCollection('SafetextContact', $this->config, $this->db);
+			$contacts->load($contactsArray);
+			
+			// if not in existing contacts, try to add as a new contact by id??
+			
+			// ** TODO ** //
+			
+			//title
+			$contactObject = $contacts->find('contact_user_id', $contact);
+			if ($contactObject instanceof SafetextContact) $contactName = $contactObject->label();
+				else $contactName = 'Unknown';
+			$viewObject->setTitle('Edit ' . $contactName);
+			
+			//store data in view
+			$viewObject->setValue('folderStats', $folderStats);
+			$viewObject->setValue('contact', $contact);
+			$viewObject->setValue('contactObject', $contactObject);
+			$viewObject->setValue('contactName', $contactName);
+			$viewObject->setValue('contacts', $contacts);
+			
+		}
+	 }
+	 
 }

@@ -346,6 +346,60 @@
 	});
 	
 	
+	/**
+	 * Save Contact.
+	 * This event will run when a save contact button is clicked.
+	 * Updates the on-server contact record with details from the current contact form.
+	 */
+	$(document).on('click', '.safetext-save-contact-button', function() {	
+		// open the picker in a pop-up
+		var thisForm = Safetext.lastPage.find(".safetext-edit-contact-form");
+		
+		if (thisForm.find('input[name="name"]').val() != '') {
+			$.ajax({url: '/api/contact',
+				data: thisForm.serialize(),
+				headers: {'x-safetext-token': getCookie('token')},
+				type: 'post',               
+				async: 'true',
+				dataType: 'json',
+				beforeSend: function() {
+					// This callback function will trigger before data is sent
+					$.mobile.loading( 'show');
+				},
+				complete: function() {
+					// This callback function will trigger on data sent/received complete
+					$.mobile.loading( "hide" );
+				},
+				success: function (result) {
+					if(result.status === 'success') {
+						// set the auth cookie
+						if (typeof result.token != 'undefined') setCookie('token',result.token,7);
+						
+						// go back to contacts page
+						$.mobile.pageContainer.pagecontainer("change", '/webclient/contacts/',{
+							reloadPage : true
+						});
+						
+					} else {
+						alert('Unable to save changes. The server said: ' + result.data.message); 
+					}
+				},
+				error: function (request,error) {
+					// This callback function will trigger on unsuccessful action                
+					alert('Network error has occurred; please try again.');
+				}
+			}); 
+
+
+		
+		} else {
+			alert('Enter a name for this contact');
+		}
+	
+		return false;
+	});
+	
+	
 	
 	
 	
