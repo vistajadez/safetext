@@ -73,6 +73,9 @@ class WebclientController extends SafetextClientController {
 			$contacts = new SafetextModelCollection('SafetextContact', $this->config, $this->db);
 			$contacts->load($contactsArray);
 			
+			//title
+			$viewObject->setTitle('Contacts');
+			
 			// set view data
 			$viewObject->setValue('folderStats', $folderStats);
 			$viewObject->setValue('contacts', $contacts);
@@ -116,7 +119,8 @@ class WebclientController extends SafetextClientController {
 				$viewObject->setValue($folder, $messages);
 			}
 			
-			// title
+			//title
+			$viewObject->setTitle(ucfirst($folder));
 			
 			// store data in view
 			$viewObject->setValue('folderStats', $folderStats);

@@ -1,7 +1,7 @@
 <div data-role="page" class="safetext-page safetext-contacts" data-title="<?php echo $this->t('Contacts'); ?>">
 		
 		<?php echo $this->render('webclient/_leftpanel.phtml'); ?>
-		<?php echo $this->render('webclient/_header.phtml'); ?>
+		<?php echo $this->render('webclient/_header_contacts.phtml'); ?>
 	
 	    <div data-role="content" class="safetext-content" data-theme="a">
 	    	
@@ -9,7 +9,7 @@
 		    	<!-- Left-hand Folder Column -->
 			    <div class="safetext-block-a">
 			    	<div class="ui-body ui-body-d">
-					    <div><a href="#" class="ui-btn ui-icon-comment ui-btn-icon-left ui-corner-all ui-shadow">Compose</a></div>
+					    <div><a href="#" class="safetext-add-contact-button ui-btn ui-icon-plus ui-btn-icon-left ui-corner-all ui-shadow"><?php echo $this->t('Add Contact'); ?></a></div>
 					    <?php echo $this->render('webclient/_foldermenu.phtml'); ?>
 					</div>
 			    </div>
@@ -26,7 +26,7 @@
 						<div>
 						    <ul data-role="listview" data-autodividers="true" data-filter="true" data-inset="true">
 						    	<?php foreach ($this->getValue('contacts') as $this_contact) : ?>
-						    		<li><a href="#">
+						    		<li><a href="/webclient/conversation/contact/<?php echo $this_contact->contact_user_id; ?>">
 						    			<h2><?php echo $this_contact->label(); ?></h2>
 						    			<?php if ($this_contact->phone !== '') : ?>
 						    				<p style="float:left; margin-right:5px;"><strong><?php echo $this->t('Tel'); ?>:</strong> <?php echo $this_contact->phone; ?></p>
