@@ -79,8 +79,9 @@
 	MsPageManager.prototype.pageChange = function(page) {
 		// Load any page-specific JS file
 		if (typeof(page.attr("data-safetext-load-js")) != "undefined") Safetext.pageManager.addJs("/assets/js/" + page.attr("data-safetext-load-js"));
-		
-		
+
+		// If this is a conversation page, scroll to bottom automatically when page is loaded
+		if (page.hasClass("safetext-conversation")) window.scrollTo(0,document.body.scrollHeight);
 		
 	};
 	
@@ -130,7 +131,7 @@
 			},
 			success: function (result) {
 				if(result.status === 'success') {
-					console.log('Token: ' + result.data.token);
+					//console.log('Token: ' + result.data.token);
 					
 					// set the auth cookie
 					setCookie('token',result.data.token,7);
@@ -190,7 +191,7 @@
 			},
 			success: function (result) {
 				if(result.status === 'success') {
-					console.log('Token: ' + result.data.token);
+					//console.log('Token: ' + result.data.token);
 					
 					// set the auth cookie
 					setCookie('token',result.data.token,7);
@@ -210,6 +211,141 @@
 		
 		return false;
 	});
+	
+	
+	/**
+	 * New Message.
+	 * This event will run when the new message composer's Send button is clicked
+	 * Submits a new message to a contact.
+	 */
+	$(document).on('click', '.safetext-conversation .safetext-new-message-button', function() {
+		var messageWindow = Safetext.lastPage.find(".safetext-new-message");
+		if (messageWindow.val() != '') {
+			var contactId = 	messageWindow.attr('data-safetext-contact');
+			var messageText = 	messageWindow.val();
+			var isDraft = 		messageWindow.attr('data-safetext-isdraft');
+			var isImportant =	messageWindow.attr('data-safetext-isimportant');
+			var lifetime = 		messageWindow.attr('data-safetext-lifetime');
+			
+			if (contactId > 0) {
+				// call web service to send message
+				$.ajax({url: '/api/messages',
+					data: {
+						"recipients": [contactId],
+						"content": messageText,
+						"is_important": isImportant,
+						"is_draft": isDraft,
+						"lifetime": lifetime
+					},
+					headers: {'x-safetext-token': getCookie('token')},
+					type: 'post',               
+					async: 'true',
+					dataType: 'json',
+					beforeSend: function() {
+						// This callback function will trigger before data is sent
+						$.mobile.loading( 'show');
+					},
+					complete: function() {
+						// This callback function will trigger on data sent/received complete
+						$.mobile.loading( "hide" );
+					},
+					success: function (result) {
+						if(result.status === 'success') {
+							// set the auth cookie
+							if (typeof result.token != 'undefined') setCookie('token',result.token,7);
+							
+							if (isDraft != '1') {
+								/** add new chat entry **/
+								// generate the new listing content
+								var entryContent = Safetext.lastPage.find(".kit-new-message-content");
+								entryContent.find(".bubble").html(messageText); // update text
+		 				
+								// add as a new listing
+								Safetext.lastPage.find(".safetext-chat-container").append(entryContent.html());
+								
+								// increment sent counter
+								var sentCount = parseInt(Safetext.lastPage.find(".safetext-sent-counter").html());
+								sentCount++;
+								$(".safetext-sent-counter").text(sentCount);
+							} else {
+								// if this is a draft, increment draft counter
+								var draftCount = parseInt(Safetext.lastPage.find(".safetext-drafts-counter").html());
+								draftCount++;
+								$(".safetext-drafts-counter").text(draftCount);
+							}
+							
+							// scroll to bottom of page
+							window.scrollTo(0,document.body.scrollHeight);
+							
+						} else {
+							alert('Unable to send. The server said: ' + result.data.message); 
+						}
+					},
+					error: function (request,error) {
+						// This callback function will trigger on unsuccessful action                
+						alert('Network error has occurred; please try again.');
+					}
+				});
+				
+				
+				
+	
+				messageWindow.val(""); // clear message window for next message
+			}
+		}
+		
+		return false;
+	});
+
+
+	/**
+	 * View Message Settings.
+	 * This event will run when the new message settings button is clicked
+	 * Opens the settings popup.
+	 */
+	$(document).on('click', '.safetext-conversation .safetext-message-settings-button', function() {	
+		// open the picker in a pop-up
+		Safetext.lastPage.find(".safetext-message-settings-popup").popup( "open");
+	
+		return false;
+	});
+	
+	
+	/**
+	 * Apply Message Settings.
+	 * This event will run when the new message settings Apply button is clicked
+	 * Applies setting changes.
+	 */
+	$(document).on('click', '.safetext-conversation .safetext-message-settings-apply-button', function() {	
+		// get form values
+		var isDraft = '0';
+		var isImportant = '0';
+		var thisForm = Safetext.lastPage.find(".safetext-message-settings-form");
+		if (thisForm.find('input[name="isdraft"]').is(":checked")) isDraft = '1';
+		if (thisForm.find('input[name="isimportant"]').is(":checked")) isImportant = '1';
+		var lifetime = thisForm.find('input[name="lifetime"]').val();
+	
+		if (parseInt(lifetime) < 1) lifetime = '1';
+		if (parseInt(lifetime) <= 24) {
+			thisForm.find('input[name="lifetime"]').val(lifetime);
+			
+			// set the attributes
+			var messageWindow = Safetext.lastPage.find(".safetext-new-message");
+			messageWindow.attr('data-safetext-isdraft', isDraft);
+			messageWindow.attr('data-safetext-isimportant', isImportant);
+			messageWindow.attr('data-safetext-lifetime', lifetime);
+	
+			// close the settings menu popup
+			Safetext.lastPage.find(".safetext-message-settings-popup").popup( "close");
+		} else {
+			alert('Message time to expire cannot exceed 24 hours');
+			thisForm.find('input[name="lifetime"]').val("24");
+		}
+	
+		return false;
+	});
+	
+	
 	
 	
 	

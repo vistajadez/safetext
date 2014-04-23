@@ -1,6 +1,6 @@
 <div data-role="page" class="safetext-page safetext-conversation" data-title="<?php echo $this->t('Conversation'); ?> - <?php echo $this->getValue('contactName'); ?>">
 		
-		<?php echo $this->render('webclient/_leftpanel.phtml'); ?>
+		<div data-role="panel" class="leftpanel" data-position="left" data-display="reveal" data-theme="b"></div>
 		<?php echo $this->render('webclient/_header_conversation.phtml'); ?>
 	
 	    <div data-role="content" class="safetext-content" data-theme="a">
@@ -26,7 +26,7 @@
 							<h3><?php echo $this->getValue('contactName'); ?></h3>
 						</div>
 						
-						<div>
+						<div class="safetext-chat-container">
 								<?php $lastHrsElapsed = ''; ?>
 						    	<?php foreach ($this->getValue('conversation') as $this_message) : 
 							    	// get time since it's been sent
@@ -66,8 +66,12 @@
 					    			<?php $lastHrsElapsed = $hrsElapsed; ?>
 					    		</div>
 						    	<?php endforeach; ?>
-
 						</div>
+						
+						<span class="kit-new-message-content" style="display:none;">
+							<div class="bubble bubble--alt"></div>
+							<div class="safetext-timedetails-right"></div>
+						</span>
 						    
 			    	</div>
 			    </div>
