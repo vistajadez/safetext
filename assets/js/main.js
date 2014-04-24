@@ -400,7 +400,60 @@
 	});
 	
 	
+	/**
+	 * Remove Contact.
+	 * This event will run when a contact record's Remove Contact button is clicked.
+	 * Removes the on-server contact record for this user.
+	 */
+	$(document).on('click', '.safetext-contact .safetext-remove-contact-button', function() {	
+		// get the contact ID
+		var thisButton = Safetext.lastPage.find(".safetext-remove-contact-button");
+		var contact = thisButton.attr('data-safetext-contact');
+
+		// send remove request to server
+		$.ajax({url: '/api/contact/contact/' + contact,
+			headers: {'x-safetext-token': getCookie('token')},
+			type: 'delete',               
+			async: 'true',
+			dataType: 'json',
+			beforeSend: function() {
+				// This callback function will trigger before data is sent
+				$.mobile.loading( 'show');
+			},
+			complete: function() {
+				// This callback function will trigger on data sent/received complete
+				$.mobile.loading( "hide" );
+			},
+			success: function (result) {
+				if(result.status === 'success') {
+					// set the auth cookie
+					if (typeof result.token != 'undefined') setCookie('token',result.token,7);
+					
+					// go back to contacts page
+					$.mobile.pageContainer.pagecontainer("change", '/webclient/contacts/',{
+						reloadPage : true
+					});
+					
+					return true;
+				} else {
+					alert('Unable to remove contact. The server said: ' + result.data.message); 
+				}
+			},
+			error: function (request,error) {
+				// This callback function will trigger on unsuccessful action                
+				alert('Network error has occurred; please try again.');
+			}
+		}); 
+
+		return false;
+	});
 	
+	
+	
+	
+	
+	
+		
 	
 	
 	

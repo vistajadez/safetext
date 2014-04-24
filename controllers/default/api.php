@@ -703,7 +703,9 @@ class ApiController extends MsController {
 	/**
 	 * Contact Action.
 	 * 
-	 * A POST request updates an existing contact. Only accessible from the WEB CLIENT.
+	 * A POST request updates an existing contact. 
+	 * A REMOVE request removes this contact record for the user.
+	 * Only accessible from the WEB CLIENT.
 	 *
 	 * @param MsView $viewObject
 	 * @return void
@@ -713,7 +715,7 @@ class ApiController extends MsController {
 		
 		// ensure we're using https
 		if (MS_PROTOCOL === 'https') {
-			if (MS_REQUEST_METHOD === 'POST') {
+			
 				if (array_key_exists('HTTP_X_SAFETEXT_TOKEN', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_TOKEN'] !== '') {
 					
 					// Create a database connection to share
@@ -731,20 +733,33 @@ class ApiController extends MsController {
 									// Create a database connection to share
 									$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
 								
-									// set up variables for db call
-									array_key_exists('name', $this->params)? $name = $this->escapeForDb($this->params['name']): $name = 'Unknown';
-									array_key_exists('phone', $this->params)? $phone = $this->escapeForDb($this->params['phone']): $phone = '';
-									array_key_exists('email', $this->params)? $email = $this->escapeForDb($this->params['email']): $email = '';
-									array_key_exists('whitelist', $this->params)? $whitelist = $this->escapeForDb($this->params['whitelist']): $whitelist = '0';
-									array_key_exists('blocked', $this->params)? $blocked = $this->escapeForDb($this->params['blocked']): $blocked = '0';
-									
-									// make update and add to device sync queues via stored procedure	
-									$db->CALL("syncContact('" . $user->id . "','" . $this->params['contact'] . "','" . $name . "','" . $email . "','" . $phone . "','" . $whitelist . "','" . $blocked . "')");
+									if (MS_REQUEST_METHOD === 'POST') { // update contact record								
+										// set up variables for db call
+										array_key_exists('name', $this->params)? $name = $this->escapeForDb($this->params['name']): $name = 'Unknown';
+										array_key_exists('phone', $this->params)? $phone = $this->escapeForDb($this->params['phone']): $phone = '';
+										array_key_exists('email', $this->params)? $email = $this->escapeForDb($this->params['email']): $email = '';
+										array_key_exists('whitelist', $this->params)? $whitelist = $this->escapeForDb($this->params['whitelist']): $whitelist = '0';
+										array_key_exists('blocked', $this->params)? $blocked = $this->escapeForDb($this->params['blocked']): $blocked = '0';
 										
-									// send feedback to client
-									$viewObject->setValue('status', 'success');
-									$viewObject->setValue('token', $user->getRelationship('device')->token);
-
+										// make update and add to device sync queues via stored procedure	
+										$db->CALL("syncContact('" . $user->id . "','" . $this->params['contact'] . "','" . $name . "','" . $email . "','" . $phone . "','" . $whitelist . "','" . $blocked . "')");
+											
+										// send feedback to client
+										$viewObject->setValue('status', 'success');
+										$viewObject->setValue('token', $user->getRelationship('device')->token);
+									} else if (MS_REQUEST_METHOD === 'DELETE') { // remove contact record
+									
+										// delete contact and add to device sync queues via stored procedure
+										$db->CALL("syncContactDelete('" . $user->id . "','" . $this->params['contact'] . "')");
+										
+										// send feedback to client
+										$viewObject->setValue('status', 'success');
+										$viewObject->setValue('token', $user->getRelationship('device')->token);
+										
+									} else { // non-allowed request type
+										$viewObject->setValue('status', 'fail');
+										$viewObject->setValue('data', array('message' => MS_REQUEST_METHOD . ' requests are not supported for this web service'));
+									}
 								} else { // no contact ID
 									$viewObject->setValue('status', 'fail');
 									$viewObject->setValue('data', array('message' => 'Missing contact ID'));
@@ -765,10 +780,7 @@ class ApiController extends MsController {
 					$viewObject->setValue('status', 'fail');
 					$viewObject->setValue('data', array('message' => 'Missing SafeText auth token. Please log in'));
 				}
-			} else { // non-POST request
-				$viewObject->setValue('status', 'fail');
-				$viewObject->setValue('data', array('message' => MS_REQUEST_METHOD . ' requests are not supported for this web service'));
-			}
+			
 		} else { // insecure
 			$viewObject->setValue('status', 'fail');
 			$viewObject->setValue('data', array('message' => 'Insecure (non-HTTPS) access denied'));
