@@ -449,6 +449,65 @@
 	});
 	
 	
+	/**
+	 * Add Contact.
+	 * This event will run when a search result for a new contact is clicked.
+	 * Adds the search result as a new contact.
+	 */
+	$(document).on('click', '.safetext-contactadd .safetext-add-contact-record', function(event) {	
+
+		var entry = $(event.target).closest("li");
+		var name = entry.attr("data-safetext-name");
+		var id = entry.attr("data-safetext-id");
+		var phone = entry.attr("data-safetext-phone");
+		var email = entry.attr("data-safetext-email");
+		
+		if (parseInt(id) > 0) {
+			$.ajax({url: '/api/contact',
+				data: {"contact": id, "name": name, "phone": phone, "email": email, "whitelist": '0', "blocked": '0'},
+				headers: {'x-safetext-token': getCookie('token')},
+				type: 'post',               
+				async: 'true',
+				dataType: 'json',
+				beforeSend: function() {
+					// This callback function will trigger before data is sent
+					$.mobile.loading( 'show');
+				},
+				complete: function() {
+					// This callback function will trigger on data sent/received complete
+					$.mobile.loading( "hide" );
+				},
+				success: function (result) {
+					if(result.status === 'success') {
+						// set the auth cookie
+						if (typeof result.token != 'undefined') setCookie('token',result.token,7);
+						
+						// go back to contacts page
+						$.mobile.pageContainer.pagecontainer("change", '/webclient/contactadd',{
+							reloadPage : true,
+							allowSamePageTransition: true
+						});
+						
+					} else {
+						alert('Unable to add contact. The server said: ' + result.data.message); 
+					}
+				},
+				error: function (request,error) {
+					// This callback function will trigger on unsuccessful action                
+					alert('Network error has occurred; please try again.');
+				}
+			}); 
+
+
+		
+		} else {
+			alert('Bad Contact Id');
+		}
+	
+		return false;
+	});
+	
+	
 	
 	
 	

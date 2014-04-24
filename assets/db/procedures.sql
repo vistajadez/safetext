@@ -578,7 +578,13 @@ BEGIN
 	/* add whitelist only users for whom this user is a whitelisted contact */
 	INSERT INTO results_table SELECT users.id,users.username,users.firstname,users.lastname,users.phone,users.email FROM users,contacts WHERE (CONCAT_WS(' ',users.firstname,users.lastname) = queryStringIn OR users.username=queryStringIn) AND users.whitelist_only = 1 AND contacts.user_id=users.id AND contacts.contact_user_id = userIdIn AND contacts.is_blocked=0 AND contacts.is_whitelist=1;
 
-	/* lookup by id */
+	/* remove existing contacts */
+	DELETE FROM results_table WHERE id IN (SELECT contact_user_id FROM contacts WHERE user_id=userIdIn);
+	
+	/* remove the case where a result is the user itself */
+	DELETE FROM results_table WHERE id=userIdIn;
+
+	/* lookup by id. do this after we've removed existing contacts, since existing contacts might be ok in case of id search */
 	INSERT INTO results_table SELECT id,username,firstname,lastname,phone,email FROM users WHERE id=queryStringIn;
 
 	/* use username in the cases where firstname and lastname are empty */

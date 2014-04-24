@@ -219,4 +219,40 @@ class WebclientController extends SafetextClientController {
 		}
 	 }
 	 
+	 
+	/**
+	 * Contact Add.
+	 * 
+	 * Provide search field for new contacts, along with results for any passed contact search.
+	 *
+	 * @param MsView $viewObject
+	 * @return void
+	 */
+	 public function contactaddAction(&$viewObject) {
+		// forward to the web client page if logged in, otherwise to the login page
+		if (!$this->init($viewObject)) {
+			$this->forward($viewObject, 'login', 'auth');
+		} else {
+			// load stats for all contacts and messages for current user
+			$folderStats = current($this->db->call("folderStats('" . $this->user->getValue('id') . "')"));
+			
+			array_key_exists('q', $this->params) ? $query = $this->params['q']: $query = '';
+			$results = null;
+			
+			if ($query !== '') {
+				$contactsArray = $this->db->call("contactLookup('" . $this->user->getValue('id') . "','" . $query . "')");				
+				$results = new SafetextModelCollection('SafetextContact', $this->config, $this->db);
+				$results->load($contactsArray);
+			}
+			
+			//title
+			$viewObject->setTitle('Add Contact');
+			
+			// set view data
+			$viewObject->setValue('folderStats', $folderStats);
+			$viewObject->setValue('q', $query);
+			$viewObject->setValue('results', $results);
+		}
+	 }
+	 
 }

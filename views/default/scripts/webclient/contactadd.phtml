@@ -1,0 +1,79 @@
+<div data-role="page" class="safetext-page safetext-contactadd" data-title="<?php echo $this->t('Add Contact'); ?>">
+		
+		<div data-role="panel" class="leftpanel" data-position="left" data-display="reveal" data-theme="b"></div>
+		<?php echo $this->render('webclient/_header_contactadd.phtml'); ?>
+	
+	    <div data-role="content" class="safetext-content" data-theme="a">
+	    	
+		    <div class="safetext-client-grid">
+		    	<!-- Left-hand Folder Column -->
+			    <div class="safetext-block-a">
+			    	<div class="ui-body ui-body-d">
+					    <?php echo $this->render('webclient/_foldermenu.phtml'); ?>
+					</div>
+			    </div>
+			    
+			    <!-- Main Content Column -->
+			    <div class="safetext-block-b">
+			    	<div class="ui-body ui-body-d">
+				    	<div class="ui-grid-b safetext-mobile-hidden">
+						    <div class="ui-block-a"><a href="/webclient/messages" class="ui-btn ui-corner-all ui-btn-icon-left ui-icon-mail">Messages</a></div>
+						    <div class="ui-block-b"><a href="/webclient/contacts" class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-user ui-btn-active">Contacts</a></div>
+						    <div class="ui-block-c"><a href="/webclient/settings" class="ui-btn ui-corner-all ui-btn-icon-left ui-icon-gear">Settings</a></div>
+						</div>
+						
+						<form class="safetext-edit-contact-form" method="post" action="/webclient/contactadd">
+							<ul data-role="listview" data-inset="true">
+								<li data-role="list-divider" style="white-space:normal;"><?php echo $this->t('Search for contacts by full name or Safe-Text username'); ?>:</li>
+								<li class="ui-field-contain">
+								    <input type="search" name="q" value="<?php echo $this->getValue('q'); ?>">
+								</li>
+								<li class="ui-field-contain">
+									<fieldset class="center">
+										<div class="ui-input-btn ui-btn ui-corner-all ui-shadow">
+											<?php echo $this->t('Search'); ?>
+											<input type="submit" data-enhanced="true" value="Search">
+										</div>
+									</fieldset>
+								</li>
+							</ul>
+						</form>
+
+						<?php if ($this->getValue('results') instanceof MsModelCollection) : ?>
+							<?php if (sizeof($this->getValue('results')) > 0) : ?>
+								<div>
+								    <ul data-role="listview" data-autodividers="true" data-inset="true" data-icon="plus">
+								    	<?php foreach ($this->getValue('results') as $this_contact) : ?>
+								    		<li data-safetext-id="<?php echo $this_contact->key; ?>" data-safetext-name="<?php echo $this_contact->label(); ?>" data-safetext-phone="<?php echo $this_contact->phone; ?>" data-safetext-email="<?php echo $this_contact->email; ?>"><a class="safetext-add-contact-record" href="#">
+								    			<h2><?php echo $this_contact->label(); ?></h2>
+								    			<?php if ($this_contact->phone !== '') : ?>
+								    				<p style="float:left; margin-right:5px;"><strong><?php echo $this->t('Tel'); ?>:</strong> <?php echo $this_contact->phone; ?></p>
+								    			<?php endif; ?>
+								    			<?php if ($this_contact->email !== '') : ?>
+								    				<p style="float:left;"><strong><?php echo $this->t('Email'); ?>:</strong> <?php echo $this_contact->email; ?></p>
+								    			<?php endif; ?></a>
+								    		</li>
+								    	<?php endforeach; ?>
+									</ul>
+								</div>
+							<?php else : ?>
+								<ul data-role="listview" data-inset="true">
+		                            <div data-role="content" class="ui-body-c">
+		                                <div class="safetext-content">
+		                                    <p><?php echo $this->t("No results"); ?></p>
+		                                </div>
+		                            </div>
+						    	</ul>
+							<?php endif; ?>
+						<?php endif; ?>
+						    
+			    	</div>
+			    </div>
+
+			</div>
+	    
+	    </div><!-- /content -->
+	
+	<?php echo $this->render('webclient/_footer.phtml'); ?>
+		
+</div> <!--/page-->
