@@ -310,7 +310,7 @@ BEGIN
 	IF userIdIn = senderId THEN
 		/* if a message has been changed from draft to active, reset the expire date */
 		IF isDraft = 1 AND isDraftIn = 0 then
-			UPDATE messages SET expireDate = DATE_ADD(NOW(),INTERVAL 24 HOUR) WHERE id=messageId LIMIT 1;
+			UPDATE messages SET expire_date = DATE_ADD(NOW(),INTERVAL 24 HOUR) WHERE id=messageId LIMIT 1;
 		END IF;
 
 		SET isImportant = isImportantIn;

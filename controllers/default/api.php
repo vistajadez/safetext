@@ -823,14 +823,26 @@ class ApiController extends MsController {
 								
 									if (MS_REQUEST_METHOD === 'POST') { // update message record, setting is_draft to '1'								
 										
+										// load all drafts
+										$messagesArray = $db->call("messages('" . $user->getValue('id') . "','drafts','0','999999')");
+										$messages = new SafetextModelCollection('SafetextMessage', $this->config, $this->db);
+										$messages->load($messagesArray);
 										
-										
-										
+										$this_message = $messages->find('id', $this->params['message']);
+										if ($this_message instanceof SafetextMessage && $this_message->isValid()) {
+											// sync the update
+											$db->call("syncMessage('" . $user->id . "','" . $this->params['message'] . "','" . $this_message->is_important . "','0','0')");
+$this->config['log']->write('call: ' . "syncMessage('" . $user->id . "','" . $this->params['message'] . "','" . $this_message->is_important . "','0','0')", 'Web client debug trace');
 											
-										// send feedback to client
-										$viewObject->setValue('status', 'fail');
-										$viewObject->setValue('token', $user->getRelationship('device')->token);
-										$viewObject->setValue('data', array('message' =>'Not yet implemented'));
+											// send feedback to client
+											$viewObject->setValue('status', 'success');
+											$viewObject->setValue('token', $user->getRelationship('device')->token);
+										} else {
+											$viewObject->setValue('status', 'fail');
+											$viewObject->setValue('token', $user->getRelationship('device')->token);
+											$viewObject->setValue('data', array('message' =>'Unable to locate draft entry'));
+											
+										}
 										
 									} else if (MS_REQUEST_METHOD === 'DELETE') { // delete message
 									

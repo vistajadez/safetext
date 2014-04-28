@@ -594,11 +594,65 @@
 		var entry = $(event.target);
 		var messageId = entry.attr('data-safetext-message-id');
 		Safetext.lastPage.find(".safetext-confirm-delete-button").attr('data-safetext-deletemessage-id', messageId);
-		Safetext.lastPage.find(".safetext-send-draft-button").attr('data-safetext-deletemessage-id', messageId);
+		Safetext.lastPage.find(".safetext-send-draft-button").attr('data-safetext-sendmessage-id', messageId);
 
 		return false;
 	});
 	
+	
+	/**
+	 * Send Draft.
+	 * This event will run when the "Send" entry of a draft message's edit menu is clicked.
+	 * Sets is_draft to '0' for this message at server, effectively sending it, and sync's the update to all participants' devices.
+	 */
+	$(document).on('click', '.safetext-messages .safetext-send-draft-button', function(event) {	
+		// get reference to target event's ID
+		var dialog = $(event.target);
+		var messageId = dialog.attr('data-safetext-sendmessage-id');
+
+		// send delete request to server
+		$.ajax({url: '/api/message/message/' + messageId,
+			headers: {'x-safetext-token': getCookie('token')},
+			type: 'post',               
+			async: 'true',
+			dataType: 'json',
+			beforeSend: function() {
+				// This callback function will trigger before data is sent
+				$.mobile.loading( 'show');
+			},
+			complete: function() {
+				// This callback function will trigger on data sent/received complete
+				$.mobile.loading( "hide" );
+			},
+			success: function (result) {
+				if(result.status === 'success') {
+					// set the auth cookie
+					if (typeof result.token != 'undefined') setCookie('token',result.token,7);
+					
+					// close pop-up
+					Safetext.lastPage.find(".safetext-editdraft-menu").popup( "close");
+		
+					// refresh page
+					$.mobile.pageContainer.pagecontainer("change", window.location.href,{
+						allowSamePageTransition : true,
+						transition              : 'none',
+						showLoadMsg             : false,
+						reloadPage              : true
+					});
+					
+					return true;
+				} else {
+					alert('Unable to send message. The server said: ' + result.data.message); 
+				}
+			},
+			error: function (request,error) {
+				// This callback function will trigger on unsuccessful action                
+				alert('Network error has occurred; please try again.');
+			}
+		});
+
+		return false;
+	});
 	
 		
 	
