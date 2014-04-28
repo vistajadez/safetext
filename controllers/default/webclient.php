@@ -160,6 +160,16 @@ class WebclientController extends SafetextClientController {
 			$conversationArray = $this->db->call("conversation('" . $this->user->getValue('id') . "','" . $contact . "','0','999999')");
 			$conversation->load($conversationArray);
 			
+			// mark all messages in the conversation as "read"
+			foreach ($conversation as $this_message) {
+				if ($this_message->is_read == '0') {
+					if ($this_message->recipient == $this->user->getValue('id')) {
+						$this_message->is_read = '1';
+						$this_message->save($this->user->getValue('id')); // saves update and sync's to all participants' devices
+					}
+				}
+			}
+			
 			//title
 			$contactObject = $contacts->find('contact_user_id', $contact);
 			if ($contactObject instanceof SafetextContact) $contactName = $contactObject->label();

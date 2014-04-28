@@ -826,7 +826,7 @@ END
 
 -- --------------------------------------------------------------------------------
 -- Conversation
--- Returns all messages in a conversation, i.e. between two particular users. Also marks all messages sent to the current user as READ.
+-- Returns all messages in a conversation, i.e. between two particular users.
 -- --------------------------------------------------------------------------------
 DELIMITER $$
 
@@ -843,11 +843,6 @@ BEGIN
 	
 	/* Add recipient. Only one recipient currently supported */
 	UPDATE messages_lookup set recipient=(SELECT contact_id FROM participants WHERE message_id=messages_lookup.id and is_sender=0);
-
-	/* Mark all conversations where user is recipient as READ */
-	UPDATE messages SET is_read=1, read_date=CURDATE() WHERE id=(
-		SELECT id FROM messages_lookup WHERE recipient=userIdIn AND sender=contactIdIn
-	);
 
 	/* return only those messages where the contact is a participant */
 	PREPARE STMT FROM " SELECT * FROM messages_lookup
