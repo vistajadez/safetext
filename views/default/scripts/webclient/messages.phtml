@@ -81,7 +81,14 @@
 	    
 	    <?php if ($this->getValue('folder')=='drafts') : ?>
 	    	<!-- edit draft popup -->
-	    
+			<div data-role="popup" class="safetext-editdraft-menu" data-theme="b">
+				<a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
+                <ul data-role="listview" data-inset="true" style="min-width:210px;">
+                    <li data-role="list-divider"><?php echo $this->t('Edit Draft'); ?></li>
+                    <li data-icon="carat-r"><a href="#" class="safetext-send-draft-button" data-safetext-deletemessage-id=""><?php echo $this->t('Send'); ?></a></li>
+                    <li data-icon="delete"><a href="#" class="safetext-confirm-delete-button" data-safetext-deletemessage-id=""><?php echo $this->t('Delete Permanently'); ?></a></li>
+                </ul>
+            </div>
 	    
 			<!-- // edit draft popup -->
 	    <?php else : ?>

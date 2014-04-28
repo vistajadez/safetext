@@ -581,7 +581,23 @@
 	});
 	
 	
+	/**
+	 * Edit Draft.
+	 * This event will run when a draft message's edit button is clicked.
+	 * Opens the edit draft menu, sets the message ID reference.
+	 */
+	$(document).on('click', '.safetext-messages .safetext-editdraft-button', function(event) {	
+		// open the edit draft menu as a pop-up
+		Safetext.lastPage.find(".safetext-editdraft-menu").popup( "open");
 	
+		// set references to clicked event's ID
+		var entry = $(event.target);
+		var messageId = entry.attr('data-safetext-message-id');
+		Safetext.lastPage.find(".safetext-confirm-delete-button").attr('data-safetext-deletemessage-id', messageId);
+		Safetext.lastPage.find(".safetext-send-draft-button").attr('data-safetext-deletemessage-id', messageId);
+
+		return false;
+	});
 	
 	
 		
