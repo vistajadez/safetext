@@ -23,7 +23,7 @@
 						</div>
 						
 						<div>
-						    <ul data-role="listview" data-filter="true" data-inset="true">
+						    <ul data-role="listview" data-filter="true" data-split-icon="<?php if ($this->getValue('folder')=='drafts') echo 'gear'; else echo 'delete'; ?>" data-inset="true">
 						    	<?php foreach ($this->getValue($this->getValue('folder')) as $this_message) : 
 							    	// get sender label
 							    	if ($this_message->sender === $this->getValue('user')->id) {
@@ -64,8 +64,9 @@
 						    				<p style="white-space:normal;"><em><?php echo $sender; ?></em> <?php echo $this->t('to'); ?> <em><?php echo $recipient; ?></em></p>
 						    			<?php endif; ?>
 						    			<p><?php echo $this_message->content; ?></p>
-						    			<p class="ui-li-aside"><strong><?php echo $this->t('time left'); ?>: <?php echo $timeLeft; ?></strong></p>
-						    		</a></li>
+						    			<p class="ui-li-aside"><strong><?php echo $this->t('time left'); ?>: <?php echo $timeLeft; ?></strong></p></a>
+						    			<a href="#"></a>
+						    		</li>
 						    	<?php endforeach; ?>
 							</ul>
 						</div>
