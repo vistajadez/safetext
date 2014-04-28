@@ -508,6 +508,78 @@
 	});
 	
 	
+	/**
+	 * Confirm Message Delete.
+	 * This event will run when a message's delete button is clicked.
+	 * Opens the confirm delete messsage popup, sets the message ID reference.
+	 */
+	$(document).on('click', '.safetext-messages .safetext-delete-button', function(event) {	
+		// open the confirmation dialog as a pop-up
+		Safetext.lastPage.find(".safetext-confirm-delete-popup").popup( "open");
+	
+		// set reference to clicked event's ID
+		var entry = $(event.target);
+		var messageId = entry.attr('data-safetext-message-id');
+		Safetext.lastPage.find(".safetext-confirm-delete-button").attr('data-safetext-deletemessage-id', messageId);
+
+		return false;
+	});
+	
+	
+	/**
+	 * Delete Message.
+	 * This event will run when a message's confirm delete dialog's "Delete" button is clicked.
+	 * Deletes message at server and sync's the update to all participants' devices.
+	 */
+	$(document).on('click', '.safetext-messages .safetext-confirm-delete-button', function(event) {	
+		// get reference to target event's ID
+		var dialog = $(event.target);
+		var messageId = dialog.attr('data-safetext-deletemessage-id');
+
+		// send delete request to server
+		$.ajax({url: '/api/message/message/' + messageId,
+			headers: {'x-safetext-token': getCookie('token')},
+			type: 'delete',               
+			async: 'true',
+			dataType: 'json',
+			beforeSend: function() {
+				// This callback function will trigger before data is sent
+				$.mobile.loading( 'show');
+			},
+			complete: function() {
+				// This callback function will trigger on data sent/received complete
+				$.mobile.loading( "hide" );
+			},
+			success: function (result) {
+				if(result.status === 'success') {
+					// set the auth cookie
+					if (typeof result.token != 'undefined') setCookie('token',result.token,7);
+					
+					// close pop-up
+					Safetext.lastPage.find(".safetext-confirm-delete-popup").popup( "close");
+		
+					// refresh page
+					$.mobile.pageContainer.pagecontainer("change", window.location.href,{
+						allowSamePageTransition : true,
+						transition              : 'none',
+						showLoadMsg             : false,
+						reloadPage              : true
+					});
+					
+					return true;
+				} else {
+					alert('Unable to delete message. The server said: ' + result.data.message); 
+				}
+			},
+			error: function (request,error) {
+				// This callback function will trigger on unsuccessful action                
+				alert('Network error has occurred; please try again.');
+			}
+		});
+
+		return false;
+	});
+	
 	
 	
 	

@@ -788,6 +788,91 @@ class ApiController extends MsController {
 	}
 	
 	
+	/**
+	 * Message Action.
+	 * 
+	 * A POST request updates an existing message. Currently the only available update is to change the is_draft attribute from 1 to 0.
+	 * A REMOVE request deletes this message.
+	 * Only accessible from the WEB CLIENT.
+	 *
+	 * @param MsView $viewObject
+	 * @return void
+	 */
+	 public function messageAction(&$viewObject) {
+		$viewObject->setResponseType('json');
+		
+		// ensure we're using https
+		if (MS_PROTOCOL === 'https') {
+			
+				if (array_key_exists('HTTP_X_SAFETEXT_TOKEN', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_TOKEN'] !== '') {
+					
+					// Create a database connection to share
+					$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+								
+					// authenticate token with stored procedure
+					require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
+					$user = SafetextUser::tokenToUser($_SERVER['HTTP_X_SAFETEXT_TOKEN'], $db, $this->config);
+					
+					if ($user instanceof SafetextUser && $user->isValid()) {
+						if ($user->getRelationship('device') instanceof SafetextDevice && $user->getRelationship('device')->isValid()) {
+							if ($user->getRelationship('device')->getValue('signature') === 'webclient') {
+								if (array_key_exists('message', $this->params) && $this->params['message'] > 0) {
+							
+									// Create a database connection to share
+									$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+								
+									if (MS_REQUEST_METHOD === 'POST') { // update message record, setting is_draft to '1'								
+										
+										
+										
+										
+											
+										// send feedback to client
+										$viewObject->setValue('status', 'fail');
+										$viewObject->setValue('token', $user->getRelationship('device')->token);
+										$viewObject->setValue('data', array('message' =>'Not yet implemented'));
+										
+									} else if (MS_REQUEST_METHOD === 'DELETE') { // delete message
+									
+										// delete message and add to all participants' device sync queues via stored procedure
+										$db->CALL("syncMessageDelete('" . $this->params['message'] . "')");
+										
+										// send feedback to client
+										$viewObject->setValue('status', 'success');
+										$viewObject->setValue('token', $user->getRelationship('device')->token);
+										
+									} else { // non-allowed request type
+										$viewObject->setValue('status', 'fail');
+										$viewObject->setValue('data', array('message' => MS_REQUEST_METHOD . ' requests are not supported for this web service'));
+									}
+								} else { // no contact ID
+									$viewObject->setValue('status', 'fail');
+									$viewObject->setValue('data', array('message' => 'Missing message ID'));
+								}
+							} else { // not web client
+								$viewObject->setValue('status', 'fail');
+								$viewObject->setValue('data', array('message' => 'This web service is not authorized for that device. Web Client access only.'));
+							}
+						} else { // invalid device
+							$viewObject->setValue('status', 'fail');
+							$viewObject->setValue('data', array('message' => 'Problem trying to load device details for that token'));
+						}
+					} else { // invalid token
+						$viewObject->setValue('status', 'fail');
+						$viewObject->setValue('data', array('message' => 'That auth token is not valid'));
+					}
+				} else { // no username
+					$viewObject->setValue('status', 'fail');
+					$viewObject->setValue('data', array('message' => 'Missing SafeText auth token. Please log in'));
+				}
+			
+		} else { // insecure
+			$viewObject->setValue('status', 'fail');
+			$viewObject->setValue('data', array('message' => 'Insecure (non-HTTPS) access denied'));
+		}
+	}
+	
+	
 	
 	
 	
