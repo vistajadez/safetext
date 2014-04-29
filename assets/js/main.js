@@ -137,7 +137,7 @@
 					setCookie('token',result.data.token,7);
 					
 					// Go to dashboard
-					window.location='/webclient/home';
+					window.location='/webclient/messages';
 					
 					
 				} else {
@@ -197,7 +197,7 @@
 					setCookie('token',result.data.token,7);
 					
 					// Go to dashboard
-					window.location='/webclient/home';
+					window.location='/webclient/messages';
 					
 				} else {
 					alert('Unable to register. The server said: ' + result.data.message); 

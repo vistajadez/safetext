@@ -18,38 +18,10 @@ class WebclientController extends SafetextClientController {
 	 */
 	 public function defaultAction(&$viewObject) {
 		// forward to the web client page if logged in, otherwise to the login page
-		if ($this->init($viewObject)) $this->forward($viewObject, 'home');
+		if ($this->init($viewObject)) $this->forward($viewObject, 'messages');
 			else $this->forward($viewObject, 'login', 'auth');
 	 }
 	
-	 
-	 
-	/**
-	 * Home Action.
-	 * 
-	 * Render web client dashboard home.
-	 *
-	 * @param MsView $viewObject
-	 * @return void
-	 */
-	 public function homeAction(&$viewObject) {
-		// forward to the web client page if logged in, otherwise to the login page
-		if (!$this->init($viewObject)) {
-			$this->forward($viewObject, 'login', 'auth');
-		} else {
-			// load stats for all contacts and messages for current user
-			$folderStats = current($this->db->call("folderStats('" . $this->user->getValue('id') . "')"));
-		
-		
-		
-			// TODO
-		
-		
-		
-			$viewObject->setValue('folderStats', $folderStats);
-			
-		}
-	 }
 	 
 	 
 	/**
