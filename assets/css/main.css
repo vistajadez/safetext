@@ -282,6 +282,29 @@ textarea {
 }
 
 
+/* rounded corners of content panes */
+.safetext-rounded-corners .ui-bar {
+  -webkit-border-top-left-radius: inherit;
+  border-top-left-radius: inherit;
+  -webkit-border-top-right-radius: inherit;
+  border-top-right-radius: inherit;
+}
+.safetext-rounded-corners .ui-body {
+  border-top-width: 0;
+  -webkit-border-bottom-left-radius: inherit;
+  border-bottom-left-radius: inherit;
+  -webkit-border-bottom-right-radius: inherit;
+  border-bottom-right-radius: inherit;
+}
+
+/* tooltip popup */
+.ui-btn.safetext-tooltip-btn,
+.ui-btn.safetext-tooltip-btn:hover,
+.ui-btn.safetext-tooltip-btn:active {
+    background: none;
+    border: 0;
+}
+
 
 /* ==========================================================================
    Helper classes

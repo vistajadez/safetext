@@ -352,7 +352,6 @@
 	 * Updates the on-server contact record with details from the current contact form.
 	 */
 	$(document).on('click', '.safetext-save-contact-button', function() {	
-		// open the picker in a pop-up
 		var thisForm = Safetext.lastPage.find(".safetext-edit-contact-form");
 		
 		if (thisForm.find('input[name="name"]').val() != '') {
@@ -654,7 +653,135 @@
 		return false;
 	});
 	
+	
+	/**
+	 * Apply Settings Update.
+	 * This event will run when the settings menu's "Apply" buttin is clicked.
+	 * Updates settings at the server.
+	 */
+	$(document).on('click', '.safetext-settings .safetext-apply-button', function(event) {	
+		var thisForm = Safetext.lastPage.find(".safetext-settings-form");
 		
+		if (thisForm.find('input[name="username"]').val() != '') {
+			$.ajax({url: '/api/settings',
+				data: thisForm.serialize(),
+				headers: {'x-safetext-token': getCookie('token')},
+				type: 'post',               
+				async: 'true',
+				dataType: 'json',
+				beforeSend: function() {
+					// This callback function will trigger before data is sent
+					$.mobile.loading( 'show');
+				},
+				complete: function() {
+					// This callback function will trigger on data sent/received complete
+					$.mobile.loading( "hide" );
+				},
+				success: function (result) {
+					if(result.status === 'success') {
+						// set the auth cookie
+						if (typeof result.token != 'undefined') setCookie('token',result.token,7);
+						
+						// refresh page
+						$.mobile.pageContainer.pagecontainer("change", window.location.href,{
+							allowSamePageTransition : true,
+							transition              : 'none',
+							showLoadMsg             : false,
+							reloadPage              : true
+						});
+						
+					} else {
+						alert('Unable to apply changes. The server said: ' + result.data.message); 
+					}
+				},
+				error: function (request,error) {
+					// This callback function will trigger on unsuccessful action                
+					alert('Network error has occurred; please try again.');
+				}
+			}); 
+
+		
+		} else {
+			alert('Your username can\'t be empty');
+		}
+	
+		return false;
+	});
+	
+	
+	/**
+	 * Confirm Unregister Device.
+	 * This event will run when a message entry's delete button is clicked on the Settings page.
+	 * Opens the confirm unregister device popup, sets the device ID reference.
+	 */
+	$(document).on('click', '.safetext-settings .safetext-delete-button', function(event) {	
+		// open the confirmation dialog as a pop-up
+		Safetext.lastPage.find(".safetext-confirm-delete-popup").popup( "open");
+	
+		// set reference to clicked event's ID
+		var entry = $(event.target).closest("li");
+		var deviceToken = entry.attr('data-safetext-device-token');
+		Safetext.lastPage.find(".safetext-confirm-delete-button").attr('data-safetext-deletedevice-token', deviceToken);
+
+		return false;
+	});
+	
+	
+	/**
+	 * Unregister Device.
+	 * This event will run when the confirm unregister device's Unregister button is clicked.
+	 * Unregisters the referenced device at the server.
+	 */
+	$(document).on('click', '.safetext-settings .safetext-confirm-delete-button', function(event) {	
+		var deviceToken = $(event.target).attr('data-safetext-deletedevice-token');
+		
+		if (deviceToken != '') {
+			$.ajax({url: '/api/devices',
+				headers: {'x-safetext-token': deviceToken},
+				type: 'delete',               
+				async: 'true',
+				dataType: 'json',
+				beforeSend: function() {
+					// This callback function will trigger before data is sent
+					$.mobile.loading( 'show');
+				},
+				complete: function() {
+					// This callback function will trigger on data sent/received complete
+					$.mobile.loading( "hide" );
+				},
+				success: function (result) {
+					if(result.status === 'success') {
+						// close confirmation popup
+						Safetext.lastPage.find(".safetext-confirm-delete-popup").popup( "close");
+						
+						// refresh page
+						$.mobile.pageContainer.pagecontainer("change", window.location.href,{
+							allowSamePageTransition : true,
+							transition              : 'none',
+							showLoadMsg             : false,
+							reloadPage              : true
+						});
+						
+					} else {
+						alert('Unable to unregister that device. The server said: ' + result.data.message); 
+					}
+				},
+				error: function (request,error) {
+					// This callback function will trigger on unsuccessful action                
+					alert('Network error has occurred; please try again.');
+				}
+			}); 
+
+		
+		} else {
+			Safetext.lastPage.find(".safetext-confirm-delete-popup").popup( "close");
+			alert('There was a problem trying to obtain the device token to unregister it. Please try again.');
+		}
+	
+		return false;
+	});
+	
+	
 	
 	
 	

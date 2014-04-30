@@ -886,3 +886,19 @@ BEGIN
 
 END
 
+
+
+-- --------------------------------------------------------------------------------
+-- Devices
+-- Returns all mobile devices registered for a particular user
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE `devices` (IN userId INT UNSIGNED)
+BEGIN
+
+	SELECT * FROM sync_device WHERE user_id = userID AND signature != 'webclient';
+
+
+END
+

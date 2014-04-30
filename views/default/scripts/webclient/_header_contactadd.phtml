@@ -4,8 +4,8 @@
 	
 	<div class="safetext-nav clearfix">
         <ul class="clearfix">
-           <li><a href="#" data-transition="fade"><?php echo $this->getValue('user')->username; ?></a></li>  
-		   <li><a href="#" data-transition="fade"><?php echo $this->t('Account Settings'); ?></a></li>  
+           <li><a href="/webclient/messages" data-transition="fade"><?php echo $this->getValue('user')->username; ?></a></li>  
+		   <li><a href="/settings" data-transition="fade"><?php echo $this->t('Settings'); ?></a></li>  
 		   <li><a href="#" data-transition="fade"><?php echo $this->t('Payment'); ?></a></li>
 		   <li><a href="/auth/logout" data-ajax="false"><?php echo $this->t('Logout'); ?></a></li>
         </ul>

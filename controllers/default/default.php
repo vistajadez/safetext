@@ -18,7 +18,7 @@ class DefaultController extends SafetextClientController {
 	 */
 	 public function defaultAction(&$viewObject) {
 		// forward to the web client page if logged in, otherwise to the login page
-		if ($this->init($viewObject)) $this->forward($viewObject, 'home', 'webclient');
+		if ($this->init($viewObject)) $this->forward($viewObject, 'messages', 'webclient');
 			else $this->forward($viewObject, 'login', 'auth');
 	 }
 	
