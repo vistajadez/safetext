@@ -7,11 +7,12 @@
 	    	
             <div class="ui-corner-all safetext-rounded-corners">
                   <div class="ui-bar ui-bar-a">
-                    <h3><?php echo $this->t('Application Settings'); ?></h3>
+                    <h3><?php echo $this->t('Settings'); ?></h3>
                   </div>
                   <div class="ui-body ui-body-b">
                         <form class="safetext-settings-form">
                             <ul data-role="listview" data-inset="true" data-theme="a">
+                            	<li data-role="list-divider"><?php echo $this->t('Account'); ?></li>
                                 <li class="ui-field-contain">
                                     <label for="username"><?php echo $this->t('Username'); ?>:</label>
                                     <input type="text" name="username" value="<?php echo $this->getValue('user')->username; ?>" data-clear-btn="true">
@@ -25,7 +26,7 @@
                                     <input type="text" name="pass" value="" data-clear-btn="true">
                                     <div data-role="popup" id="safetext-password-info" class="ui-content" data-theme="a" style="max-width:350px;">
 								      <a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
-								      <p><?php echo $this->t('Last updated'); ?>: <?php echo $this->getValue('user')->last_pass_update; ?></p>
+								      <p><?php echo $this->t('Last updated'); ?>: <?php echo date('M jS, Y', strtotime($this->getValue('user')->last_pass_update)); ?></p>
 								    </div>
                                 </li>
                                 
@@ -70,36 +71,38 @@
 						                <option value="1"<?php if ($this->getValue('user')->enable_panic === '1') echo ' selected'; ?>><?php echo $this->t('Yes'); ?></option>
 						            </select>
                                 </li>
-                                
                                 <li>
                                 	<input type="hidden" name="language" value="en" />
                                 	<button class="ui-btn ui-corner-all ui-btn-a safetext-apply-button ui-icon-check ui-btn-icon-left">Apply</button>
                                 </li>
+                                
+                                
+                                <li data-role="list-divider"><?php echo $this->t('Membership Status'); ?></li>
+                                <li data-icon="gear">
+                               		<a href="#" class="safetext-membership-options-button">
+                                        <h2><?php if ($this->getValue('user')->subscription_level < 1) echo $this->t('Not Active'); else echo $this->t('Active'); ?></h2>
+                                        <p style="white-space: normal;"><strong><?php if ($this->getValue('user')->subscription_level < 1) echo $this->t('Subscribe today to activate your account and enable message sending'); else if ($this->getValue('user')->subscription_recurs === '1') echo $this->t('Auto-renews on') . ' ' . date('M jS, Y', strtotime($this->getValue('user')->subscription_expires)); else echo $this->t('Expires on') . ' ' . date('M jS, Y', strtotime($this->getValue('user')->subscription_expires)); ?></strong></p>
+                                    </a>
+                                </li>
+                                
+                                <?php if (sizeof($this->getValue('devices')) > 0): ?>
+                              		<li data-role="list-divider"><?php echo $this->t('Registered Devices'); ?></li>
+							  		<?php foreach ($this->getValue('devices') as $this_device) : ?>
+	                               <li id="safetext-devicelisting-<?php echo $this_device->id; ?>" data-icon="delete" data-safetext-device-token="<?php echo $this_device->token; ?>">
+	                               		<a href="#" class="safetext-delete-button">
+	                                        <h2><?php echo $this_device->description; ?></h2>
+	                                        <p><strong><?php echo $this->t('Signature'); ?>:</strong> <?php echo $this_device->signature; ?></p>
+											<?php if ($this_device->is_initialized != '1') echo '<p> &middot; <em>' . $this->t('Not yet synchronized') . '</em></p>'; ?>
+										</a>
+	                                </li>
+	                            <?php endforeach; ?>
+                                
+                                <?php endif; ?>
                             </ul>
                         </form>
                    </div>
             </div>
-			
-    		<div class="ui-corner-all safetext-rounded-corners" style="margin-top:20px;">
-                  <div class="ui-bar ui-bar-a">
-                    <h3><?php echo $this->t('Registered Devices'); ?></h3>
-                  </div>
-                  <div class="ui-body ui-body-b">
-    					<?php if (sizeof($this->getValue('devices')) > 0): ?>
-                        <ul data-role="listview" data-inset="true" data-theme="a">
-                            <?php foreach ($this->getValue('devices') as $this_device) : ?>
-                               <li id="safetext-devicelisting-<?php echo $this_device->id; ?>" data-icon="delete" data-safetext-device-token="<?php echo $this_device->token; ?>">
-                               		<a href="#" class="<?php echo 'safetext-delete-button'; ?>">
-                                        <h2><?php echo $this_device->description; ?></h2>
-                                        <p><strong><?php echo $this->t('Signature'); ?>:</strong> <?php echo $this_device->signature; ?></p>
-										<p><?php if ($this_device->is_initialized != '1') echo '<p> &middot; <em>' . $this->t('Not yet synchronized') . '</em></p>'; ?></p>
-                                    </a>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                        <?php endif; ?>
-				  </div>
-            </div>      
+
 	    	
 	    </div><!-- /content -->
 	
@@ -121,7 +124,24 @@
 	        </div>
 	    </div>
     <!-- /delete message popup -->
-	    
+    
+    <!-- subscription options popup -->
+    	<div data-role="popup" class="safetext-subscription-options-menu" data-theme="b">
+			<a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
+            <ul data-role="listview" data-inset="true" style="min-width:210px;">
+                <li data-role="list-divider"><?php echo $this->t('Update Subscription'); ?></li>
+                <?php if ($this->getValue('user')->subscription_level < 1) : ?>
+                	<li data-icon="carat-r"><a href="#" class="safetext-subscribe-button" data-safetext-sendmessage-id=""><?php echo $this->t('Subscribe'); ?></a></li>
+                <?php elseif ($this->getValue('user')->subscription_recurs === '1') : ?>
+                	<li data-icon="carat-r"><a href="#" class="safetext-disable-autorenew-button" data-safetext-sendmessage-id=""><?php echo $this->t('Disable Auto-Renew'); ?></a></li>
+                <?php else: ?>
+                	<li data-icon="carat-r"><a href="#" class="safetext-subscribe-button" data-safetext-sendmessage-id=""><?php echo $this->t('Extend'); ?></a></li>
+                <?php endif; ?>
+                <li data-icon="carat-r"><a href="#" class="safetext-paymenthistory-button" data-safetext-deletemessage-id=""><?php echo $this->t('Payment History'); ?></a></li>
+                <li data-icon="carat-r"><a href="#" class="safetext-updatecard-button" data-safetext-deletemessage-id=""><?php echo $this->t('Change Payment Card'); ?></a></li>
+            </ul>
+        </div>
+	<!-- /subscription options popup -->
 	    
 	<?php echo $this->render('webclient/_footer.phtml'); ?>
 		

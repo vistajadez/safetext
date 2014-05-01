@@ -782,6 +782,19 @@
 	});
 	
 	
+	/**
+	 * Subscription Options.
+	 * This event will run when the settings page subscription status entry is clicked.
+	 * Opens the subscription options menu.
+	 */
+	$(document).on('click', '.safetext-settings .safetext-membership-options-button', function(event) {	
+		// open the edit draft menu as a pop-up
+		Safetext.lastPage.find(".safetext-subscription-options-menu").popup( "open");
+	
+		return false;
+	});
+	
+	
 	
 	
 	

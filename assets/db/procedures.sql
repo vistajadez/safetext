@@ -126,6 +126,9 @@ BEGIN
 	declare user_whitelist_only tinyint(2) unsigned;
 	declare user_enable_panic tinyint(2) unsigned;
 	declare user_subscription_level tinyint unsigned;
+	declare user_subscription_expires date;
+	declare user_subscription_recurs tinyint(1) unsigned;
+	declare user_payment_token varchar(64);
 
 	/* declare device variables */
 	declare device_id int unsigned;
@@ -152,13 +155,13 @@ BEGIN
 		END IF;
 
 		/* look up associated user*/
-		select id,username,firstname,lastname,email,phone,pass,date_added,date_last_pass_update,`language`,notifications_on,whitelist_only,enable_panic,subscription_level
-			INTO userid,user_username,user_firstname,user_lastname,user_email,user_phone,user_pass,user_date_added,user_date_last_pass_update,user_language,user_notifications_on,user_whitelist_only,user_enable_panic,user_subscription_level
+		select id,username,firstname,lastname,email,phone,pass,date_added,date_last_pass_update,`language`,notifications_on,whitelist_only,enable_panic,subscription_level,payment_token,subscription_expires,subscription_recurs
+			INTO userid,user_username,user_firstname,user_lastname,user_email,user_phone,user_pass,user_date_added,user_date_last_pass_update,user_language,user_notifications_on,user_whitelist_only,user_enable_panic,user_subscription_level,user_payment_token,user_subscription_expires,user_subscription_recurs
 			FROM users WHERE id=device_user_id;
 
 
 		/* format response columns */
-		select userid AS id,user_username AS username,user_firstname AS firstname,user_lastname as lastname, user_email AS email,user_phone AS phone,user_pass AS pass,user_date_added as date_added,user_date_last_pass_update AS last_pass_update,user_language AS `language`,user_notifications_on AS notifications_on,user_whitelist_only AS whitelist_only,user_enable_panic AS enable_panic,user_subscription_level as subscription_level,device_id AS `device.id`,device_signature AS `device.signature`,device_description AS `device.description`,device_is_initialized AS `device.is_initialized`,@token AS `device.token`;
+		select userid AS id,user_username AS username,user_firstname AS firstname,user_lastname as lastname, user_email AS email,user_phone AS phone,user_pass AS pass,user_date_added as date_added,user_date_last_pass_update AS last_pass_update,user_language AS `language`,user_notifications_on AS notifications_on,user_whitelist_only AS whitelist_only,user_enable_panic AS enable_panic,user_subscription_level as subscription_level,user_payment_token AS payment_token,user_subscription_expires AS subscription_expires,user_subscription_recurs AS subscription_recurs,device_id AS `device.id`,device_signature AS `device.signature`,device_description AS `device.description`,device_is_initialized AS `device.is_initialized`,@token AS `device.token`;
 
 	ELSE
 		/* token not found */
@@ -902,3 +905,15 @@ BEGIN
 
 END
 
+
+
+-- --------------------------------------------------------------------------------
+-- Subscription Levels
+-- Returns available subscription level options
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE DEFINER=`maxdistrodb`@`%.%.%.%` PROCEDURE `subscriptionLevels`()
+BEGIN
+	SELECT * FROM subscription_levels order by id;
+END

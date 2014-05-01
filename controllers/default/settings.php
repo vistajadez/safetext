@@ -29,13 +29,16 @@ class SettingsController extends SafetextClientController {
 			$devices = new SafetextModelCollection('SafetextDevice', $this->config, $this->db);
 			$devices->load($devicesArray);
 			
+			// load membership levels
+			$subscriptionLevels = $this->db->call("subscriptionLevels()");
+
 			//title
 			$viewObject->setTitle('Settings');
 			
 			// set view data
 			$viewObject->setValue('folderStats', $folderStats);
 			$viewObject->setValue('devices', $devices);
-		
+			$viewObject->setValue('subscription_levels', $subscriptionLevels);
 		
 		
 		
