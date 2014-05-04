@@ -795,6 +795,59 @@
 	});
 	
 	
+	/**
+	 * Subscribe.
+	 * This event will run when the subscription page's subscribe/extend button is clicked.
+	 * Sends the purchase request to the server.
+	 */
+	$(document).on('click', '.safetext-subscribe .safetext-subscribe-button', function(event) {	
+		// get the form details
+		var thisForm = Safetext.lastPage.find(".safetext-subscribe-form");
+		
+		if (thisForm.find('input[name="subscriptionlevel"]').val() != '') {
+			$.ajax({url: '/settings/processpayment',
+				data: thisForm.serialize(),
+				headers: {'x-safetext-token': getCookie('token')},
+				type: 'post',               
+				async: 'true',
+				dataType: 'json',
+				beforeSend: function() {
+					// This callback function will trigger before data is sent
+					$.mobile.loading( 'show');
+				},
+				complete: function() {
+					// This callback function will trigger on data sent/received complete
+					$.mobile.loading( "hide" );
+				},
+				success: function (result) {
+					if(result.status === 'success') {
+						// set the auth cookie
+						if (typeof result.token != 'undefined') setCookie('token',result.token,7);
+						
+						// go back to settings page, refresh
+						$.mobile.pageContainer.pagecontainer("change", '/settings',{
+							transition              : 'none',
+							reloadPage              : true
+						});
+						
+					} else {
+						alert('Unable to process payment. The server said: ' + result.data.message); 
+					}
+				},
+				error: function (request,error) {
+					// This callback function will trigger on unsuccessful action                
+					alert('Network error has occurred; please try again.');
+				}
+			}); 
+
+		
+		} else {
+			alert('A membership level must be selected');
+		}
+	
+		return false;
+	});
+	
 	
 	
 	

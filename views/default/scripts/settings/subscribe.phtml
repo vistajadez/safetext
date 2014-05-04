@@ -1,0 +1,52 @@
+<div data-role="page" class="safetext-page safetext-subscribe" data-title="<?php echo $this->t('Subscribe'); ?>">
+		
+		<div data-role="panel" class="leftpanel" data-position="left" data-display="reveal" data-theme="b"></div>
+		<?php echo $this->render('webclient/_header_conversation.phtml'); ?>
+	
+	    <div data-role="content" class="safetext-content" data-theme="a">
+	    	
+        <?php if ($this->getValue('user')->subscription_level > 0 && $this->getValue('user')->subscription_recurs === '1') : // can't extend a recurring subscr ?>
+        	<div data-role="content" class="ui-body-c">
+                <div class="kit-content">
+                    <p><?php echo $this->t("Your membership is already set to auto-renew"); ?></p>
+                </div>
+            </div>
+        <?php else : ?>
+           <div class="ui-corner-all safetext-rounded-corners">
+                  <div class="ui-bar ui-bar-a">
+                    <h3><?php if ($this->getValue('user')->subscription_level === '0') echo $this->t('Subscribe'); else echo $this->t('Extend Membership'); ?></h3>
+                  </div>
+                  <div class="ui-body ui-body-b">
+                        <form class="safetext-subscribe-form">
+                            <ul data-role="listview" data-inset="true" data-theme="a">
+                            	<li class="ui-field-contain">
+                                    <label for="subscriptionlevel" class="select"><?php if ($this->getValue('user')->subscription_level === '0') echo $this->t('Subscribe'); else echo $this->t('Extend'); ?> <?php echo $this->t('For'); ?>:</label>
+                                    <select name="subscriptionlevel">
+                                        <?php foreach ($this->getValue('subscription_levels') as $this_subscriptionLevel) : ?>
+                                        	<option value="<?php echo $this_subscriptionLevel['id']; ?>"><?php echo $this_subscriptionLevel['name']; ?> $<?php echo $this_subscriptionLevel['cpm']; ?></option>
+                                        	<?php if ($this_subscriptionLevel['can_recur'] === '1') : ?>
+                                        		<option value="<?php echo $this_subscriptionLevel['id']; ?>-r"><?php echo $this_subscriptionLevel['name'] . ' ' . $this->t('Recurring'); ?> $<?php echo $this_subscriptionLevel['cpm']; ?></option>
+                                        	<?php endif; ?>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </li>
+                                
+                                <?php if ($this->getValue('user')->payment_token === '') echo $this->render('settings/_card-form-fields.phtml'); ?>
+                                                                   
+                                <li class="ui-body ui-body-b">
+                                    <fieldset class="ui-grid-a">
+                                            <button type="button" class="ui-btn ui-corner-all ui-btn-a safetext-subscribe-button"><?php if ($this->getValue('user')->subscription_level === '0') echo $this->t('Subscribe'); else echo $this->t('Extend'); ?></button>
+                                    </fieldset>
+                                </li>
+                            </ul>
+                        </form>
+                  </div>
+            </div>
+		<?php endif; ?>
+	    	
+	    </div><!-- /content -->
+	
+	    
+	<?php echo $this->render('webclient/_footer.phtml'); ?>
+		
+</div> <!--/page-->

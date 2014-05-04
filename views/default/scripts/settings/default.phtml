@@ -131,11 +131,11 @@
             <ul data-role="listview" data-inset="true" style="min-width:210px;">
                 <li data-role="list-divider"><?php echo $this->t('Update Subscription'); ?></li>
                 <?php if ($this->getValue('user')->subscription_level < 1) : ?>
-                	<li data-icon="carat-r"><a href="#" class="safetext-subscribe-button" data-safetext-sendmessage-id=""><?php echo $this->t('Subscribe'); ?></a></li>
+                	<li data-icon="carat-r"><a href="/settings/subscribe" class="safetext-subscribe-button" data-safetext-sendmessage-id=""><?php echo $this->t('Subscribe'); ?></a></li>
                 <?php elseif ($this->getValue('user')->subscription_recurs === '1') : ?>
                 	<li data-icon="carat-r"><a href="#" class="safetext-disable-autorenew-button" data-safetext-sendmessage-id=""><?php echo $this->t('Disable Auto-Renew'); ?></a></li>
                 <?php else: ?>
-                	<li data-icon="carat-r"><a href="#" class="safetext-subscribe-button" data-safetext-sendmessage-id=""><?php echo $this->t('Extend'); ?></a></li>
+                	<li data-icon="carat-r"><a href="/settings/subscribe" class="safetext-subscribe-button" data-safetext-sendmessage-id=""><?php echo $this->t('Extend'); ?></a></li>
                 <?php endif; ?>
                 <li data-icon="carat-r"><a href="#" class="safetext-paymenthistory-button" data-safetext-deletemessage-id=""><?php echo $this->t('Payment History'); ?></a></li>
                 <li data-icon="carat-r"><a href="#" class="safetext-updatecard-button" data-safetext-deletemessage-id=""><?php echo $this->t('Change Payment Card'); ?></a></li>

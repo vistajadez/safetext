@@ -1,0 +1,60 @@
+<li class="ui-field-contain">
+    <label for="cc_type"><?php echo $this->t('Card Type'); ?>:</label>
+    <select name="cc_type">
+        <option value="visa">Visa</option>
+        <option value="mastercard">Mastercard</option>
+        <option value="amex">American Express</option>
+        <option value="discover">Discover</option>
+    </select>
+</li>
+<li class="ui-field-contain">
+    <label for="cc_number"><?php echo $this->t('Card Number'); ?>:</label>
+    <input type="text" name="cc_number" value="" data-clear-btn="true">
+</li>
+<li class="ui-field-contain">
+    <label for="cc_cvv2"><?php echo $this->t('CVV2'); ?>: <a href="#safetext-ccv2-info" data-rel="popup" data-transition="pop" class="safetext-tooltip-btn ui-btn ui-alt-icon ui-nodisc-icon ui-btn-inline ui-icon-info ui-btn-icon-notext ui-corner-all">Info</a></label>
+    <input type="text" name="cc_cvv2" value="" data-clear-btn="true">
+    <div data-role="popup" id="safetext-ccv2-info" class="ui-content" data-theme="a" style="max-width:350px;">
+      <a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
+      <p>The <strong>CVV2</strong> code is 3 or 4 digits long, located on the back of your card just after the card number.</p>
+    </div>
+</li>
+<li class="ui-field-contain">
+    <label for="name"><?php echo $this->t('Name on Card'); ?>:</label>
+    <input type="text" name="name" value="<?php echo $this->getValue('user')->fullName(); ?>" data-clear-btn="true">
+</li>
+<!--
+<li class="ui-field-contain">
+    <label for="zip"><?php echo $this->t('Zip Code'); ?>:</label>
+    <input type="text" name="zip" value="" data-clear-btn="true">
+</li>
+-->
+<li class="ui-field-contain">
+    <label for="cc_exp_month"><?php echo $this->t('Exp Month'); ?>:</label>
+    <select name="cc_exp_month">
+        <option value="1">1 - Jan</option>
+        <option value="2">2 - Feb</option>
+        <option value="3">3 - Mar</option>
+        <option value="4">4 - Apr</option>
+        <option value="5">5 - May</option>
+        <option value="6">6 - Jun</option>
+        <option value="7">7 - Jul</option>
+        <option value="8">8 - Aug</option>
+        <option value="9">9 - Sep</option>
+        <option value="10">10 - Oct</option>
+        <option value="11">11 - Nov</option>
+        <option value="12">12 - Dec</option>
+    </select>
+</li>
+<li class="ui-field-contain">
+    <label for="cc_exp_year" class="select"><?php echo $this->t('Exp Year'); ?>:</label>
+    <select name="cc_exp_year">
+        <?php for($year = date('Y'); $year < date('Y') + 11; $year++) : ?>
+            <option value="<?php echo $year; ?>"><?php echo $year; ?></option>
+        <?php endfor; ?>
+    </select>
+</li>
+<li class="ui-field-contain">
+    <label for="promo"><?php echo $this->t('Promo Code'); ?>:</label>
+    <input type="text" name="promo" value="" data-clear-btn="true">
+</li>

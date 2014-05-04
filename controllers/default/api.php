@@ -704,7 +704,7 @@ class ApiController extends MsController {
 	 * Contact Action.
 	 * 
 	 * A POST request updates an existing contact. 
-	 * A REMOVE request removes this contact record for the user.
+	 * A DELETE request removes this contact record for the user.
 	 * Only accessible from the WEB CLIENT.
 	 *
 	 * @param MsView $viewObject
@@ -883,6 +883,9 @@ $this->config['log']->write('call: ' . "syncMessage('" . $user->id . "','" . $th
 			$viewObject->setValue('data', array('message' => 'Insecure (non-HTTPS) access denied'));
 		}
 	}
+	
+	
+	
 	
 	
 	

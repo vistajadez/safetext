@@ -917,3 +917,33 @@ CREATE DEFINER=`maxdistrodb`@`%.%.%.%` PROCEDURE `subscriptionLevels`()
 BEGIN
 	SELECT * FROM subscription_levels order by id;
 END
+
+
+-- --------------------------------------------------------------------------------
+-- Put Payment
+-- Store new payment details in the database as a record
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE DEFINER=`maxdistrodb`@`%.%.%.%` PROCEDURE `putPayment`(IN paymentIdIn VARCHAR(64), IN userIdIn INTEGER UNSIGNED, IN amountIn DOUBLE(4,2) UNSIGNED, IN approvalCodeIn VARCHAR(16))
+BEGIN
+
+	INSERT INTO payments (merch_payment_id, user_id, amount, approval_code, payment_date) 
+		VALUES(paymentIdIn, userIdIn, amountIn, approvalCodeIn, NOW());
+
+END
+
+
+-- --------------------------------------------------------------------------------
+-- Update Subscription
+-- Updates a user's subscription details
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE `updateSubscription` (IN userIdIn INTEGER UNSIGNED, IN subscriptionIdIn INTEGER UNSIGNED, IN paymentTokenIn VARCHAR(64), IN expireDateIn DATETIME, IN recurringIn TINYINT(1) UNSIGNED)
+BEGIN
+
+	UPDATE users SET subscription_level=subscriptionIdIn, payment_token=paymentTokenIn, subscription_expires=expireDateIn, subscription_recurs=recurringIn WHERE id=userIdIn LIMIT 1;
+
+END
+
