@@ -849,6 +849,70 @@
 	});
 	
 	
+	/**
+	 * Update Card.
+	 * This event will run when the update card page's Apply button is clicked.
+	 * Sends the update request to the server.
+	 */
+	$(document).on('click', '.safetext-card .safetext-update-button', function(event) {	
+		// get the form details
+		var thisForm = Safetext.lastPage.find(".safetext-update-form");
+		
+		if (thisForm.find('input[name="name"]').val() != '') {
+			if (thisForm.find('input[name="cc_number"]').val() != '') {
+				if (thisForm.find('input[name="cc_cvv2"]').val() != '') {
+			
+					$.ajax({url: '/settings/updatecard',
+						data: thisForm.serialize(),
+						headers: {'x-safetext-token': getCookie('token')},
+						type: 'post',               
+						async: 'true',
+						dataType: 'json',
+						beforeSend: function() {
+							// This callback function will trigger before data is sent
+							$.mobile.loading( 'show');
+						},
+						complete: function() {
+							// This callback function will trigger on data sent/received complete
+							$.mobile.loading( "hide" );
+						},
+						success: function (result) {
+							if(result.status === 'success') {
+								// set the auth cookie
+								if (typeof result.token != 'undefined') setCookie('token',result.token,7);
+								
+								// go back to settings page, refresh
+								$.mobile.pageContainer.pagecontainer("change", '/settings',{
+									transition              : 'none',
+									reloadPage              : true
+								});
+								
+							} else {
+								alert('Unable to process update. The server said: ' + result.data.message); 
+							}
+						},
+						error: function (request,error) {
+							// This callback function will trigger on unsuccessful action                
+							alert('Network error has occurred; please try again.');
+						}
+					}); 
+
+				} else {
+					alert('Please enter your card code');
+				}
+			} else {
+				alert('Please enter your card number');
+			}
+		} else {
+			alert('Please enter your full name as it appears on your card');
+		}
+	
+		return false;
+	});
+	
+	
+	
+	
 	
 	
 	/**
