@@ -506,6 +506,58 @@ class SettingsController extends SafetextClientController {
 			$viewObject->setValue('data', array('message' => 'Insecure (non-HTTPS) access denied'));
 		}
 	}
+	
+	
+	/**
+	 * Cancel Recurring Action.
+	 * 
+	 * Cancels a user's recurring subscription.
+	 *
+	 * @param MsView $viewObject
+	 * @return void
+	 */
+	 public function cancelrecurringAction(&$viewObject) {
+		$viewObject->setResponseType('json');
+		
+		// ensure we're using https
+		if (MS_PROTOCOL === 'https') {
+			if (array_key_exists('HTTP_X_SAFETEXT_TOKEN', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_TOKEN'] !== '') {
+				// Create a database connection to share
+				$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+							
+				// authenticate token with stored procedure
+				require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
+				$user = SafetextUser::tokenToUser($_SERVER['HTTP_X_SAFETEXT_TOKEN'], $db, $this->config);
+		
+				if ($user instanceof SafetextUser && $user->isValid()) {
+			
+					if (MS_REQUEST_METHOD === 'POST') {
+
+						// save subscription status and payment token for user
+						$db->call("updateSubscription('" . $user->id . "','" . $user->subscription_level . "','" . $user->payment_token . "','" . $user->subscription_expires . "', '0')");
+						
+						$viewObject->setValue('status', 'success');
+						
+					} else {
+						$viewObject->setValue('status', 'fail');
+						$viewObject->setValue('token', $user->getRelationship('device')->token);
+						$viewObject->setValue('data', array('message' => MS_REQUEST_METHOD . ' requests are not supported for this web service'));
+					}
+				} else { // invalid token
+					$viewObject->setValue('status', 'fail');
+					$viewObject->setValue('data', array('message' => 'That auth token is not valid'));
+				}
+			} else { // no token
+				$viewObject->setValue('status', 'fail');
+				$viewObject->setValue('data', array('message' => 'Missing auth token'));
+			}
+		} else { // insecure
+			$viewObject->setValue('status', 'fail');
+			$viewObject->setValue('data', array('message' => 'Insecure (non-HTTPS) access denied'));
+		}
+	}
+	
+	
 	 
 	 
 	

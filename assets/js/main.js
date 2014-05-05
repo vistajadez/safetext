@@ -911,6 +911,53 @@
 	});
 	
 	
+	/**
+	 * Cancel Recurring.
+	 * This event will run when the settings page's cancel recurring subscription button is clicked.
+	 * Sends the purchase request to the server.
+	 */
+	$(document).on('click', '.safetext-settings .safetext-disable-autorenew-button', function(event) {	
+		$.ajax({url: '/settings/cancelrecurring',
+			headers: {'x-safetext-token': getCookie('token')},
+			type: 'post',               
+			async: 'true',
+			dataType: 'json',
+			beforeSend: function() {
+				// This callback function will trigger before data is sent
+				$.mobile.loading( 'show');
+			},
+			complete: function() {
+				// This callback function will trigger on data sent/received complete
+				$.mobile.loading( "hide" );
+			},
+			success: function (result) {
+				if(result.status === 'success') {
+					// set the auth cookie
+					if (typeof result.token != 'undefined') setCookie('token',result.token,7);
+					
+					// refresh page
+					$.mobile.pageContainer.pagecontainer("change", window.location.href,{
+						allowSamePageTransition : true,
+						transition              : 'none',
+						showLoadMsg             : false,
+						reloadPage              : true
+					});
+					
+				} else {
+					alert('Unable to process update. The server said: ' + result.data.message); 
+				}
+			},
+			error: function (request,error) {
+				// This callback function will trigger on unsuccessful action                
+				alert('Network error has occurred; please try again.');
+			}
+		}); 
+		
+		return false;
+	});
+	
+	
+	
 	
 	
 	
