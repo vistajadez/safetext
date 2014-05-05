@@ -947,3 +947,17 @@ BEGIN
 
 END
 
+
+-- --------------------------------------------------------------------------------
+-- Payments
+-- Returns all payments in a user's payment history
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE DEFINER=`maxdistrodb`@`%.%.%.%` PROCEDURE `payments`(IN userIdIn INTEGER UNSIGNED)
+BEGIN
+	
+	SELECT * FROM payments WHERE user_id=userIdIn ORDER BY payment_date DESC;
+
+END
+

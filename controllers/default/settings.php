@@ -331,6 +331,31 @@ class SettingsController extends SafetextClientController {
 	}
 	
 	
+	/**
+	 * Payments.
+	 * 
+	 * Displays a user's history of payments.
+	 *
+	 * @param MsView $viewObject
+	 * @return void
+	 */
+	 public function paymentsAction(&$viewObject) {
+		// forward to the web client page if logged in, otherwise to the login page
+		if (!$this->init($viewObject)) {
+			$this->forward($viewObject, 'login', 'auth');
+		} else {
+			// load all registered devices
+			$payments = $this->db->call("payments('" . $this->user->getValue('id') . "')");
+
+			//title
+			$viewObject->setTitle('Payment History');
+			
+			// set view data
+			$viewObject->setValue('payments', $payments);
+		}
+	 }
+	 
+	 
 	
 	
 }

@@ -1,0 +1,39 @@
+<div data-role="page" class="safetext-page safetext-payments" data-title="<?php echo $this->t('Payment History'); ?>">
+		
+		<div data-role="panel" class="leftpanel" data-position="left" data-display="reveal" data-theme="b"></div>
+		<?php echo $this->render('webclient/_header_conversation.phtml'); ?>
+	
+	    <div data-role="content" class="safetext-content" data-theme="a">
+	    	
+            <div class="ui-corner-all safetext-rounded-corners">
+            	<div class="ui-bar ui-bar-a">
+                    <h3><?php echo $this->t('Settings'); ?></h3>
+                  </div>
+                  
+                 <?php if (sizeof($this->getValue('payments')) > 0): ?>
+                	<div class="ui-body ui-body-b">
+                    	<ul data-role="listview" data-inset="true" data-theme="a">
+					  		<?php foreach ($this->getValue('payments') as $this_payment) : ?>
+		                        <li>
+		                        	<h3><?php echo date('l, F jS, Y', strtotime($this_payment['payment_date'])); ?></strong></h3>
+		                        	<p><strong><?php echo $this->t('Payment ID'); ?>: <?php echo $this_payment['merch_payment_id']; ?></strong></p>
+		                            <p>$<?php echo $this_payment['amount']; ?></p>
+		                        </li>
+		                    <?php endforeach; ?>
+						</ul>
+					</div>
+                <?php else: ?>
+                	<div data-role="content" class="ui-body-c">
+	     				<div class="kit-content">
+	                    	<p><?php echo $this->t('No payments on file'); ?></p>
+	                    </div>
+	            	</div>
+                <?php endif; ?>
+                   
+            </div>
+	    	
+	    </div><!-- /content -->
+	    
+	<?php echo $this->render('webclient/_footer.phtml'); ?>
+		
+</div> <!--/page-->
