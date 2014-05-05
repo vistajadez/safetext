@@ -1,0 +1,32 @@
+<div data-role="page" class="safetext-page safetext-card" data-title="<?php echo $this->t('Update Card'); ?>">
+		
+		<div data-role="panel" class="leftpanel" data-position="left" data-display="reveal" data-theme="b"></div>
+		<?php echo $this->render('webclient/_header_conversation.phtml'); ?>
+	
+	   <div data-role="content" class="safetext-content" data-theme="a">
+
+       <div class="ui-corner-all safetext-rounded-corners">
+              <div class="ui-bar ui-bar-a">
+                <h3><?php echo $this->t('Update Payment Card'); ?></h3>
+              </div>
+              <div class="ui-body ui-body-b">
+                    <form class="safetext-update-form">
+                        <ul data-role="listview" data-inset="true" data-theme="a">
+                            
+                            <?php echo $this->render('settings/_card-form-fields.phtml'); ?>
+                                                               
+                            <li class="ui-body ui-body-b">
+                                <fieldset class="ui-grid-a">
+                                        <button type="button" class="ui-btn ui-corner-all ui-btn-a safetext-update-button"><?php echo $this->t('Apply'); ?></button>
+                                </fieldset>
+                            </li>
+                        </ul>
+                    </form>
+              </div>
+        </div>
+	    	
+	    </div><!-- /content -->
+	    
+	<?php echo $this->render('webclient/_footer.phtml'); ?>
+		
+</div> <!--/page-->
