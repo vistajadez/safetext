@@ -961,3 +961,31 @@ BEGIN
 
 END
 
+
+
+-- --------------------------------------------------------------------------------
+-- Get Expiring Accounts
+-- Returns accounts set to expire
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE `getExpiringAccounts` ()
+BEGIN
+	SELECT * FROM users WHERE subscription_level > 0 AND subscription_expires <= CURDATE() AND subscription_recurs = 0;
+
+END
+
+
+-- --------------------------------------------------------------------------------
+-- Get Renewing Accounts
+-- Returns accounts due to be renewed
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE `getRenewingAccounts` ()
+BEGIN
+	SELECT * FROM users WHERE subscription_level > 0 AND subscription_expires <= CURDATE() AND subscription_recurs = 1;
+
+END
+
+
