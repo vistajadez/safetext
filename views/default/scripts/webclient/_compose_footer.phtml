@@ -5,11 +5,12 @@
 			<div class="safetext-footer-composer-input">
 				<label for="composer" class="ui-hidden-accessible">Compose Input:</label>
 				<textarea class="safetext-new-message"
+					<?php if ($this->getValue('user')->subscription_level < 1) : ?>disabled="disabled"<?php endif; ?>
 					data-safetext-contact="<?php echo $this->getValue('contact'); ?>"
 					data-safetext-isdraft="0"
 					data-safetext-isimportant="0"
 					data-safetext-lifetime="24"
-					name="composer" data-mini="true" placeholder="New Message" data-clear-btn="true" data-theme="a"></textarea>
+					name="composer" data-mini="true" placeholder="<?php if ($this->getValue('user')->subscription_level < 1) echo $this->t('Subscribe to enable messaging'); else echo $this->t('New Message'); ?>" data-clear-btn="true" data-theme="a"></textarea>
 			</div>
 			<div class="safetext-footer-composer-button">
 				<div class="ui-grid-a center">
