@@ -45,12 +45,17 @@ class WebclientController extends SafetextClientController {
 			$contacts = new SafetextModelCollection('SafetextContact', $this->config, $this->db);
 			$contacts->load($contactsArray);
 			
+			// add blocked contacts flag
+			array_key_exists('filter', $this->params) ? $filter = $this->params['filter']: $filter = '';
+			
 			//title
-			$viewObject->setTitle('Contacts');
+			if ($filter === 'blocked') $viewObject->setTitle('Blocked Contacts');
+				else $viewObject->setTitle('Contacts');
 			
 			// set view data
 			$viewObject->setValue('folderStats', $folderStats);
 			$viewObject->setValue('contacts', $contacts);
+			$viewObject->setValue('filter', $filter);
 		}
 	 }
 	 

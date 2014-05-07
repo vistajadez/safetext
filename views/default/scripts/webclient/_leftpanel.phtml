@@ -12,7 +12,7 @@
 			<li><a href="/webclient/messages/folder/sent" data-transition="fade"><?php echo $this->t('Sent'); ?> <span class="ui-li-count safetext-sent-counter"><?php echo $folderStats['sent']; ?></span></a></li>
 			<li><a href="/webclient/messages/folder/drafts" data-transition="fade"><?php echo $this->t('Drafts'); ?> <span class="ui-li-count safetext-drafts-counter"><?php echo $folderStats['drafts']; ?></span></a></li>
 			<li><a href="/webclient/contacts" data-transition="fade"><?php echo $this->t('Contacts'); ?> <span class="ui-li-count"><?php echo $folderStats['contacts']; ?></span></a></li>
-			<li><a href="#" data-transition="fade"><?php echo $this->t('Black List'); ?> <span class="ui-li-count"><?php echo $folderStats['blacklist']; ?></span></a></li>
+			<li><a href="/webclient/contacts/filter/blocked" data-transition="fade"><?php echo $this->t('Black List'); ?> <span class="ui-li-count"><?php echo $folderStats['blacklist']; ?></span></a></li>
 			<li data-role="list-divider"></li>
 			<li><a href="/settings" data-transition="fade"><?php echo $this->t('Settings'); ?></a></li>  
 			<li><a href="<?php if ($this->getValue('user')->subscription_level > 0) echo '/settings/payments'; else echo '/settings/subscribe'; ?>" data-transition="fade"><?php echo $this->t('Payment'); ?></a></li>
