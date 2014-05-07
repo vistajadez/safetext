@@ -15,7 +15,7 @@
 			<li><a href="#" data-transition="fade"><?php echo $this->t('Black List'); ?> <span class="ui-li-count"><?php echo $folderStats['blacklist']; ?></span></a></li>
 			<li data-role="list-divider"></li>
 			<li><a href="/settings" data-transition="fade"><?php echo $this->t('Settings'); ?></a></li>  
-			<li><a href="#" data-transition="fade"><?php echo $this->t('Payment'); ?></a></li>
+			<li><a href="<?php if ($this->getValue('user')->subscription_level > 0) echo '/settings/payments'; else echo '/settings/subscribe'; ?>" data-transition="fade"><?php echo $this->t('Payment'); ?></a></li>
 			<li><a href="/auth/logout" data-ajax="false"><?php echo $this->t('Log Out'); ?></a></li>			
 		</ul>
 	</div>
