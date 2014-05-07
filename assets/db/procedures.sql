@@ -594,7 +594,7 @@ BEGIN
 	UPDATE results_table SET firstname=username WHERE firstname='' AND lastname='';
 
 	/* return stored hits */
-	SELECT id AS `key`, TRIM(CONCAT_WS(' ',firstname,lastname)) AS `name`,phone,email FROM results_table;
+	SELECT id AS `key`, TRIM(CONCAT_WS(' ',firstname,lastname)) AS `name`,phone FROM results_table;
 
 	/* remove the temporary table */
 	DROP TEMPORARY TABLE results_table;

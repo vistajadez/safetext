@@ -46,10 +46,10 @@
 								    	<?php foreach ($this->getValue('results') as $this_contact) : ?>
 								    		<li data-safetext-id="<?php echo $this_contact->key; ?>" data-safetext-name="<?php echo $this_contact->label(); ?>" data-safetext-phone="<?php echo $this_contact->phone; ?>" data-safetext-email="<?php echo $this_contact->email; ?>"><a class="safetext-add-contact-record" href="#">
 								    			<h2><?php echo $this_contact->label(); ?></h2>
-								    			<?php if ($this_contact->phone !== '') : ?>
+								    			<?php if ($this_contact->phone != '') : ?>
 								    				<p style="float:left; margin-right:5px;"><strong><?php echo $this->t('Tel'); ?>:</strong> <?php echo $this_contact->phone; ?></p>
 								    			<?php endif; ?>
-								    			<?php if ($this_contact->email !== '') : ?>
+								    			<?php if ($this_contact->email != '') : ?>
 								    				<p style="float:left;"><strong><?php echo $this->t('Email'); ?>:</strong> <?php echo $this_contact->email; ?></p>
 								    			<?php endif; ?></a>
 								    		</li>
