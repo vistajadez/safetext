@@ -53,26 +53,38 @@ class ApiController extends MsController {
 					if (array_key_exists('HTTP_X_SAFETEXT_PASSWORD', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_PASSWORD'] !== '') {
 						if (array_key_exists('device_signature', $this->params) && $this->params['device_signature'] !== '') {
 							if (array_key_exists('device_description', $this->params) && $this->params['device_description'] !== '') {
-								// Create a database connection to share
-								$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
-			
-								// generate token via db stored procedure
-								require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
-								$tokenDetails = SafetextUser::generateToken($_SERVER['HTTP_X_SAFETEXT_USERNAME'], $_SERVER['HTTP_X_SAFETEXT_PASSWORD'], $this->params['device_signature'], $this->params['device_description'], $db, $this->config);
 								
-								if ($tokenDetails['id'] > 0) {
+								array_key_exists('ios_id', $this->params)? $ios_id = $this->params['ios_id']: $ios_id = '';
+								array_key_exists('android_id', $this->params)? $android_id = $this->params['android_id']: $android_id = '';
+							
+								if ($this->params['device_signature'] === 'webclient' || $ios_id !== '' || $android_id !== '') {								
 								
-									$viewObject->setValue('status', 'success');
-									$viewObject->setValue('data', array('token' => $tokenDetails['token'], 'user' => $tokenDetails['id']));
+									// Create a database connection to share
+									$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+				
+									// generate token via db stored procedure
+									require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
+									$tokenDetails = SafetextUser::generateToken($_SERVER['HTTP_X_SAFETEXT_USERNAME'], $_SERVER['HTTP_X_SAFETEXT_PASSWORD'], $this->params['device_signature'], $this->params['device_description'], $ios_id, $android_id, $db, $this->config);
 									
-									// log the auth request
-									$this->config['log']->write('User: ' . $tokenDetails['id'] . ', Token: ' . $tokenDetails['token'] . ' (' . $this->params['device_description'] . ')', 'Auth Request');
-		
-								} else { // unsuccessful auth token generation
+									if ($tokenDetails['id'] > 0) {
+									
+										$viewObject->setValue('status', 'success');
+										$viewObject->setValue('data', array('token' => $tokenDetails['token'], 'user' => $tokenDetails['id']));
+										
+										// log the auth request
+										$this->config['log']->write('User: ' . $tokenDetails['id'] . ', Token: ' . $tokenDetails['token'] . ' (' . $this->params['device_description'] . ')', 'Auth Request');
+			
+										
+									} else { // unsuccessful auth token generation
+										$viewObject->setValue('status', 'fail');
+										$viewObject->setValue('data', array('message' => $tokenDetails['msg']));
+									}
+								
+								} else { // missing notifications token
 									$viewObject->setValue('status', 'fail');
-									$viewObject->setValue('data', array('message' => $tokenDetails['msg']));
+									$viewObject->setValue('data', array('message' => 'An iOS id  or Android id is required, for device notification support'));
 								}
-							} else { // no device sig
+							} else { // no device description
 								$viewObject->setValue('status', 'fail');
 								$viewObject->setValue('data', array('message' => 'Missing device description'));
 							}
