@@ -194,7 +194,7 @@ class SafetextUser extends SafetextModel {
 	  * @return mixed[] Array: id=>user_id (or 0 if unsuccessful), token=>device auth token, msg=>error message (nor null if successful)
 	  *
 	  */
-	public static function newUser($username, $password, $name, $email, $deviceSig, $deviceDesc, $db='', $config) {
+	public static function newUser($username, $password, $name, $email, $deviceSig, $deviceDesc, $iosId, $androidId, $db='', $config) {
 		// make sure we have a db connection
 		if (!$db instanceof MsDb) $db = new MsDb($config['dbHost'], $config['dbUser'], $config['dbPass'], $config['dbName']);
 	
@@ -211,9 +211,11 @@ class SafetextUser extends SafetextModel {
 		$email = SafetextModel::escapeForDb($email);
 		$deviceSig = SafetextModel::escapeForDb($deviceSig);
 		$deviceDesc = SafetextModel::escapeForDb($deviceDesc);
+		$iosId = SafetextModel::escapeForDb($iosId);
+		$androidId = SafetextModel::escapeForDb($androidId);
 	
 		// stored procedure call
-		$result = current($db->call("newUser('$username','$password','$firstname','$lastname','$email','$deviceSig','$deviceDesc')"));
+		$result = current($db->call("newUser('$username','$password','$firstname','$lastname','$email','$deviceSig','$deviceDesc','$iosId','$androidId')"));
 		
 		return $result;
 	}

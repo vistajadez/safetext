@@ -627,29 +627,38 @@ class ApiController extends MsController {
 				// **** CREATE USER **** 
 				if (array_key_exists('HTTP_X_SAFETEXT_USERNAME', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_USERNAME'] !== '') {
 					if (array_key_exists('HTTP_X_SAFETEXT_PASSWORD', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_PASSWORD'] !== '') {
-						if (array_key_exists('device_signature', $this->params) && $this->params['device_signature'] === 'webclient') {
+						if (array_key_exists('device_signature', $this->params) && $this->params['device_signature'] !== '') {
 							if (array_key_exists('device_description', $this->params) && $this->params['device_description'] !== '') {
 								if (array_key_exists('name', $this->params) && $this->params['name'] !== '') {
 									if (strpos($this->params['name'], ' ') !== false) {
 										if (strlen($_SERVER['HTTP_X_SAFETEXT_USERNAME']) < 17 && strlen($_SERVER['HTTP_X_SAFETEXT_USERNAME']) > 2) {
+											array_key_exists('ios_id', $this->params)? $ios_id = $this->params['ios_id']: $ios_id = '';
+											array_key_exists('android_id', $this->params)? $android_id = $this->params['android_id']: $android_id = '';
 										
-											// Create a database connection to share
-											$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
-						
-											// generate token via db stored procedure
-											array_key_exists('email', $this->params)? $email = $this->escapeForDb($this->params['email']): $email = '';
-											
-											require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
-											$tokenDetails = SafetextUser::newUser($_SERVER['HTTP_X_SAFETEXT_USERNAME'], $_SERVER['HTTP_X_SAFETEXT_PASSWORD'], $this->params['name'], $email, $this->params['device_signature'], $this->params['device_description'], $db, $this->config);
-											
-											if ($tokenDetails['id'] > 0) {
-											
-												$viewObject->setValue('status', 'success');
-												$viewObject->setValue('data', array('token' => $tokenDetails['token'], 'user' => $tokenDetails['id']));
+											if ($this->params['device_signature'] === 'webclient' || $ios_id !== '' || $android_id !== '') {
+										
+												// Create a database connection to share
+												$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+							
+												// generate token via db stored procedure
+												array_key_exists('email', $this->params)? $email = $this->escapeForDb($this->params['email']): $email = '';
 												
-											} else { // unsuccessful auth token generation
+												require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
+												$tokenDetails = SafetextUser::newUser($_SERVER['HTTP_X_SAFETEXT_USERNAME'], $_SERVER['HTTP_X_SAFETEXT_PASSWORD'], $this->params['name'], $email, $this->params['device_signature'], $this->params['device_description'], $ios_id, $android_id, $db, $this->config);
+												
+												if ($tokenDetails['id'] > 0) {
+												
+													$viewObject->setValue('status', 'success');
+													$viewObject->setValue('data', array('token' => $tokenDetails['token'], 'user' => $tokenDetails['id']));
+													
+												} else { // unsuccessful auth token generation
+													$viewObject->setValue('status', 'fail');
+													$viewObject->setValue('data', array('message' => $tokenDetails['msg']));
+												}
+												
+											} else { // missing notification ID/token
 												$viewObject->setValue('status', 'fail');
-												$viewObject->setValue('data', array('message' => $tokenDetails['msg']));
+												$viewObject->setValue('data', array('message' => 'An iOS id  or Android id is required, for device notification support'));
 											}
 										} else { // username too long
 											$viewObject->setValue('status', 'fail');
@@ -669,7 +678,7 @@ class ApiController extends MsController {
 							}
 						} else { // no device sig
 							$viewObject->setValue('status', 'fail');
-							$viewObject->setValue('data', array('message' => 'Only allowed for Web Client'));
+							$viewObject->setValue('data', array('message' => 'Missing device signature'));
 						}
 					} else { // no password
 						$viewObject->setValue('status', 'fail');

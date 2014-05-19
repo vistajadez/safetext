@@ -608,7 +608,7 @@ END
 -- --------------------------------------------------------------------------------
 DELIMITER $$
 
-CREATE DEFINER=`maxdistrodb`@`%.%.%.%` PROCEDURE `newUser`(IN usernameIn VARCHAR(24), IN passIn VARCHAR(24), IN firstnameIn VARCHAR(32), IN lastnameIn VARCHAR(32), IN emailIn VARCHAR(64), IN deviceSig VARCHAR(64), IN deviceDesc VARCHAR(64))
+CREATE DEFINER=`maxdistrodb`@`%.%.%.%` PROCEDURE `newUser`(IN usernameIn VARCHAR(24), IN passIn VARCHAR(24), IN firstnameIn VARCHAR(32), IN lastnameIn VARCHAR(32), IN emailIn VARCHAR(64), IN deviceSig VARCHAR(64), IN deviceDesc VARCHAR(64), IN iosId VARCHAR(64), IN androidId VARCHAR(64))
 BEGIN
 	/* check username availability */
 	SET @userId = (SELECT `id` FROM users WHERE `username` = usernameIn);
@@ -623,7 +623,7 @@ BEGIN
 		IF @userId > 0 THEN
 			/* create new device entry */
 			SET @tokenString = CAST(MD5(CONCAT(CONCAT('SafeText-hashsalt', usernameIn), UNIX_TIMESTAMP())) AS CHAR);
-			INSERT INTO sync_device (id,user_id,signature,description,is_initialized,token,token_expires) VALUES('', @userId, deviceSig, deviceDesc, '0', @tokenString, DATE_ADD(CURDATE(),INTERVAL 5 DAY));
+			INSERT INTO sync_device (id,user_id,signature,ios_id,android_id,description,is_initialized,token,token_expires) VALUES('', @userId, deviceSig, iosId, androidId, deviceDesc, '0', @tokenString, DATE_ADD(CURDATE(),INTERVAL 5 DAY));
 			IF LAST_INSERT_ID() IS NOT NULL THEN
 				SET @token = @tokenString;
 			ELSE
