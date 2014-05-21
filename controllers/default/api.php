@@ -821,7 +821,7 @@ class ApiController extends MsController {
 	 * Message Action.
 	 * 
 	 * A POST request updates an existing message. Currently the only available update is to change the is_draft attribute from 1 to 0.
-	 * A REMOVE request deletes this message.
+	 * A DELETE request deletes this message.
 	 * Only accessible from the WEB CLIENT.
 	 *
 	 * @param MsView $viewObject
@@ -907,6 +907,68 @@ $this->config['log']->write('call: ' . "syncMessage('" . $user->id . "','" . $th
 					$viewObject->setValue('data', array('message' => 'Missing SafeText auth token. Please log in'));
 				}
 			
+		} else { // insecure
+			$viewObject->setValue('status', 'fail');
+			$viewObject->setValue('data', array('message' => 'Insecure (non-HTTPS) access denied'));
+		}
+	}
+	
+	
+	/**
+	 * Images Action.
+	 * 
+	 * Images are uploaded to the server and can be queried for their thumb URLs by the mobile app using the Images web service
+	 *
+	 * @link https://github.com/deztopia/safetext/wiki/Images
+	 *
+	 * @param MsView $viewObject
+	 * @return void
+	 */
+	 public function imagesAction(&$viewObject) {
+		$viewObject->setResponseType('json');
+		
+		// ensure we're using https
+		if (MS_PROTOCOL === 'https') {
+			if (array_key_exists('HTTP_X_SAFETEXT_TOKEN', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_TOKEN'] !== '') {
+				// Create a database connection to share
+				$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+							
+				// authenticate token with stored procedure
+				require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
+				$user = SafetextUser::tokenToUser($_SERVER['HTTP_X_SAFETEXT_TOKEN'], $db, $this->config);
+		
+				if ($user instanceof SafetextUser && $user->isValid()) {
+			
+					if (MS_REQUEST_METHOD === 'GET') {
+						/* GET IMAGE DETAILS */
+						
+						$viewObject->setValue('status', 'fail');
+						$viewObject->setValue('data', array('message' => 'Not yet implemented'));
+						
+						// log the request
+						$this->config['log']->write('User: ' . $user->id . ' (' . $user->username . ')', 'Image Details Request');
+							
+					} else if (MS_REQUEST_METHOD === 'POST') {
+						/* UPLOAD IMAGE */
+						$viewObject->setValue('status', 'fail');
+						$viewObject->setValue('data', array('message' => 'Not yet implemented'));
+						
+						// log the request
+						$this->config['log']->write('User: ' . $user->id . ' (' . $user->username . ')', 'Image Upload');						
+						
+					} else {
+						$viewObject->setValue('status', 'fail');
+						$viewObject->setValue('token', $user->getRelationship('device')->token);
+						$viewObject->setValue('data', array('message' => MS_REQUEST_METHOD . ' requests are not supported for this web service'));
+					}
+				} else { // invalid token
+					$viewObject->setValue('status', 'fail');
+					$viewObject->setValue('data', array('message' => 'That auth token is not valid'));
+				}
+			} else { // no token
+				$viewObject->setValue('status', 'fail');
+				$viewObject->setValue('data', array('message' => 'Missing auth token'));
+			}
 		} else { // insecure
 			$viewObject->setValue('status', 'fail');
 			$viewObject->setValue('data', array('message' => 'Insecure (non-HTTPS) access denied'));
