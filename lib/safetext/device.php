@@ -247,7 +247,7 @@ class SafetextDevice extends SafetextModel {
 			$ctx = stream_context_create();
 			stream_context_set_option($ctx, 'ssl', 'local_cert', MS_PATH_BASE . DS . 'assets' . DS . 'certs' . DS . $this->config['apns']['certificate']);
 			//stream_context_set_option($ctx, 'ssl', 'passphrase', $this->config['apns']['passphrase']);
-	
+		
 			$fp = @stream_socket_client(
 				'ssl://' . $this->config['apns']['server'], $err, $errstr, 60,
 				STREAM_CLIENT_CONNECT|STREAM_CLIENT_PERSISTENT, $ctx);
@@ -277,8 +277,8 @@ class SafetextDevice extends SafetextModel {
 	
 			$result = @fwrite($fp, $msg, strlen($msg));
 	
-			if ($result) $this->config['log']->write(' - Message successfully delivered');
-				else $this->config['log']->write(' - Message not delivered');
+			if ($result) $this->config['log']->write(' - Notification message successfully delivered');
+				else $this->config['log']->write(' - Notification message not delivered');
 
 			// disconnect
 			fclose($fp);

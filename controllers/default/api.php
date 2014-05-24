@@ -260,12 +260,14 @@ class ApiController extends MsController {
 										$this->config['log']->write('Successfully delivered. Message key ' . $result['key']);
 										
 										// send device notification(s) to recipient
-										// load all registered devices
-										$devicesArray = $db->call("devices('" . current($this->params['recipients']) . "')");
-										$devices = new SafetextModelCollection('SafetextDevice', $this->config, $db);
-										$devices->load($devicesArray);
-										foreach ($devices as $this_device) $this_device->sendNotification($user->fullName() . ': ' . $this->params['content']);
-																	
+										$recipientSettings = current($db->CALL("getSettings('" . current($this->params['recipients']) . "')"));
+										if ($recipientSettings['notifications_on'] == '1') {
+											// load all registered devices
+											$devicesArray = $db->call("devices('" . current($this->params['recipients']) . "')");
+											$devices = new SafetextModelCollection('SafetextDevice', $this->config, $db);
+											$devices->load($devicesArray);
+											foreach ($devices as $this_device) $this_device->sendNotification($user->fullName() . ': ' . $this->params['content']);
+										}
 										// load successful output into view
 										$viewObject->setValue('status', 'success');
 										$viewObject->setValue('token', $user->getRelationship('device')->token);
