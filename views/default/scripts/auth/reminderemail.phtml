@@ -1,0 +1,26 @@
+<html>
+<head>
+  <title>Your Requested Safe-Text Login</title>
+</head>
+<body>
+    <h2>Your Requested Safe-Text Login</h2>
+    
+    <p>
+    	Your Safe-Text username is: <strong><?php echo $this->getValue('username'); ?></strong>
+    </p>
+    
+    <p>If you have forgotten your password, you may reset it by <a href="https://safe-text.us/auth/resetpass/verification/<?php echo $this->getValue('code'); ?>">Clicking Here</a> or by pasting the URL below into your browser's address window:</p>
+     
+    <p>
+    	<strong>https://safe-text.us/auth/resetpass/verification/<?php echo $this->getValue('code'); ?></strong>
+    </p>
+     
+    <p><em>IMPORTANT: For security purposes, resetting your password will clear all of your Safe-Text contacts and messages.</em></p>
+     
+    <p>Thanks for using Safe-text!</p>
+    
+    <p>
+    	- The <a href="https://safe-text.us">Safe-Text</a> Team<br />
+    </p>
+</body>
+</html>
