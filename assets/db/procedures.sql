@@ -989,3 +989,75 @@ BEGIN
 END
 
 
+-- --------------------------------------------------------------------------------
+-- Generate Verification Code
+-- Sets up a verification code suitable for use in a link to reset password
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE `generateVerificationCode` (IN emailIn VARCHAR(128))
+BEGIN
+	DECLARE userId int unsigned;
+	DECLARE userNameVal VARCHAR(16);
+
+		/* get user ID */
+	SELECT id, username INTO userId, userNameVal FROM users WHERE `email` = emailIn;
+        SET @msg = NULL;
+
+	IF userId IS NOT NULL THEN
+		/* generate the verification code */
+		SET @code=CAST(MD5(CONCAT(userId,NOW())) AS CHAR);
+
+		UPDATE users SET verification_code=@code WHERE id=userId LIMIT 1;
+
+	ELSE
+		/* email didn't match */
+		SET userId = 0;
+		SET userNameVal = '';
+        SET @code = '';
+		SET @msg = "Unable to find a match for that email address";
+    END IF;
+
+	SELECT userId AS id, userNameVal AS username, @code AS `code`, @msg AS msg;
+
+
+END
+
+
+-- --------------------------------------------------------------------------------
+-- Reset Password
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE `resetPass` (IN passwordIn VARCHAR(32), IN codeIn VARCHAR(32))
+BEGIN
+	/* first validate the verification code */
+	SET @userId = (SELECT id FROM users WHERE verification_code=codeIn LIMIT 1);
+
+	IF @userId IS NOT NULL THEN
+		/* reset password, clear verification code */
+		UPDATE users SET pass=passwordIn, verification_code='', date_last_pass_update=NOW() WHERE id=@userId LIMIT 1;
+		SET @msg = NULL;
+		
+		/* clear all this user's stuff for security */
+		/* Delete contacts */
+		DELETE FROM contacts WHERE `user_id`=@userId;
+
+		/* Delete devices */
+		DELETE FROM sync_device WHERE `user_id`=@userId LIMIT 3;
+
+		/* Delete any sync records queued for this contact */
+		DELETE FROM sync_queue WHERE `user_id`=@userId;
+
+	ELSE
+		/* code didn't match */
+		SET @userId = 0;
+		SET @msg = "Invalid credentials. Your reset password code may have expired or changed; try requesting a new password reset email";
+    END IF;
+
+	SELECT @userId AS id, @msg AS msg;
+
+
+END
+
+

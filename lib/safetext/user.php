@@ -221,4 +221,80 @@ class SafetextUser extends SafetextModel {
 	}
 	
 	
+	/**
+	  * Send Reminder Email.
+	  * A user has provided their email address and requests an email be sent to them with their username and a link
+	  * to reset their password.
+	  *
+	  * @param String email
+	  * @param String password
+	  *
+	  * @return mixed[] Array: id=>user_id (or empty string if unsuccessful), code=>verification code, msg=>error message (nor null if successful)
+	  *
+	  */
+	public static function sendReminderEmail($email, $db='', $config) {	
+		// make sure we have a db connection
+		if (!$db instanceof MsDb) $db = new MsDb($config['dbHost'], $config['dbUser'], $config['dbPass'], $config['dbName']);
+	
+		// required params
+		if ($email === '') 
+			return array('id' => 0, 'msg' => 'Missing email address');
+	
+		// cleanse input
+		$email = SafetextModel::escapeForDb($email);
+	
+		// stored procedure call
+		$result = current($db->call("generateVerificationCode('$email')"));
+		
+		if ($result['code'] != '') {
+			// send email
+		
+			$msgView = new MsView();
+			$msgView->setViewScript( MS_PATH_BASE . DS .'views'. DS . MS_MODULE . DS . 'scripts' . DS . 'auth' . DS .
+				'reminderemail.phtml'); // set the view script
+			$msgView->setValue('code', $result['code']);
+			$msgView->setValue('username', $result['username']);
+			$msg = $msgView->render();
+			
+			$to = $email;
+			$headers  = 'MIME-Version: 1.0' . "\r\n"; // To send HTML mail, the Content-type header must be set
+			$headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+			$headers .= 'To: ' . $email . "\r\n";
+			$headers .= 'From: ' . $config['productName'] . ' <' . $config['productNoreplyEmail'] . '>' . "\r\n";
+			mail($to, 'Your Safe-Text Login', $msg, $headers);
+		
+		}
+		
+		return $result;
+	}
+	
+	
+	/**
+	  * Reset Pass.
+	  * A user has requested to reset their password. Validate the passed verification code, update password, and clear all existing contacts and messages.
+	  *
+	  * @param String password
+	  * @param String code Verification code.
+	  *
+	  * @return mixed[] Array: id=>user_id (or 0 if unsuccessful), msg=>error message (or null if successful)
+	  *
+	  */
+	public static function resetPass($password, $code, $db='', $config) {
+		// make sure we have a db connection
+		if (!$db instanceof MsDb) $db = new MsDb($config['dbHost'], $config['dbUser'], $config['dbPass'], $config['dbName']);
+	
+		// required params
+		if ($password === '' || $code === '') 
+			return array('id' => 0, 'msg' => 'Missing parameters before sending to stored procedure');
+	
+		// cleanse input
+		$password = SafetextModel::escapeForDb($password);
+		$code = SafetextModel::escapeForDb($code);
+	
+		// stored procedure call
+		$result = current($db->call("resetPass('$password','$code')"));
+		return $result;
+	}
+	
+	
 }

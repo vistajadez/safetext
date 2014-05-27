@@ -73,8 +73,66 @@ class AuthController extends SafetextClientController {
 		$viewObject->setTitle($this->config['productName'] . ' - ' . $viewObject->t('Register'));
 
 	 }
+	 
+	 
+	/**
+	 * Password Action.
+	 * 
+	 * Display a password reminder form.
+	 * 
+	 * @param MsView $viewobject
+	 * @return void
+	 */
+	 public function passwordAction(&$viewObject) {
+	 	// ensure we're using https
+		if (MS_PROTOCOL !== 'https') {
+			$redirect = "https://".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+			header("Location: $redirect");
+				
+			return; // terminate controller action
+		}
+		
+		// Page title
+		$viewObject->setTitle($this->config['productName'] . ' - ' . $viewObject->t('Login Assistance'));
+
+	 }
 
 
+	/**
+	 * Reset Password.
+	 * 
+	 * Display a Form to reset password.
+	 * 
+	 * @param MsView $viewobject
+	 * @return void
+	 */
+	 public function resetpassAction(&$viewObject) {
+	 	// ensure we're using https
+		if (MS_PROTOCOL !== 'https') {
+			$redirect = "https://".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+			header("Location: $redirect");
+				
+			return; // terminate controller action
+		}
+				
+		// make sure we're passed a verification code, otherwise return a 404 error
+		if (array_key_exists('verification', $this->params) && $this->params['verification'] !== '') {
+			// Page title
+			$viewObject->setTitle($this->config['productName'] . ' - ' . $viewObject->t('Reset Password'));
+		
+			// view data
+			$viewObject->setValue('code', $this->params['verification']);
+		
+		} else {
+			$this->forward($viewObject, 'noaction', 'notfound');
+			return;
+		}
+
+	 }
+	 
+	 
+	 
+	 
 	 
 	 
 	 

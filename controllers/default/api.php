@@ -978,6 +978,111 @@ $this->config['log']->write('call: ' . "syncMessage('" . $user->id . "','" . $th
 	}
 	
 	
+	/**
+	 * Send Reminder Email.
+	 * 
+	 * A user has provided their email address and requests an email be sent to them with their username and a link
+	 * to reset their password.
+	 *
+	 * @link https://github.com/deztopia/safetext
+	 *
+	 * @param MsView $viewObject
+	 * @return void
+	 */
+	 public function sendreminderemailAction(&$viewObject) {
+		$viewObject->setResponseType('json');
+		
+		// ensure we're using https
+		if (MS_PROTOCOL === 'https') {
+			if (MS_REQUEST_METHOD === 'POST') {
+				if (array_key_exists('email', $this->params) && $this->params['email'] !== '') {
+					
+					// Create a database connection to share
+					$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+
+					// generate verification code
+					require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
+					$codeDetails = SafetextUser::sendReminderEmail($this->params['email'], $db, $this->config);
+					
+					if ($codeDetails['code'] != '') {
+						$viewObject->setValue('status', 'success');
+						
+						// log the request
+						$this->config['log']->write('User: ' . $codeDetails['id'] . ', Verification Code: ' . $codeDetails['token'], 'Login Help Email Request');
+					} else { // unsuccessful code generation
+						$viewObject->setValue('status', 'fail');
+						$viewObject->setValue('data', array('message' => $codeDetails['msg']));
+					}
+				} else { // no device description
+					$viewObject->setValue('status', 'fail');
+					$viewObject->setValue('data', array('message' => 'Missing email address'));
+				}
+
+			} else { // non-POST request
+				$viewObject->setValue('status', 'fail');
+				$viewObject->setValue('data', array('message' => MS_REQUEST_METHOD . ' requests are not supported for auth'));
+			}
+		} else { // insecure
+			$viewObject->setValue('status', 'fail');
+			$viewObject->setValue('data', array('message' => 'Insecure (non-HTTPS) access denied'));
+		}
+	}
+	
+	
+	/**
+	 * Reset Password.
+	 * 
+	 * A user has requested to reset their password. Validate the passed verification code, update password, and clear all existing contacts and messages.
+	 *
+	 * @link https://github.com/deztopia/safetext
+	 *
+	 * @param MsView $viewObject
+	 * @return void
+	 */
+	 public function resetpassAction(&$viewObject) {
+		$viewObject->setResponseType('json');
+		
+		// ensure we're using https
+		if (MS_PROTOCOL === 'https') {
+			if (MS_REQUEST_METHOD === 'POST') {
+				if (array_key_exists('HTTP_X_SAFETEXT_CODE', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_CODE'] !== '') {
+					if (array_key_exists('password', $this->params) && $this->params['password'] !== '') {
+						
+						// Create a database connection to share
+						$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+	
+						// generate verification code
+						require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
+						$resultDetails = SafetextUser::resetPass($this->params['password'], $_SERVER['HTTP_X_SAFETEXT_CODE'], $db, $this->config);
+						
+						if ($resultDetails[id] > 0) {
+							$viewObject->setValue('status', 'success');
+							
+							// log the request
+							$this->config['log']->write('User: ' . $resultDetails['id'] . ', Verification Code: ' . $_SERVER['HTTP_X_SAFETEXT_CODE'], 'Reset Password Request');
+						} else { // unsuccessful reset
+							$viewObject->setValue('status', 'fail');
+							$viewObject->setValue('data', array('message' => $resultDetails['msg']));
+						}
+					} else { // no device description
+						$viewObject->setValue('status', 'fail');
+						$viewObject->setValue('data', array('message' => 'Missing password'));
+					}
+				
+				} else { // no verification code
+					$viewObject->setValue('status', 'fail');
+					$viewObject->setValue('data', array('message' => 'Missing password reset verification code'));
+				}
+			} else { // non-POST request
+				$viewObject->setValue('status', 'fail');
+				$viewObject->setValue('data', array('message' => MS_REQUEST_METHOD . ' requests are not supported for auth'));
+			}
+		} else { // insecure
+			$viewObject->setValue('status', 'fail');
+			$viewObject->setValue('data', array('message' => 'Insecure (non-HTTPS) access denied'));
+		}
+	}
+	
 	
 	
 	

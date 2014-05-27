@@ -957,6 +957,123 @@
 	});
 	
 	
+	/**
+	 * Send Forgot Password Email.
+	 * This event will run when the login assistance page's submit button is clicked.
+	 * Sends the email address to the server to request a reset email, using the API.
+	 */
+	$(document).on('click', '.safetext-password .safetext-send-button', function(event) {	
+		// get the form details
+		var thisForm = Safetext.lastPage.find(".safetext-sendpassword-form");
+		
+		if (thisForm.find('input[name="email"]').val() != '') {
+			$.ajax({url: '/api/sendreminderemail',
+				data: thisForm.serialize(),
+				type: 'post',               
+				async: 'true',
+				dataType: 'json',
+				beforeSend: function() {
+					// This callback function will trigger before data is sent
+					$.mobile.loading( 'show');
+				},
+				complete: function() {
+					// This callback function will trigger on data sent/received complete
+					$.mobile.loading( "hide" );
+				},
+				success: function (result) {
+					if(result.status === 'success') {
+						// feedback message
+						alert('You should receive our email within a few moments. Please check your spam folders if you do not see it.');
+						
+						// go back to login page, refresh
+						$.mobile.pageContainer.pagecontainer("change", '/auth/login',{
+							transition              : 'none',
+							reloadPage              : true
+						});
+						
+					} else {
+						alert('Unable to send email. The server said: ' + result.data.message); 
+					}
+				},
+				error: function (request,error) {
+					// This callback function will trigger on unsuccessful action                
+					alert('Network error has occurred; please try again.');
+				}
+			}); 
+
+		
+		} else {
+			alert("Enter your Safe-Text account's email address");
+		}
+	
+		return false;
+	});
+	
+	
+	/**
+	 * Reset Password.
+	 * This event will run when the reset password page's Reset button is clicked.
+	 * Resets the user's password to the one they select in the form, and clears their contacts and messages.
+	 */
+	$(document).on('click', '.safetext-resetpassword .safetext-send-button', function(event) {	
+		// get the form details
+		var thisForm = Safetext.lastPage.find(".safetext-resetpassword-form");
+		
+		if (thisForm.find('input[name="password"]').val() != '') {
+			if (thisForm.find('input[name="code"]').val() != '') {
+			
+				$.ajax({url: '/api/resetpass',
+					data: {'password': thisForm.find('input[name="password"]').val()},
+					headers: {'x-safetext-code': thisForm.find('input[name="code"]').val()},
+					type: 'post',               
+					async: 'true',
+					dataType: 'json',
+					beforeSend: function() {
+						// This callback function will trigger before data is sent
+						$.mobile.loading( 'show');
+					},
+					complete: function() {
+						// This callback function will trigger on data sent/received complete
+						$.mobile.loading( "hide" );
+					},
+					success: function (result) {
+						if(result.status === 'success') {
+							// feedback message
+							alert('Your information has been successfully updated. You may now login to Safe-Text with your new password.');
+							
+							// go back to login page, refresh
+							$.mobile.pageContainer.pagecontainer("change", '/auth/login',{
+								transition              : 'none',
+								reloadPage              : true
+							});
+							
+						} else {
+							alert('Unable to reset your password. The server said: ' + result.data.message);
+							
+							// go back to login page, refresh
+							$.mobile.pageContainer.pagecontainer("change", '/auth/login',{
+								transition              : 'none',
+								reloadPage              : true
+							});
+						}
+					},
+					error: function (request,error) {
+						// This callback function will trigger on unsuccessful action                
+						alert('Network error has occurred; please try again.');
+					}
+				});
+
+		
+			} else {
+				alert("Unable to validate the verification form. Please try again.");
+			}
+		} else {
+			alert("Please select a new password");
+		}
+	
+		return false;
+	});
+	
 	
 	
 	
