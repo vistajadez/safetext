@@ -943,21 +943,116 @@ $this->config['log']->write('call: ' . "syncMessage('" . $user->id . "','" . $th
 			
 					if (MS_REQUEST_METHOD === 'GET') {
 						/* GET IMAGE DETAILS */
-						
-						$viewObject->setValue('status', 'fail');
-						$viewObject->setValue('data', array('message' => 'Not yet implemented'));
-						
-						// log the request
-						$this->config['log']->write('User: ' . $user->id . ' (' . $user->username . ')', 'Image Details Request');
+						if (array_key_exists('image', $this->params) && $this->params['image'] !== '') {
+							// retrieve details via stored procedure
+							$result = current($db->call("getImage('" . $user->id . "','" . $this->params['image'] . "')"));
 							
+							if ($result['key'] != '') {
+								$viewObject->setValue('status', 'success');
+								$viewObject->setValue('token', $user->getRelationship('device')->token);
+								$viewObject->setValue('data', array(
+									'key' => $result['key'],
+									'large' => MS_URL_BASE . '/assets/images/users/' . $result['filename'] . '-l.jpg',
+									'medium' => MS_URL_BASE . '/assets/images/users/' . $result['filename'] . '-m.jpg',
+									'small' => MS_URL_BASE . '/assets/images/users/' . $result['filename'] . '-s.jpg',
+									'deletes_in' => round((strtotime($result['expire_date']) - time())/60)
+								));
+							
+								// log the request
+								$this->config['log']->write('User: ' . $user->id . ' (' . $user->username . '), image ' . $this->params['image'], 'Image Details Request');
+							} else {
+								$viewObject->setValue('status', 'fail');
+								$viewObject->setValue('token', $user->getRelationship('device')->token);
+								$viewObject->setValue('data', array('message' => 'Image not found'));
+							}
+						} else {
+							$viewObject->setValue('status', 'fail');
+							$viewObject->setValue('token', $user->getRelationship('device')->token);
+							$viewObject->setValue('data', array('message' => 'No image specified'));
+						}
 					} else if (MS_REQUEST_METHOD === 'POST') {
 						/* UPLOAD IMAGE */
-						$viewObject->setValue('status', 'fail');
-						$viewObject->setValue('data', array('message' => 'Not yet implemented'));
+						$file = current($_FILES);
+						if(isset($file) && is_uploaded_file($file['tmp_name'])) {
+							
+							$ImageName 		= str_replace(' ','-',strtolower($file['name'])); //get image name
+							$ImageSize 		= $file['size']; // get original image size
+							$TempSrc	 	= $file['tmp_name']; // Temp name of image file stored in PHP tmp folder
+							$ImageType	 	= $file['type']; //get file type, returns "image/png", image/jpeg, text/plain etc.
+							
+							//Let's check allowed $ImageType, we use PHP SWITCH statement here
+							switch(strtolower($ImageType))
+							{
+								case 'image/png':
+									//Create a new image from file 
+									$CreatedImage =  imagecreatefrompng($file['tmp_name']);
+									break;
+								case 'image/gif':
+									$CreatedImage =  imagecreatefromgif($file['tmp_name']);
+									break;			
+								case 'image/jpeg':
+								case 'image/pjpeg':
+									$CreatedImage = imagecreatefromjpeg($file['tmp_name']);
+									break;
+								default:
+									$CreatedImage = false;
+							}
+							
+							if ($CreatedImage !== false) {
+								//PHP getimagesize() function returns height/width from image file stored in PHP tmp folder.
+								//Get first two values from image, width and height. 
+								//list assign svalues to $CurWidth,$CurHeight
+								list($CurWidth,$CurHeight)=getimagesize($TempSrc);
+
+								//Construct a new unique base filename
+								$NewImageName = MD5($ImageName . $user->id . time());
+								
+								// base filename with prepended path
+								$NewImageDest = MS_PATH_BASE . DS . 'assets' . DS . 'images' . DS . 'users' . DS . $NewImageName;
+								
+								//Resize image to Specified Size by calling resizeImage function.
+								if($this->_resizeImage($CurWidth,$CurHeight,$this->config['imagesLargeWidth'],$NewImageDest . '-l.jpg',$CreatedImage,$this->config['imagesQuality'])) {
+									$this->_resizeImage($CurWidth,$CurHeight,$this->config['imagesMediumWidth'],$NewImageDest . '-m.jpg',$CreatedImage,$this->config['imagesQuality']);
+									$this->_resizeImage($CurWidth,$CurHeight,$this->config['imagesSmallWidth'],$NewImageDest . '-s.jpg',$CreatedImage,$this->config['imagesQuality']);
+							
+									// store database reference and generate an image key
+									$result = current($db->call("putImage('" . $user->id . "','$NewImageName')"));
+									
+									if ($result['key'] != '') {
 						
-						// log the request
-						$this->config['log']->write('User: ' . $user->id . ' (' . $user->username . ')', 'Image Upload');						
-						
+										$viewObject->setValue('status', 'success');
+										$viewObject->setValue('token', $user->getRelationship('device')->token);
+										$viewObject->setValue('data', array(
+											'key' => $result['key'],
+											'large' => MS_URL_BASE . '/assets/images/users/' . $NewImageName . '-l.jpg',
+											'medium' => MS_URL_BASE . '/assets/images/users/' . $NewImageName . '-m.jpg',
+											'small' => MS_URL_BASE . '/assets/images/users/' . $NewImageName . '-s.jpg',
+											'deletes_in' => round((strtotime($result['expire_date']) - time())/60)
+										));
+										
+										// log the request
+										$this->config['log']->write('User: ' . $user->id . ' (' . $user->username . ')', 'Image Upload');						
+									
+									} else {
+										$viewObject->setValue('status', 'fail');
+										$viewObject->setValue('token', $user->getRelationship('device')->token);
+										$viewObject->setValue('data', array('message' => $result['msg']));
+									}
+								} else {
+									$viewObject->setValue('status', 'fail');
+									$viewObject->setValue('token', $user->getRelationship('device')->token);
+									$viewObject->setValue('data', array('message' => 'Unable to resize image'));
+								}
+							} else {
+								$viewObject->setValue('status', 'fail');
+								$viewObject->setValue('token', $user->getRelationship('device')->token);
+								$viewObject->setValue('data', array('message' => 'Unsupported filetype'));
+							}
+						} else {
+							$viewObject->setValue('status', 'fail');
+							$viewObject->setValue('token', $user->getRelationship('device')->token);
+							$viewObject->setValue('data', array('message' => 'No image file'));
+						}
 					} else {
 						$viewObject->setValue('status', 'fail');
 						$viewObject->setValue('token', $user->getRelationship('device')->token);
@@ -1101,6 +1196,45 @@ $this->config['log']->write('call: ' . "syncMessage('" . $user->id . "','" . $th
 		return str_replace("'", "\'", $val);
 	}
 	
+	/**
+	 * Resize Image.
+	 * Resizes an image for local storage.
+	 *
+	 * @param String $CurWidth
+	 * @param String $CurHeight
+	 * @param String $MaxSize
+	 * @param String $DestFolder
+	 * @param String $SrcImage
+	 * @param String $Quality
+	 * @return Boolean
+	 */
+	// This function will proportionally resize image 
+	protected function _resizeImage($CurWidth,$CurHeight,$MaxSize,$DestFolder,$SrcImage,$Quality)
+	{
+		//Check Image size is not 0
+		if($CurWidth <= 0 || $CurHeight <= 0) 
+		{
+			return false;
+		}
+		
+		//Construct a proportional size of new image
+		$ImageScale      	= min($MaxSize/$CurWidth, $MaxSize/$CurHeight); 
+		$NewWidth  			= ceil($ImageScale*$CurWidth);
+		$NewHeight 			= ceil($ImageScale*$CurHeight);
+		$NewCanves 			= imagecreatetruecolor($NewWidth, $NewHeight);
+		
+		// Resize Image
+		if(imagecopyresampled($NewCanves, $SrcImage,0, 0, 0, 0, $NewWidth, $NewHeight, $CurWidth, $CurHeight))
+		{
+			imagejpeg($NewCanves,$DestFolder,$Quality);
+			
+			//Destroy image, frees memory	
+			if(is_resource($NewCanves)) {imagedestroy($NewCanves);} 
+			return true;
+		}
+	
+	}
+	
 	
 	public function testAction(&$viewObject) {
 		$viewObject->setResponseType('json');
@@ -1121,6 +1255,6 @@ $this->config['log']->write('call: ' . "syncMessage('" . $user->id . "','" . $th
 		
 		$viewObject->setValue('Test', $test);
 		
-	} 
+	}
 	 
 }

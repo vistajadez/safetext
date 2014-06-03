@@ -1061,3 +1061,59 @@ BEGIN
 END
 
 
+-- --------------------------------------------------------------------------------
+-- Put Image
+-- Saves image details to database
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE `putImage` (IN userIdIn int unsigned, IN filenameIn varchar(32))
+BEGIN
+	DECLARE imageId int unsigned;
+
+	INSERT INTO images (id, user_id, image_key, filename, expire_date) VALUES ('', userIdIn, CONCAT_WS('-',userIdIn,NOW(),0), filenameIn, DATE_ADD(NOW(),INTERVAL 24 HOUR));
+
+	SET imageId = LAST_INSERT_ID();
+	IF imageId IS NOT NULL THEN 
+		SELECT id, image_key AS `key`, expire_date, '' AS msg FROM images WHERE id=imageId;
+
+	ELSE
+		SELECT '' AS `key`, 'There was an error trying to save image details' AS `msg`;
+	END IF;
+
+END
+
+
+-- --------------------------------------------------------------------------------
+-- Get Image
+-- Returns image details
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE `getImage` (IN userIdIn int unsigned, IN keyIn varchar(32))
+BEGIN
+
+	SELECT image_key AS `key`, filename, expire_date FROM images WHERE user_id=userIdIn AND image_key=KeyIn;
+
+
+END
+
+
+-- --------------------------------------------------------------------------------
+-- Images Cleanup
+-- Delete expired images. To be run from a CRON job.
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE `imagesCleanup` ()
+BEGIN
+
+	/* return filenames as a resultset for physical deletion */
+	SELECT filename FROM images WHERE expire_date < NOW();
+
+	/* delete expired images */
+	DELETE FROM images WHERE expire_date < NOW();
+
+END
+
+
