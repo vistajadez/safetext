@@ -294,13 +294,14 @@ BEGIN
 	DECLARE isImportant, isDraft, isRead tinyint(1) unsigned;
 	DECLARE readDate, sentDate, expireDate datetime;
 	DECLARE msgContent text;
+	DECLARE msgImage VARCHAR(32);
 	DECLARE done INT DEFAULT FALSE;
 	DECLARE cur CURSOR FOR SELECT sync_device.id, sync_device.user_id FROM sync_device, participants WHERE participants.message_id =messageId AND participants.contact_id = sync_device.user_id AND sync_device.is_initialized=1;
 	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
 
 	/* Get the message's current values */
-	SELECT content,is_important,is_draft,is_read,read_date,sent_date,expire_date
-		INTO msgContent,isImportant,isDraft,isRead,readDate,sentDate,expireDate
+	SELECT content,image,is_important,is_draft,is_read,read_date,sent_date,expire_date
+		INTO msgContent,msgImage,isImportant,isDraft,isRead,readDate,sentDate,expireDate
 		FROM messages WHERE id=messageId;
 	
 	/* Get the sender ID */
@@ -342,7 +343,7 @@ BEGIN
 				LEAVE read_loop;
 			END IF;
 			IF isDraft = 0 OR userId = senderId THEN
-				INSERT INTO sync_queue (id,user_id,device_id,date_added,tablename,pk,vals,is_pulled) VALUES (null,userId,deviceId,NOW(),'messages',messageId,CONCAT_WS('','{"sender":"',senderId,'","recipients":["',recipientId,'"],"content":"',msgContent,'","is_read":"',isRead,'","is_important":"',isImportant,'","is_draft":"',isDraft,'","sent_date":"',sentDate,'","read_date":"',readDate,'","expire_date":"',expireDate,'","is_updated":"0","is_deleted":"0"}'),0);
+				INSERT INTO sync_queue (id,user_id,device_id,date_added,tablename,pk,vals,is_pulled) VALUES (null,userId,deviceId,NOW(),'messages',messageId,CONCAT_WS('','{"sender":"',senderId,'","recipients":["',recipientId,'"],"content":"',msgContent,'","image":"', msgImage ,'","is_read":"',isRead,'","is_important":"',isImportant,'","is_draft":"',isDraft,'","sent_date":"',sentDate,'","read_date":"',readDate,'","expire_date":"',expireDate,'","is_updated":"0","is_deleted":"0"}'),0);
 			END IF;
 		END LOOP;
 	CLOSE cur;

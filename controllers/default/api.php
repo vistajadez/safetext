@@ -248,13 +248,14 @@ class ApiController extends MsController {
 									array_key_exists('lifetime', $this->params)? $lifetime = $this->params['lifetime']: $lifetime = '24';
 									if ($lifetime > 24) $lifetime = 24; // message lifetime cannot be more than 24 hrs
 									$content = $this->escapeForDb($this->params['content']);
+									array_key_exists('image', $this->params)? $image = $this->params['image']: $image = '';
 									
 									// log the send message request
-									$this->config['log']->write('User: ' . $user->id . ", Device: " . $user->getRelationship('device')->id . ": sendMessage('" . $user->id . "','" . current($this->params['recipients']) . "','" . $content . "','" . $is_important . "','" . $is_draft . "','" . $lifetime . "')", 'Send Message Request');
+									$this->config['log']->write('User: ' . $user->id . ", Device: " . $user->getRelationship('device')->id . ", image: " . $image, 'Send Message Request');
 									$this->config['log']->write('Request body: ' . file_get_contents('php://input'));
 								
 									// execute send via stored procedure
-									$result = current($db->call("sendMessage('" . $user->id . "','" . current($this->params['recipients']) . "','" . $content . "','" . $is_important . "','" . $is_draft . "','" . $lifetime . "')"));
+									$result = current($db->call("sendMessage('" . $user->id . "','" . current($this->params['recipients']) . "','" . $content . "','" . $is_important . "','" . $is_draft . "','" . $lifetime . "','" . $image . "')"));
 									
 									if ($result['key'] > 0) {
 										$this->config['log']->write('Successfully delivered. Message key ' . $result['key']);
