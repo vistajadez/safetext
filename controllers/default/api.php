@@ -267,8 +267,10 @@ class ApiController extends MsController {
 											$devicesArray = $db->call("devices('" . current($this->params['recipients']) . "')");
 											$devices = new SafetextModelCollection('SafetextDevice', $this->config, $db);
 											$devices->load($devicesArray);
-											foreach ($devices as $this_device) $this_device->sendNotification($user->fullName() . ': ' . $this->params['content']);
+											//foreach ($devices as $this_device) $this_device->sendNotification($user->fullName() . ': ' . $this->params['content']);
+											foreach ($devices as $this_device) $this_device->sendNotification('You received a new message');
 										}
+										
 										// load successful output into view
 										$viewObject->setValue('status', 'success');
 										$viewObject->setValue('token', $user->getRelationship('device')->token);
@@ -633,43 +635,38 @@ class ApiController extends MsController {
 						if (array_key_exists('device_signature', $this->params) && $this->params['device_signature'] !== '') {
 							if (array_key_exists('device_description', $this->params) && $this->params['device_description'] !== '') {
 								if (array_key_exists('name', $this->params) && $this->params['name'] !== '') {
-									if (strpos($this->params['name'], ' ') !== false) {
-										if (strlen($_SERVER['HTTP_X_SAFETEXT_USERNAME']) < 17 && strlen($_SERVER['HTTP_X_SAFETEXT_USERNAME']) > 2) {
-											array_key_exists('ios_id', $this->params)? $ios_id = $this->params['ios_id']: $ios_id = '';
-											array_key_exists('android_id', $this->params)? $android_id = $this->params['android_id']: $android_id = '';
-										
-											if ($this->params['device_signature'] === 'webclient' || $ios_id !== '' || $android_id !== '') {
-										
-												// Create a database connection to share
-												$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
-							
-												// generate token via db stored procedure
-												array_key_exists('email', $this->params)? $email = $this->escapeForDb($this->params['email']): $email = '';
+									if (strlen($_SERVER['HTTP_X_SAFETEXT_USERNAME']) < 17 && strlen($_SERVER['HTTP_X_SAFETEXT_USERNAME']) > 2) {
+										array_key_exists('ios_id', $this->params)? $ios_id = $this->params['ios_id']: $ios_id = '';
+										array_key_exists('android_id', $this->params)? $android_id = $this->params['android_id']: $android_id = '';
+									
+										if ($this->params['device_signature'] === 'webclient' || $ios_id !== '' || $android_id !== '') {
+									
+											// Create a database connection to share
+											$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+						
+											// generate token via db stored procedure
+											array_key_exists('email', $this->params)? $email = $this->escapeForDb($this->params['email']): $email = '';
+											
+											require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
+											$tokenDetails = SafetextUser::newUser($_SERVER['HTTP_X_SAFETEXT_USERNAME'], $_SERVER['HTTP_X_SAFETEXT_PASSWORD'], $this->params['name'], $email, $this->params['device_signature'], $this->params['device_description'], $ios_id, $android_id, $db, $this->config);
+											
+											if ($tokenDetails['id'] > 0) {
+											
+												$viewObject->setValue('status', 'success');
+												$viewObject->setValue('data', array('token' => $tokenDetails['token'], 'user' => $tokenDetails['id']));
 												
-												require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
-												$tokenDetails = SafetextUser::newUser($_SERVER['HTTP_X_SAFETEXT_USERNAME'], $_SERVER['HTTP_X_SAFETEXT_PASSWORD'], $this->params['name'], $email, $this->params['device_signature'], $this->params['device_description'], $ios_id, $android_id, $db, $this->config);
-												
-												if ($tokenDetails['id'] > 0) {
-												
-													$viewObject->setValue('status', 'success');
-													$viewObject->setValue('data', array('token' => $tokenDetails['token'], 'user' => $tokenDetails['id']));
-													
-												} else { // unsuccessful auth token generation
-													$viewObject->setValue('status', 'fail');
-													$viewObject->setValue('data', array('message' => $tokenDetails['msg']));
-												}
-												
-											} else { // missing notification ID/token
+											} else { // unsuccessful auth token generation
 												$viewObject->setValue('status', 'fail');
-												$viewObject->setValue('data', array('message' => 'An iOS id  or Android id is required, for device notification support'));
+												$viewObject->setValue('data', array('message' => $tokenDetails['msg']));
 											}
-										} else { // username too long
+											
+										} else { // missing notification ID/token
 											$viewObject->setValue('status', 'fail');
-											$viewObject->setValue('data', array('message' =>'Username must be between 3 and 16 characters'));
+											$viewObject->setValue('data', array('message' => 'An iOS id  or Android id is required, for device notification support'));
 										}
-									} else { // only one name was given
+									} else { // username too long
 										$viewObject->setValue('status', 'fail');
-										$viewObject->setValue('data', array('message' => 'Please include both your first and last name'));
+										$viewObject->setValue('data', array('message' =>'Username must be between 3 and 16 characters'));
 									}
 								} else { // no first/last name
 									$viewObject->setValue('status', 'fail');

@@ -234,7 +234,8 @@ class SafetextDevice extends SafetextModel {
 			// structure payload
 			$body = array();
 			$body['aps'] = array(
-				'alert' => $content, 
+				//'alert' => $content, 
+				'alert' => 'You have a new Safe-Text message',
 				'sound' => 'default'
 			);
 			$payload = json_encode($body);
@@ -318,7 +319,7 @@ class SafetextDevice extends SafetextModel {
 	        if ($result === FALSE) {
 	            $this->config['log']->write(' - Message not delivered');
 	        } else {
-		        $this->config['log']->write(' - Message successfully delivered, result: ' . $result);
+		        $this->config['log']->write(' - Message delivered, api key: ' . $this->config['gcm']['apikey'] . ', reg id: ' . $this->android_id . ', result: ' . $result);
 	        }
 	 
 	        // Close connection

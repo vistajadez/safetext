@@ -23,7 +23,7 @@
                                 </li>
                                 <li class="ui-field-contain">
                                     <label for="pass"><?php echo $this->t('Change Password'); ?>: <a href="#safetext-password-info" data-rel="popup" data-transition="pop" class="safetext-tooltip-btn ui-btn ui-alt-icon ui-nodisc-icon ui-btn-inline ui-icon-info ui-btn-icon-notext ui-corner-all">Info</a></label>
-                                    <input type="text" name="pass" value="" data-clear-btn="true">
+                                    <input type="password" name="pass" value="" data-clear-btn="true">
                                     <div data-role="popup" id="safetext-password-info" class="ui-content" data-theme="a" style="max-width:350px;">
 								      <a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
 								      <p><?php echo $this->t('Last updated'); ?>: <?php echo date('M jS, Y', strtotime($this->getValue('user')->last_pass_update)); ?></p>

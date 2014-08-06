@@ -72,7 +72,14 @@ DELIMITER $$
 
 CREATE DEFINER=`maxdistrodb`@`%.%.%.%` PROCEDURE `expireToken`(IN tokenIn VARCHAR(64))
 BEGIN
-	UPDATE sync_device SET `token`='', `token_expires`= CURDATE() WHERE `token` = tokenIn LIMIT 1; 
+	/* get device id before we clear the token */
+	set @deviceId = (SELECT id FROM sync_device WHERE `token` = tokenIn);
+	
+	/* clear token and reset the init flag */
+	UPDATE sync_device SET `token`='', `token_expires`= CURDATE(), `is_initialized`=0 WHERE `token` = tokenIn LIMIT 1;
+	
+	/* clear the sync queue */
+	DELETE FROM sync_queue WHERE `device_id` = @deviceId; 
 END
 
 
@@ -1072,7 +1079,7 @@ CREATE PROCEDURE `putImage` (IN userIdIn int unsigned, IN filenameIn varchar(32)
 BEGIN
 	DECLARE imageId int unsigned;
 
-	INSERT INTO images (id, user_id, image_key, filename, expire_date) VALUES ('', userIdIn, CONCAT_WS('-',userIdIn,NOW(),0), filenameIn, DATE_ADD(NOW(),INTERVAL 24 HOUR));
+	INSERT INTO images (id, user_id, image_key, filename, expire_date) VALUES ('', userIdIn, MD5(CONCAT_WS('-',userIdIn,NOW(),0)), filenameIn, DATE_ADD(NOW(),INTERVAL 24 HOUR));
 
 	SET imageId = LAST_INSERT_ID();
 	IF imageId IS NOT NULL THEN 
