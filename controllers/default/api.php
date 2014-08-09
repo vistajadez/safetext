@@ -241,7 +241,7 @@ class ApiController extends MsController {
 					if ($user instanceof SafetextUser && $user->isValid()) {
 						if ($user->getRelationship('device') instanceof SafetextDevice && $user->getRelationship('device')->isValid()) {
 							if (array_key_exists('recipients', $this->params) && is_array($this->params['recipients'])) {
-								if (array_key_exists('content', $this->params) && $this->params['content'] !== '') {
+								if (array_key_exists('content', $this->params)) {
 									// check all message options
 									array_key_exists('is_important', $this->params)? $is_important = $this->params['is_important']: $is_important = '0';
 									array_key_exists('is_draft', $this->params)? $is_draft = $this->params['is_draft']: $is_draft = '0';

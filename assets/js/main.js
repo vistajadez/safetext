@@ -310,6 +310,18 @@
 		return false;
 	});
 	
+	/**
+	 * Attach Image.
+	 * This event will run when the attach image button is clicked
+	 * Opens the attach image popup.
+	 */
+	$(document).on('click', '.safetext-conversation .safetext-message-attach-button', function() {	
+		// open the picker in a pop-up
+		Safetext.lastPage.find(".safetext-message-attach-popup").popup( "open");
+	
+		return false;
+	});
+	
 	
 	/**
 	 * Apply Message Settings.
@@ -1074,6 +1086,171 @@
 		return false;
 	});
 	
+	
+	
+	
+	 
+	/**
+	 * Upload Image.
+	 * This event will run when the image upload form's submit button is clicked.
+	 */
+	$(document).on('click', '.safetext-message-attach-send-button', function() {
+		// grab a handle to the form
+		var form = $(this).closest(".safetext-message-attach-form"),
+			file = form.find('input[name="image"]'),
+			messageWindow = Safetext.lastPage.find(".safetext-new-message"),
+			contactId = 	messageWindow.attr('data-safetext-contact'),
+			isImportant =	messageWindow.attr('data-safetext-isimportant'),
+			lifetime = 		messageWindow.attr('data-safetext-lifetime');
+
+		var options = { 
+			headers: {'x-safetext-token': getCookie('token')},
+			target:   '#output',   // target element(s) to be updated with server response 
+			beforeSubmit: function() { //function to check file size before uploading.
+				//check whether browser fully supports all File API
+				if (window.File && window.FileReader && window.FileList && window.Blob) {
+					if( !file.val()) //check empty input filed
+					{
+						alert("Please select an image file to upload");
+						return false
+					}
+					
+					var fsize = file[0].files[0].size; //get file size
+					var ftype = file[0].files[0].type; // get file type
+					
+			
+					//allow file types 
+					switch(ftype)
+			        {
+			            case 'image/png': 
+						case 'image/gif': 
+						case 'image/jpeg': 
+			                break;
+			            default:
+			                alert("Unsupported file type!");
+							return false
+			        }
+					
+					//Allowed file size is less than 5 MB (1048576)
+					if(fsize>5242880) 
+					{
+						alert("File is too big, it should be less than 5 MB.");
+						return false
+					}
+							
+					$('#submit-btn').hide(); //hide submit button
+					$('#loading-img').show(); //hide submit button
+					$("#output").html("");  
+				}
+				else
+				{
+					//Output error to older unsupported browsers that doesn't support HTML5 File API
+					alert("Please upgrade your browser, because your current browser lacks some features we need!");
+					return false;
+				}
+				
+			},
+			success:function (result) {
+				// set the auth cookie
+				if (typeof result.token != 'undefined') {
+					setCookie('token',result.token,7);
+				}
+				
+				// close the upload image popup
+				Safetext.lastPage.find(".safetext-message-attach-popup").popup( "close");
+				
+				//hide progress bar
+				$('#progressbox').delay( 1000 ).fadeOut();
+					
+				if(result.status === 'success') {
+					var new_filename = result.data.small;
+				
+							// Now that it is uploaded, SEND image to recipient *** AS A NEW MESSAGE using webservice ***
+							$.ajax({url: '/api/messages',
+							data: {
+								"recipients": [contactId],
+								"content": '',
+								"image" : result.data.key,
+								"is_important": isImportant,
+								"is_draft": 0,
+								"lifetime": lifetime
+							},
+							headers: {'x-safetext-token': result.token},
+							type: 'post',               
+							async: 'true',
+							dataType: 'json',
+							beforeSend: function() {
+								$.mobile.loading( 'show');
+							},
+							complete: function() {
+								$.mobile.loading( "hide" );
+							},
+							success: function (result) {
+								if(result.status === 'success') { // send message successful
+									// set the auth cookie
+									if (typeof result.token != 'undefined') setCookie('token',result.token,7);
+									
+										/** add new chat entry **/
+										// generate the new listing content
+										var entryContent = Safetext.lastPage.find(".kit-new-message-content");
+										entryContent.find(".bubble").html('<div class="safetext-image-container"><img src="' + new_filename + '" /></div>'); // update text
+				 				
+										// add as a new listing
+										Safetext.lastPage.find(".safetext-chat-container").append(entryContent.html());
+										
+										// increment sent counter
+										var sentCount = parseInt(Safetext.lastPage.find(".safetext-sent-counter").html());
+										sentCount++;
+										$(".safetext-sent-counter").text(sentCount);
+									
+									// scroll to bottom of page
+									window.scrollTo(0,document.body.scrollHeight);
+									
+								} else {
+									alert('Unable to send. The server said: ' + result.data.message); 
+								}
+							},
+							error: function (request,error) {
+								// This callback function will trigger on unsuccessful action                
+								alert('Network error has occurred; please try again.');
+							}
+						});
+					
+					// *** end send message call *** //
+					
+				} else {
+					alert('Unable to process that image. The server said: ' + result.data.message);
+					
+					// close the upload image popup
+					Safetext.lastPage.find(".safetext-message-attach-popup").popup( "close");
+					
+					//hide progress bar
+					$('#progressbox').delay( 1000 ).fadeOut();
+				}
+			},
+			uploadProgress: OnProgress, //upload progress callback 
+			resetForm: true        // reset the form after successful submit 
+		};
+	
+		form.ajaxSubmit(options); 
+		// always return false to prevent standard browser submit and page navigation 
+		return false; 
+	}); 
+		
+
+	//progress bar function
+	function OnProgress(event, position, total, percentComplete)
+	{
+		//Progress bar
+		$('#progressbox').show();
+	    $('#progressbar').width(percentComplete + '%') //update progressbar percent complete
+	    $('#statustxt').html(percentComplete + '%'); //update status text
+	    
+	    if(percentComplete>50)
+        {
+            $('#statustxt').css('color','#000'); //change status text to white after 50%
+        }
+	}
 	
 	
 	

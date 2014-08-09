@@ -57,6 +57,11 @@
 						    	?>
 					    		<div class="<?php if ($this_message->sender === $this->getValue('user')->id) echo 'bubble bubble--alt'; else echo 'bubble'; ?>">
 					    			<?php echo $this_message->content; ?>
+					    			<?php if ($this_message->image_name != ''): ?>
+					    				<div class="safetext-image-container">
+					    					<img src="/assets/images/users/<?php echo $this_message->image_name; ?>-s.jpg" />
+					    				</div>
+					    			<?php endif; ?>
 					    		</div>
 					    		<div class="safetext-timedetails-<?php if ($this_message->sender === $this->getValue('user')->id) echo 'right'; else echo 'left'; ?>">
 					    			<?php if ($lastHrsElapsed === '' || ($lastHrsElapsed - $hrsElapsed) > 1) : // only post time details if significant difference ?>

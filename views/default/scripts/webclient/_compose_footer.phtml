@@ -20,6 +20,7 @@
 					</div>
 					<div data-role="controlgroup" data-type="horizontal" class="safetext-mobile-hidden">
 					    <a href="#" class="safetext-new-message-button ui-btn ui-corner-all ui-icon-carat-r ui-btn-icon-right"><?php echo $this->t('Send'); ?></a>
+					    <a href="#" class="safetext-message-attach-button ui-btn ui-corner-all ui-icon-camera ui-btn-icon-right">&nbsp;</a>
 					    <a href="#" class="safetext-message-settings-button ui-btn ui-corner-all ui-icon-gear ui-btn-icon-right">&nbsp;</a>
 					</div>
 				</div><!-- /grid-a -->
@@ -50,3 +51,21 @@
     </form>
 </div>
 <!-- /settings -->
+
+<!-- attach image popup message -->
+<div data-role="popup" data-theme="a" class="safetext-message-attach-popup ui-corner-all">
+	<a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
+	<form action="https://safe-text.us/api/images/" method="post" enctype="multipart/form-data" class="safetext-message-attach-form">
+        <div style="padding:10px 20px;">
+            <h3><?php echo $this->t('Send Image'); ?></h3>
+            <fieldset data-role="controlgroup" data-theme="a">
+			    <input type="file" name="image">
+            </fieldset>
+            
+            <a href="#" class="safetext-message-attach-send-button ui-btn ui-corner-all ui-shadow"><?php echo $this->t('Send'); ?></a>
+        </div>
+    </form>
+	<div id="progressbox" ><div id="progressbar"></div ><div id="statustxt">0%</div></div>
+	<div id="output"></div>
+</div>
+<!-- /attach image -->

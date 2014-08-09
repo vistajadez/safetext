@@ -38,23 +38,26 @@
         <link rel="stylesheet" href="/assets/css/main.css" />
         
         <?php $this->renderStylesheets(); ?>
-        
-        <script src="<?php echo MS_PROTOCOL; ?>://code.jquery.com/jquery-1.10.2.min.js"></script>
-		<script src="<?php echo MS_PROTOCOL; ?>://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.js"></script>
-        <script src="/assets/js/vendor/modernizr-2.6.2.min.js"></script>
-        <script src="/assets/js/main.js"></script>
-   		<?php $this->renderScriptIncludes(); ?>
     </head>
     <body>
 
         <?php echo $this->content; ?>
 
-        <script src="/assets/js/helper.js"></script>
+        
+		<script src="<?php echo MS_PROTOCOL; ?>://code.jquery.com/jquery-1.10.2.min.js"></script>
+		<script src="<?php echo MS_PROTOCOL; ?>://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.js"></script>
+        <script src="/assets/js/vendor/modernizr-2.6.2.min.js"></script>
+        <script src="/assets/js/main.js"></script>
+   		<?php $this->renderScriptIncludes(); ?>
+   		
+   		<script src="/assets/js/helper.js"></script>
         <script>
 			$( document ).ready(function() {
 				// Add iOS App Startp Images
 				MBP.startupImage();
 			});
 		</script>
+		
+		<script type="text/javascript" src="/assets/js/vendor/jquery.form.min.js"></script>
     </body>
 </html>

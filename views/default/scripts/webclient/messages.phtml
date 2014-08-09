@@ -58,6 +58,9 @@
 							    	}
 						    	?>
 						    		<li><a href="/webclient/conversation/contact/<?php echo $contact->contact_user_id; ?>">
+						    			<?php if ($this_message->image_name != ''): ?>
+						    				<img src="/assets/images/users/<?php echo $this_message->image_name; ?>-s.jpg" />
+						    			<?php endif; ?>
 						    			<?php if ($this->getValue('folder') !== 'sent' && $this->getValue('folder') !== 'drafts' && $this_message->is_read === '0') : ?>
 						    				<p style="white-space:normal;"><strong><em><?php echo $sender; ?></em> <?php echo $this->t('to'); ?> <em><?php echo $recipient; ?></em></strong></p>
 						    			<?php else: ?>
