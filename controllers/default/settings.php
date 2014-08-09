@@ -76,11 +76,121 @@ class SettingsController extends SafetextClientController {
 	 
 	 
 	/**
+	 * Payment Card Details Action (JSON).
+	 * 
+	 * Pulls a user's payment card details, if any is on file. Endpoint for mobile devices.
+	 *
+	 * @link https://github.com/deztopia/safetext/wiki/Payments
+	 *
+	 * @param MsView $viewObject
+	 * @return void
+	 */
+	 public function paymentcardAction(&$viewObject) {
+		$viewObject->setResponseType('json');
+		
+		// ensure we're using https
+		if (MS_PROTOCOL === 'https') {
+			if (MS_REQUEST_METHOD === 'GET') {
+				if (array_key_exists('HTTP_X_SAFETEXT_TOKEN', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_TOKEN'] !== '') {
+					
+					// Create a database connection to share
+					$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+								
+					// authenticate token with stored procedure
+					require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
+					$user = SafetextUser::tokenToUser($_SERVER['HTTP_X_SAFETEXT_TOKEN'], $db, $this->config);
+					
+					if ($user instanceof SafetextUser && $user->isValid()) {
+						$viewObject->setValue('token', $user->getRelationship('device')->token);
+						if ($user->getRelationship('device') instanceof SafetextDevice && $user->getRelationship('device')->isValid()) {
+							// obtain a PayPal authorization token
+							$ch = curl_init();
+							curl_setopt($ch, CURLOPT_URL, $this->config['paypal']['endpoint'] . '/v1/oauth2/token');
+							curl_setopt($ch, CURLOPT_HEADER, false);
+							curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+							curl_setopt($ch, CURLOPT_POST, true);
+							curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
+							curl_setopt($ch, CURLOPT_USERPWD, $this->config['paypal']['clientid'] . ':' . $this->config['paypal']['secret']);
+							curl_setopt($ch, CURLOPT_POSTFIELDS, "grant_type=client_credentials");
+							
+							$result = curl_exec($ch);
+							
+							// process response
+							$response = json_decode($result, true);						
+							if (!is_array($response) || !array_key_exists('access_token', $response) || $response['access_token'] === '') {
+								$viewObject->setValue('status', 'fail');
+								$viewObject->setValue('data', array('message' => 'Merchant service refused to authorize'));
+								return; // terminate the controller action
+							}
+							
+							$authtoken = $response['access_token'];
+							curl_close($ch);
+								
+							// check for existing payment token
+							$paymentToken = $user->payment_token;
+							
+							if ($paymentToken !== '') {
+								$ch = curl_init();
+								curl_setopt($ch, CURLOPT_URL, $this->config['paypal']['endpoint'] . '/v1/vault/credit-card/' . $paymentToken);
+								curl_setopt($ch, CURLOPT_HEADER, false);
+								curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+								curl_setopt($ch, CURLOPT_HTTPGET, true);
+								curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
+								curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+									'Authorization: Bearer ' . $authtoken,
+									'Accept: application/json',
+									'Content-Type: application/json'
+								));
+								$result = curl_exec($ch);
+							
+								// process response
+								$response = json_decode($result, true);						
+								if (!is_array($response) || !array_key_exists('state', $response) || $response['state'] !== 'ok') {
+									$viewObject->setValue('status', 'fail');
+									$viewObject->setValue('data', array('message' => 'Unable to lookup your card details. You may want to try updating your payment card'));
+									return; // terminate the controller action
+								}
+								
+								$viewObject->setValue('status', 'success');
+								$viewObject->setValue('data', array('lastfour' => substr($response['number'], -4), 'type' => $response['type'], 'expire_month' => $response['expire_month'], 'expire_year' => $response['expire_year']));
+								return;
+								
+							} else {
+								$viewObject->setValue('status', 'success');
+								$viewObject->setValue('data', array());
+							}
+							
+							
+						} else { // invalid device
+							$viewObject->setValue('status', 'fail');
+							$viewObject->setValue('data', array('message' => 'Problem trying to load device details for that token'));
+						}
+					} else { // invalid token
+						$viewObject->setValue('status', 'fail');
+						$viewObject->setValue('data', array('message' => 'That auth token is not valid'));
+					}
+				} else { // no username
+					$viewObject->setValue('status', 'fail');
+					$viewObject->setValue('data', array('message' => 'Missing SafeText auth token. Please log in'));
+				}
+			} else { // non-POST request
+				$viewObject->setValue('status', 'fail');
+				$viewObject->setValue('data', array('message' => MS_REQUEST_METHOD . ' requests are not supported for this web service'));
+			}
+		} else { // insecure
+			$viewObject->setValue('status', 'fail');
+			$viewObject->setValue('data', array('message' => 'Insecure (non-HTTPS) access denied'));
+		}
+	}
+	 
+	 
+	 
+	/**
 	 * Process Payment Action (JSON).
 	 * 
 	 * Sends a request to process a subscription payment.
 	 *
-	 * @link https://github.com/deztopia/safetext/wiki/Sync-Protocol
+	 * @link https://github.com/deztopia/safetext/wiki/Payments
 	 *
 	 * @param MsView $viewObject
 	 * @return void
@@ -101,6 +211,7 @@ class SettingsController extends SafetextClientController {
 					$user = SafetextUser::tokenToUser($_SERVER['HTTP_X_SAFETEXT_TOKEN'], $db, $this->config);
 					
 					if ($user instanceof SafetextUser && $user->isValid()) {
+						$viewObject->setValue('token', $user->getRelationship('device')->token);
 						if ($user->getRelationship('device') instanceof SafetextDevice && $user->getRelationship('device')->isValid()) {
 							// obtain a PayPal authorization token
 							$ch = curl_init();
@@ -133,49 +244,69 @@ class SettingsController extends SafetextClientController {
 								if (array_key_exists('cc_number', $this->params) && $this->params['cc_number'] != '') {
 									if (array_key_exists('cc_cvv2', $this->params) && $this->params['cc_cvv2'] != '') {
 										if (array_key_exists('name', $this->params) && $this->params['name'] != '') {
-											// store card in PayPal Vault, receive payment token
-											$name = explode(' ', $this->params['name']);
-											$data = array(
-												'payer_id' => $user->id,
-												'type' => strtolower($this->params['cc_type']),
-												'number' => $this->params['cc_number'],
-												'expire_month' => $this->params['cc_exp_month'],
-												'expire_year' => $this->params['cc_exp_year'],
-												'cvv2' => $this->params['cc_cvv2'],
-												'first_name' => $name[0],
-												'last_name' => $name[1]
-											);
-											$ch = curl_init();
-											curl_setopt($ch, CURLOPT_URL, $this->config['paypal']['endpoint'] . '/v1/vault/credit-card');
-											curl_setopt($ch, CURLOPT_HEADER, false);
-											curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-											curl_setopt($ch, CURLOPT_POST, true);
-											curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
-											curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-												'Authorization: Bearer ' . $authtoken,
-												'Accept: application/json',
-												'Content-Type: application/json'
-											));
-											curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-											$result = curl_exec($ch);
+											if (array_key_exists('cc_type', $this->params) && $this->params['cc_type'] != '') {
+												if (array_key_exists('cc_exp_month', $this->params) && $this->params['cc_exp_month'] != '') {
+													if (array_key_exists('cc_exp_year', $this->params) && $this->params['cc_exp_year'] != '') {
 											
-											// process response
-											$response = json_decode($result, true);						
-											if (!is_array($response) || !array_key_exists('id', $response) || $response['id'] === '') {
+														// store card in PayPal Vault, receive payment token
+														$name = explode(' ', $this->params['name']);
+														$data = array(
+															'payer_id' => $user->id,
+															'type' => strtolower($this->params['cc_type']),
+															'number' => $this->params['cc_number'],
+															'expire_month' => $this->params['cc_exp_month'],
+															'expire_year' => $this->params['cc_exp_year'],
+															'cvv2' => $this->params['cc_cvv2'],
+															'first_name' => $name[0],
+															'last_name' => $name[1]
+														);
+														$ch = curl_init();
+														curl_setopt($ch, CURLOPT_URL, $this->config['paypal']['endpoint'] . '/v1/vault/credit-card');
+														curl_setopt($ch, CURLOPT_HEADER, false);
+														curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+														curl_setopt($ch, CURLOPT_POST, true);
+														curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
+														curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+															'Authorization: Bearer ' . $authtoken,
+															'Accept: application/json',
+															'Content-Type: application/json'
+														));
+														curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+														$result = curl_exec($ch);
+														
+														// process response
+														$response = json_decode($result, true);						
+														if (!is_array($response) || !array_key_exists('id', $response) || $response['id'] === '') {
+															$viewObject->setValue('status', 'fail');
+															$viewObject->setValue('data', array('message' => 'Card declined'));
+															return; // terminate the controller action
+														}
+														
+														$paymentToken = $response['id'];
+														curl_close($ch);
+														
+														// save some values for later calls
+														$lastfour = substr($this->params['cc_number'], -4);
+														$type = strtolower($this->params['cc_type']);
+														$expire_month = $this->params['cc_exp_month'];
+														$expire_year = $this->params['cc_exp_year'];
+											
+											
+													} else {
+														$viewObject->setValue('status', 'fail');
+														$viewObject->setValue('data', array('message' => 'You need to provide the card expiration year'));
+														return;
+													}
+												} else {
+													$viewObject->setValue('status', 'fail');
+													$viewObject->setValue('data', array('message' => 'You need to provide the card expiration month'));
+													return;
+												}
+											} else {
 												$viewObject->setValue('status', 'fail');
-												$viewObject->setValue('data', array('message' => 'Card declined'));
-												return; // terminate the controller action
+												$viewObject->setValue('data', array('message' => 'You need to provide the card type'));
+												return;
 											}
-											
-											$paymentToken = $response['id'];
-											curl_close($ch);
-											
-											// save some values for later calls
-											$lastfour = substr($this->params['cc_number'], -4);
-											$type = strtolower($this->params['cc_type']);
-											$expire_month = $this->params['cc_exp_month'];
-											$expire_year = $this->params['cc_exp_year'];
-											
 										} else {
 											$viewObject->setValue('status', 'fail');
 											$viewObject->setValue('data', array('message' => 'You need to provide the name on your payment card'));
