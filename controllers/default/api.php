@@ -172,13 +172,27 @@ class ApiController extends MsController {
 		// ensure we're using https
 		if (MS_PROTOCOL === 'https') {
 			if (MS_REQUEST_METHOD === 'DELETE') {
-				if (array_key_exists('HTTP_X_SAFETEXT_TOKEN', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_TOKEN'] !== '') {
+				$deviceId = (array_key_exists('HTTP_X_SAFETEXT_DEVICEID', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_DEVICEID'] !== '') ? $_SERVER['HTTP_X_SAFETEXT_DEVICEID'] : '';
+				$deviceToken = (array_key_exists('HTTP_X_SAFETEXT_TOKEN', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_TOKEN'] !== '') ? $_SERVER['HTTP_X_SAFETEXT_TOKEN'] : '';
+			
+				if ($deviceId != '' || $deviceToken != '') {
 					// Create a database connection to share
 					$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
-								
+			
+					if ($deviceId != '') {
+						// delete device using ID via stored procedure
+						$db->CALL("unregisterDevice('$deviceId', '')");
+						$viewObject->setValue('status', 'success');
+							
+						// log the request
+							$this->config['log']->write('Device: ' . $deviceId, 'Unregister Device Request');
+						
+						return; 
+					}
+			
 					// authenticate token with stored procedure
 					require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
-					$user = SafetextUser::tokenToUser($_SERVER['HTTP_X_SAFETEXT_TOKEN'], $db, $this->config);
+					$user = SafetextUser::tokenToUser($deviceToken, $db, $this->config);
 					
 					if ($user instanceof SafetextUser && $user->isValid()) {
 						if ($user->getRelationship('device') instanceof SafetextDevice && $user->getRelationship('device')->isValid()) {
@@ -199,7 +213,7 @@ class ApiController extends MsController {
 					}
 				} else { // no token
 					$viewObject->setValue('status', 'fail');
-					$viewObject->setValue('data', array('message' => 'Missing auth token'));
+					$viewObject->setValue('data', array('message' => 'Missing auth token or device ID'));
 				}
 			} else { // non-POST request
 				$viewObject->setValue('status', 'fail');
@@ -943,7 +957,7 @@ $this->config['log']->write('call: ' . "syncMessage('" . $user->id . "','" . $th
 						/* GET IMAGE DETAILS */
 						if (array_key_exists('image', $this->params) && $this->params['image'] !== '') {
 							// retrieve details via stored procedure
-							$result = current($db->call("getImage('" . $user->id . "','" . $this->params['image'] . "')"));
+							$result = current($db->call("getImage('" . $this->params['image'] . "')"));
 							
 							if ($result['key'] != '') {
 								$viewObject->setValue('status', 'success');

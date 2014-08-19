@@ -1134,3 +1134,32 @@ BEGIN
 END
 
 
+-- --------------------------------------------------------------------------------
+-- Username and Password to User ID
+-- 
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE PROCEDURE `UsernamePassToId` (IN usernameIn VARCHAR(24), IN passIn VARCHAR(24))
+BEGIN
+
+	SELECT `id` FROM users WHERE `username` = usernameIn AND `pass` = passIn;
+
+END
+
+
+-- --------------------------------------------------------------------------------
+-- Routine DDL
+-- Note: comments before and after the routine body will not be stored by the server
+-- --------------------------------------------------------------------------------
+DELIMITER $$
+
+CREATE DEFINER=`maxdistrodb`@`%.%.%.%` PROCEDURE `pendingCheck`(IN userId INT UNSIGNED)
+BEGIN
+
+	SELECT COUNT(*) AS `count` FROM participants p, messages m 
+		WHERE p.message_id = m.id AND p.contact_id = userId AND p.is_sender = 0 AND m.is_draft = 0 AND m.is_read = 0 AND m.expire_date > NOW();
+
+END
+
+

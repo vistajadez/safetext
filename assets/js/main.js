@@ -732,8 +732,8 @@
 	
 		// set reference to clicked event's ID
 		var entry = $(event.target).closest("li");
-		var deviceToken = entry.attr('data-safetext-device-token');
-		Safetext.lastPage.find(".safetext-confirm-delete-button").attr('data-safetext-deletedevice-token', deviceToken);
+		var deviceId = entry.attr('data-safetext-device-id');
+		Safetext.lastPage.find(".safetext-confirm-delete-button").attr('data-safetext-deletedevice-id', deviceId);
 
 		return false;
 	});
@@ -745,11 +745,11 @@
 	 * Unregisters the referenced device at the server.
 	 */
 	$(document).on('click', '.safetext-settings .safetext-confirm-delete-button', function(event) {	
-		var deviceToken = $(event.target).attr('data-safetext-deletedevice-token');
+		var deviceId = $(event.target).attr('data-safetext-deletedevice-id');
 		
-		if (deviceToken != '') {
+		if (deviceId != '') {
 			$.ajax({url: '/api/devices',
-				headers: {'x-safetext-token': deviceToken},
+				headers: {'x-safetext-deviceid': deviceId},
 				type: 'delete',               
 				async: 'true',
 				dataType: 'json',
@@ -787,7 +787,7 @@
 		
 		} else {
 			Safetext.lastPage.find(".safetext-confirm-delete-popup").popup( "close");
-			alert('There was a problem trying to obtain the device token to unregister it. Please try again.');
+			alert('There was a problem trying to obtain the device id to unregister it. Please try again.');
 		}
 	
 		return false;

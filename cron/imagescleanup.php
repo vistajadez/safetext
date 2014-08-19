@@ -38,15 +38,17 @@ $db = new MsDb($ms_config['dbHost'], $ms_config['dbUser'], $ms_config['dbPass'],
 
 // call maintenance procedure
 $result = $db->call("imagesCleanup()");
-if ($result['filename'] != '') {
-	$entry = 'Deleting image ' . $result['filename'] . "*\n";
-	
-	if (file_exists(MS_PATH_BASE . DS . 'assets' . DS . 'images' . DS . 'users' . DS . $result['filename'] . '-l.jpg'))
-		unlink(MS_PATH_BASE . DS . 'assets' . DS . 'images' . DS . 'users' . DS . $result['filename'] . '-l.jpg');
-	if (file_exists(MS_PATH_BASE . DS . 'assets' . DS . 'images' . DS . 'users' . DS . $result['filename'] . '-m.jpg'))
-		unlink(MS_PATH_BASE . DS . 'assets' . DS . 'images' . DS . 'users' . DS . $result['filename'] . '-m.jpg');
-	if (file_exists(MS_PATH_BASE . DS . 'assets' . DS . 'images' . DS . 'users' . DS . $result['filename'] . '-s.jpg'))
-		unlink(MS_PATH_BASE . DS . 'assets' . DS . 'images' . DS . 'users' . DS . $result['filename'] . '-s.jpg');
+foreach ($result as $this_result) {
+	if ($this_result['filename'] != '') {
+		$entry = 'Deleting image ' . $this_result['filename'] . "*\n";
+		
+		if (file_exists(MS_PATH_BASE . DS . 'assets' . DS . 'images' . DS . 'users' . DS . $this_result['filename'] . '-l.jpg'))
+			unlink(MS_PATH_BASE . DS . 'assets' . DS . 'images' . DS . 'users' . DS . $this_result['filename'] . '-l.jpg');
+		if (file_exists(MS_PATH_BASE . DS . 'assets' . DS . 'images' . DS . 'users' . DS . $this_result['filename'] . '-m.jpg'))
+			unlink(MS_PATH_BASE . DS . 'assets' . DS . 'images' . DS . 'users' . DS . $this_result['filename'] . '-m.jpg');
+		if (file_exists(MS_PATH_BASE . DS . 'assets' . DS . 'images' . DS . 'users' . DS . $this_result['filename'] . '-s.jpg'))
+			unlink(MS_PATH_BASE . DS . 'assets' . DS . 'images' . DS . 'users' . DS . $this_result['filename'] . '-s.jpg');
+	}
 }
 
 file_put_contents(MS_PATH_BASE . DS . 'cron' . DS . 'cron.log', $entry, FILE_APPEND);

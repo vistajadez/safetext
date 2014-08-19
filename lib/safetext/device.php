@@ -260,9 +260,9 @@ class SafetextDevice extends SafetextModel {
 			
 			// Send notification: the simple format
 			$msg = chr(0)                       // command (1 byte)
-			     . pack('n', 32)                // token length (2 bytes)
-			     . pack('H*', $this->ios_id)    // device token (32 bytes)
-			     . pack('n', strlen($payload))  // payload length (2 bytes)
+			     . @pack('n', 32)                // token length (2 bytes)
+			     . @pack('H*', $this->ios_id)    // device token (32 bytes)
+			     . @pack('n', strlen($payload))  // payload length (2 bytes)
 			     . $payload;                    // the JSON payload
 	
 			/*

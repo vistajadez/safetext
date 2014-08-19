@@ -31,6 +31,14 @@
                                 </li>
                                 
                                 <li class="ui-field-contain">
+                                    <label for="pass"><?php echo $this->t('Security Code'); ?>: <a href="#safetext-code-info" data-rel="popup" data-transition="pop" class="safetext-tooltip-btn ui-btn ui-alt-icon ui-nodisc-icon ui-btn-inline ui-icon-info ui-btn-icon-notext ui-corner-all">Info</a></label>
+                                    <input type="text" disabled value="<?php echo MD5('seCURityCode' . $this->getValue('user')->id); ?>">
+                                    <div data-role="popup" id="safetext-code-info" class="ui-content" data-theme="a" style="max-width:350px;">
+								      <a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>					  <p>Use this code to authenticate your account for third-party applications. To use, copy and paste into the "Security Code" field of the application requesting Safe-Text access. This is a hashcode based on your user ID can cannot be changed.</p>
+								    </div>
+                                </li>
+                                
+                                <li class="ui-field-contain">
                                     <label for="firstname"><?php echo $this->t('First Name'); ?>:</label>
                                     <input type="text" name="firstname" value="<?php echo $this->getValue('user')->firstname; ?>" data-clear-btn="true">
                                 </li>
@@ -88,7 +96,7 @@
                                 <?php if (sizeof($this->getValue('devices')) > 0): ?>
                               		<li data-role="list-divider"><?php echo $this->t('Registered Devices'); ?></li>
 							  		<?php foreach ($this->getValue('devices') as $this_device) : ?>
-	                               <li id="safetext-devicelisting-<?php echo $this_device->id; ?>" data-icon="delete" data-safetext-device-token="<?php echo $this_device->token; ?>">
+	                               <li id="safetext-devicelisting-<?php echo $this_device->id; ?>" data-icon="delete" data-safetext-device-id="<?php echo $this_device->id; ?>">
 	                               		<a href="#" class="safetext-delete-button">
 	                                        <h2><?php echo $this_device->description; ?></h2>
 	                                        <p><strong><?php echo $this->t('Signature'); ?>:</strong> <?php echo $this_device->signature; ?></p>
@@ -118,7 +126,7 @@
 	            <fieldset class="ui-grid-a">
 		            <div class="ui-block-a"><a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-b" data-rel="back">Cancel</a></div>
 		            <div class="ui-block-b"><a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-b safetext-confirm-delete-button" 
-		                data-safetext-deletedevice-token=""
+		                data-safetext-deletedevice-id=""
 						data-rel="back" data-transition="flow"><?php echo $this->t('Unregister'); ?></a></div>
 	            </fieldset>
 	        </div>
