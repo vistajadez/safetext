@@ -256,47 +256,54 @@ class ApiController extends MsController {
 						if ($user->getRelationship('device') instanceof SafetextDevice && $user->getRelationship('device')->isValid()) {
 							if (array_key_exists('recipients', $this->params) && is_array($this->params['recipients'])) {
 								if (array_key_exists('content', $this->params)) {
-									// check all message options
-									array_key_exists('is_important', $this->params)? $is_important = $this->params['is_important']: $is_important = '0';
-									array_key_exists('is_draft', $this->params)? $is_draft = $this->params['is_draft']: $is_draft = '0';
-									array_key_exists('lifetime', $this->params)? $lifetime = $this->params['lifetime']: $lifetime = '24';
-									if ($lifetime > 24) $lifetime = 24; // message lifetime cannot be more than 24 hrs
-									$content = $this->escapeForDb($this->params['content']);
-									array_key_exists('image', $this->params)? $image = $this->params['image']: $image = '';
-									
-									// log the send message request
-									$this->config['log']->write('User: ' . $user->id . ", Device: " . $user->getRelationship('device')->id . ", image: " . $image, 'Send Message Request');
-									$this->config['log']->write('Request body: ' . file_get_contents('php://input'));
-								
-									// execute send via stored procedure
-									$result = current($db->call("sendMessage('" . $user->id . "','" . current($this->params['recipients']) . "','" . $content . "','" . $is_important . "','" . $is_draft . "','" . $lifetime . "','" . $image . "')"));
-									
-									if ($result['key'] > 0) {
-										$this->config['log']->write('Successfully delivered. Message key ' . $result['key']);
+									if (strlen($this->params['content']) <= $this->config['maxMessageLength']) {
+										// check all message options
+										array_key_exists('is_important', $this->params)? $is_important = $this->params['is_important']: $is_important = '0';
+										array_key_exists('is_draft', $this->params)? $is_draft = $this->params['is_draft']: $is_draft = '0';
+										array_key_exists('lifetime', $this->params)? $lifetime = $this->params['lifetime']: $lifetime = '24';
+										if ($lifetime > 24) $lifetime = 24; // message lifetime cannot be more than 24 hrs
+										array_key_exists('image', $this->params)? $image = $this->params['image']: $image = '';
 										
-										// send device notification(s) to recipient
-										$recipientSettings = current($db->CALL("getSettings('" . current($this->params['recipients']) . "')"));
-										if ($recipientSettings['notifications_on'] == '1') {
-											// load all registered devices
-											$devicesArray = $db->call("devices('" . current($this->params['recipients']) . "')");
-											$devices = new SafetextModelCollection('SafetextDevice', $this->config, $db);
-											$devices->load($devicesArray);
-											//foreach ($devices as $this_device) $this_device->sendNotification($user->fullName() . ': ' . $this->params['content']);
-											foreach ($devices as $this_device) $this_device->sendNotification('You received a new message');
+										// log the send message request
+										$this->config['log']->write('User: ' . $user->id . ", Device: " . $user->getRelationship('device')->id . ", image: " . $image, 'Send Message Request');
+										$this->config['log']->write('Request body: ' . file_get_contents('php://input'));
+									
+										// execute send via stored procedure
+										$cipher = new SafetextCipher($this->config['hashSalt']);
+										$result = current($db->call("sendMessage('" . $user->id . "','" . current($this->params['recipients']) . "','" . $this->escapeForDb($cipher->encrypt($this->params['content'])) . "','" . $is_important . "','" . $is_draft . "','" . $lifetime . "','" . $image . "')"));
+										
+										if ($result['key'] > 0) {
+											$this->config['log']->write('Successfully delivered. Message key ' . $result['key']);
+											
+											// send device notification(s) to recipient
+											$recipientSettings = current($db->CALL("getSettings('" . current($this->params['recipients']) . "')"));
+											if ($recipientSettings['notifications_on'] == '1') {
+												// load all registered devices
+												$devicesArray = $db->call("devices('" . current($this->params['recipients']) . "')");
+												$devices = new SafetextModelCollection('SafetextDevice', $this->config, $db);
+												$devices->load($devicesArray);
+												//foreach ($devices as $this_device) $this_device->sendNotification($user->fullName() . ': ' . $this->params['content']);
+												foreach ($devices as $this_device) $this_device->sendNotification('You received a new message');
+											}
+											
+											// load successful output into view
+											$viewObject->setValue('status', 'success');
+											$viewObject->setValue('token', $user->getRelationship('device')->token);
+											$viewObject->setValue('data', array('key' => $result['key']));
+										} else {
+											// load error message output into view
+											$viewObject->setValue('status', 'fail');
+											$viewObject->setValue('token', $user->getRelationship('device')->token);
+											$viewObject->setValue('data', array('message' => $result['msg']));
+											$this->config['log']->write('Fail: ' . $result['msg']);
 										}
-										
-										// load successful output into view
-										$viewObject->setValue('status', 'success');
-										$viewObject->setValue('token', $user->getRelationship('device')->token);
-										$viewObject->setValue('data', array('key' => $result['key']));
-									} else {
-										// load error message output into view
+					
+					
+									} else { // content exceeds max message length
 										$viewObject->setValue('status', 'fail');
 										$viewObject->setValue('token', $user->getRelationship('device')->token);
-										$viewObject->setValue('data', array('message' => $result['msg']));
-										$this->config['log']->write('Fail: ' . $result['msg']);
+										$viewObject->setValue('data', array('message' => 'Message length cannot exceed ' . $this->config['maxMessageLength']));
 									}
-					
 								} else { // no content
 									$viewObject->setValue('status', 'fail');
 									$viewObject->setValue('token', $user->getRelationship('device')->token);

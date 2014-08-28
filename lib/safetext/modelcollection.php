@@ -24,8 +24,19 @@ class SafetextModelCollection extends MsModelCollection {
 		$path = MS_PATH_BASE . DS . 'lib' . DS . strtolower($classNameArray[0]) . DS . strtolower($classNameArray[1]) . '.php';
 		if (file_exists($path)) require_once($path);
 		
+		// if this collection contains messages, we need to decrypt the message content
+		if ($this->classname === 'SafetextMessage') {
+			$cipher = new SafetextCipher($this->config['hashSalt']);
+		}
+		
 		// load each model into the collection
 	 	foreach ($modelArrayIn as $this_model) {
+	 		if ($this->classname === 'SafetextMessage') {
+		 		if (array_key_exists('content', $this_model)) {
+			 		$this_model['content'] = $cipher->decrypt($this_model['content']);
+		 		}
+	 		}
+	 	
 		 	eval('$model = new ' . $this->classname . '($this->config, $this->db);');
 		 	if (is_object($model)) {
 		 		$model->setColumnValues($this_model);

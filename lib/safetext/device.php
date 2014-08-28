@@ -111,6 +111,7 @@ class SafetextDevice extends SafetextModel {
 		$this->config['log']->write('PULL SYNC: ' . sizeof($pullRecords) . ' records pulled');
 		
 		// package pull sync results in correct array structure for JSON output
+		$cipher = new SafetextCipher($this->config['hashSalt']);
 		foreach ($pullRecords as $this_record) {
 			if (array_key_exists('pk', $this_record) && $this_record['pk'] > 0) {
 				if (array_key_exists('vals', $this_record) && $this_record['vals'] != '') {
@@ -118,6 +119,13 @@ class SafetextDevice extends SafetextModel {
 						$this->config['log']->write('PULLING RECORD - pk: ' . $this_record['pk'] . ', table: ' . $this_record['tablename'] . ', vals: ' . $this_record['vals']);
 						$values = json_decode($this_record['vals'], true);
 						$values['key'] = $this_record['pk'];
+						
+						// if this is a message, we need to decrypt the content string
+						if ($this_record['tablename'] === 'messages') {
+							if (array_key_exists('content', $values)) {
+								$values['content'] = $cipher->decrypt($values['content']);
+							}
+						}
 						
 						$arrayOut[] = array('table' => $this_record['tablename'], 'values' => $values);
 					} else {
@@ -149,6 +157,7 @@ class SafetextDevice extends SafetextModel {
 		$this->config['log']->write('Initializing new device with ' . sizeof($messages) . ' existing messages and ' . sizeof($contacts) . ' existing contacts');
 		
 		// format returning records as queue entries
+		$cipher = new SafetextCipher($this->config['hashSalt']);
 		foreach ($messages as $this_message) {
 			$recipientsArray = array($this_message['recipient']);
 			unset($this_message['recipient']);
@@ -157,6 +166,9 @@ class SafetextDevice extends SafetextModel {
 			unset ($this_message['id']);
 			$this_message['is_updated'] = '0';
 			$this_message['is_deleted'] = '0';
+			
+			// decrypt message content
+			$this_message['content'] = $cipher->decrypt($this_message['content']);
 			
 			$array_out[] = array('table' => 'messages', 'values' => $this_message);
 		}
@@ -189,6 +201,7 @@ class SafetextDevice extends SafetextModel {
 	{
 		$arrayOut = array();
 		$pullRecords = $this->db->call("syncLastPull('" . $this->getValue('user_id') . "','" . $this->getValue('id') . "')");
+		$cipher = new SafetextCipher($this->config['hashSalt']);
 		
 		// package pull sync results in correct array structure for JSON output
 		foreach ($pullRecords as $this_record) {
@@ -197,6 +210,13 @@ class SafetextDevice extends SafetextModel {
 					if (array_key_exists('tablename', $this_record) && $this_record['tablename'] != '') {
 						$values = json_decode($this_record['vals'], true);
 						$values['key'] = $this_record['pk'];
+						
+						// if this is a message, we need to decrypt the content string
+						if ($this_record['tablename'] === 'messages') {
+							if (array_key_exists('content', $values)) {
+								$values['content'] = $cipher->decrypt($values['content']);
+							}
+						}
 						
 						$arrayOut[] = array('table' => $this_record['tablename'], 'values' => $values);
 					}

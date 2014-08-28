@@ -35,6 +35,7 @@ require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'ms' . DS . 'db.php' );
 require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'model.php' );
 require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'modelcollection.php' );
 require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'log.php' );
+require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'cipher.php' );
 
 // parse route
 $urlArray = explode('?', trim($_SERVER['REQUEST_URI']));
