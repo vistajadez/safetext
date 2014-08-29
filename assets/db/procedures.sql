@@ -6,60 +6,92 @@ DELIMITER $$
 
 CREATE PROCEDURE `generateToken` (IN usernameIn VARCHAR(24), IN passIn VARCHAR(24), IN deviceSig VARCHAR(64), IN deviceDesc VARCHAR(64))
 BEGIN
+	declare userId int unsigned;
+	declare storedPass varchar(16);
+	declare numTries smallint unsigned;
+	declare lockedTo datetime;
+
+	SELECT id,pass,num_tries,locked_to
+		INTO userId,storedPass, numTries, lockedTo
+		FROM users WHERE `username` = usernameIn;
+
 	/* get user ID */
-	SET @userId = (SELECT `id` FROM users WHERE `username` = usernameIn AND `pass` = passIn);
-        SET @msg = NULL;
-	
-	IF @userId IS NOT NULL THEN
-		/* see if this device exists */
-		SET @deviceId = (SELECT `id` FROM sync_device WHERE `user_id` = @userId AND `signature` = deviceSig);
-		IF @deviceId IS NOT NULL THEN
-			/* get the existing token */
-			SET @token = (SELECT `token` FROM sync_device WHERE `id` = @deviceId);
+	IF userId IS NOT NULL THEN
+		/* are we locked out? */
+		IF lockedTo IS NULL OR lockedTo < NOW() THEN
+			UPDATE users SET locked_to = NULL WHERE id=userId LIMIT 1;
 
-			/* if token is empty, meaning it has been previously expired or cleared, generate a new one */
-			if @token < 1 THEN
-				SET @token = CAST(MD5(CONCAT(CONCAT('SafeText-hashsalt', usernameIn), UNIX_TIMESTAMP())) AS CHAR);
-				UPDATE sync_device SET `token`=@token, `token_expires`=DATE_ADD(CURDATE(),INTERVAL 5 DAY), `description`=deviceDesc WHERE `user_id` = @userId AND `id` = @deviceId; 
-			ELSE
-				/* re-auth: a device which already has a valid token assigned to it is re-authenticating.*/
-				IF deviceSig != 'webclient' THEN
-					/* reset the init flag */
-					UPDATE sync_device SET `is_initialized`=0, `description`=deviceDesc WHERE `user_id` = @userId AND `id` = @deviceId;
-					/* clear the sync queue */
-					DELETE FROM sync_queue WHERE `user_id` = @userId AND `device_id` = @deviceId;
-				END IF;
-			END IF;
-			
-		ELSE
-			/* make sure that there aren’t too many devices already registered */
-			SET @numDevices = (SELECT COUNT(*) FROM `sync_device` WHERE user_id=@userId AND signature != 'webclient');
+			/* check password */
+			IF storedPass <=> passIn THEN
+				UPDATE users SET num_tries = 0 WHERE id=userId LIMIT 1;
 
-			IF @numDevices < 2 OR deviceSig = 'webclient' THEN
-				/* create new device entry */
-				SET @tokenString = CAST(MD5(CONCAT(CONCAT('SafeText-hashsalt', usernameIn), UNIX_TIMESTAMP())) AS CHAR);
-				INSERT INTO sync_device (id,user_id,signature,description,is_initialized,token,token_expires) VALUES('', @userId, deviceSig, deviceDesc, '0', @tokenString, DATE_ADD(CURDATE(),INTERVAL 5 DAY));
-				IF LAST_INSERT_ID() IS NOT NULL THEN
-					SET @token = @tokenString;
+				/* see if this device exists */
+				SET @deviceId = (SELECT `id` FROM sync_device WHERE `user_id` = userId AND `signature` = deviceSig);
+				IF @deviceId IS NOT NULL THEN
+					/* get the existing token */
+					SET @token = (SELECT `token` FROM sync_device WHERE `id` = @deviceId);
+
+					/* if token is empty, meaning it has been previously expired or cleared, generate a new one */
+					if @token < 1 THEN
+						SET @token = CAST(MD5(CONCAT(CONCAT('SafeText-hashsalt', usernameIn), UNIX_TIMESTAMP())) AS CHAR);
+						UPDATE sync_device SET `token`=@token, `token_expires`=DATE_ADD(CURDATE(),INTERVAL 5 DAY), `description`=deviceDesc, `ios_id`=iosId, `android_id`=androidId WHERE `user_id` = userId AND `id` = @deviceId; 
+					ELSE
+						/* re-auth: a device which already has a valid token assigned to it is re-authenticating.*/
+						IF deviceSig != 'webclient' THEN
+							/* reset the init flag */
+							UPDATE sync_device SET `is_initialized`=0, `description`=deviceDesc, `ios_id`=iosId, `android_id`=androidId WHERE `user_id` = userId AND `id` = @deviceId;
+							/* clear the sync queue */
+							DELETE FROM sync_queue WHERE `user_id` = userId AND `device_id` = @deviceId;
+						END IF;
+					END IF;
+					
 				ELSE
-					SET @userId = 0;
-					SET @token = NULL;
-					SET @msg = "Unable to create new token";
+					/* make sure that there aren’t too many devices already registered */
+					SET @numDevices = (SELECT COUNT(*) FROM `sync_device` WHERE user_id=userId AND signature != 'webclient');
+
+					IF @numDevices < 2 OR deviceSig = 'webclient' THEN
+						/* create new device entry */
+						SET @tokenString = CAST(MD5(CONCAT(CONCAT('SafeText-hashsalt', usernameIn), UNIX_TIMESTAMP())) AS CHAR);
+						INSERT INTO sync_device (id,user_id,signature,ios_id,android_id,description,is_initialized,token,token_expires) VALUES('', userId, deviceSig, iosId, androidId, deviceDesc, '0', @tokenString, DATE_ADD(CURDATE(),INTERVAL 5 DAY));
+						IF LAST_INSERT_ID() IS NOT NULL THEN
+							SET @token = @tokenString;
+						ELSE
+							SET userId = 0;
+							SET @token = NULL;
+							SET @msg = "Unable to create new token";
+						END IF;
+					ELSE
+						SET userId = 0;
+						SET @msg = "Too many devices registered. Unregister unused devices using the web client Settings page";
+					END IF;
 				END IF;
+
 			ELSE
-				SET @userId = 0;
-				SET @msg = "Too many devices registered. Unregister unused devices using the web client Settings page";
+				IF numTries < 4 then
+					UPDATE users SET num_tries = num_tries + 1 WHERE id=userId LIMIT 1;
+				ELSE
+					UPDATE users SET num_tries = 0, locked_to = DATE_ADD(NOW(), INTERVAL 1 HOUR) WHERE id=userId LIMIT 1;
+				END IF;
+
+				SET userId = 0;
+				SET @token = NULL;
+				SET @msg = "Incorrect Password.";
 			END IF;
+
+		ELSE
+			SET userId = 0;
+			SET @token = NULL;
+			SET @msg = "Your account has been temporarily locked due to too many attempts. Try again later.";
 		END IF;
 
 	ELSE
 		/* user/pass didn't match */
-		SET @userId = 0;
+		SET userId = 0;
         SET @token = NULL;
-		SET @msg = "No match found for that username and password";
+		SET @msg = "No match found for that username.";
     END IF;
 
-	SELECT @userId AS id, @token AS token, @msg AS msg;
+	SELECT userId AS id, @token AS token, @msg AS msg;
 
 END $$
 
