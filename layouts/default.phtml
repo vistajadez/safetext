@@ -45,6 +45,15 @@
 
         
 		<script src="<?php echo MS_PROTOCOL; ?>://code.jquery.com/jquery-1.10.2.min.js"></script>
+		<script>
+            $(document).bind( 'mobileinit', function(){
+              $.mobile.loader.prototype.options.text = "loading";
+              $.mobile.loader.prototype.options.textVisible = true;
+              $.mobile.loader.prototype.options.theme = "a";
+              $.mobile.loader.prototype.options.textonly = false;
+              $.mobile.loader.prototype.options.html = "<span class='ui-bar ui-corner-all'><img src='/assets/images/loader.gif' /></span>";
+            });
+        </script>
 		<script src="<?php echo MS_PROTOCOL; ?>://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.js"></script>
         <script src="/assets/js/vendor/modernizr-2.6.2.min.js"></script>
         <script src="/assets/js/main.js"></script>

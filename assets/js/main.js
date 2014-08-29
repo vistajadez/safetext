@@ -88,7 +88,6 @@
 	
 	
 	// ********* Hook Listeners to UI objects/events **********
-	
 	/**
 	 * This function will run every time a page change occurs.
 	 * 
