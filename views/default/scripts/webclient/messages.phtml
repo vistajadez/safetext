@@ -67,6 +67,7 @@
 						    				<p style="white-space:normal;"><em><?php echo $sender; ?></em> <?php echo $this->t('to'); ?> <em><?php echo $recipient; ?></em></p>
 						    			<?php endif; ?>
 						    			<p><?php echo $this_message->content; ?></p>
+						    			<p style="font-size:.68em;">sent <?php echo $this_message->sent_date; ?></p>
 						    			<p class="ui-li-aside"><strong><?php echo $this->t('time left'); ?>: <?php echo $timeLeft; ?></strong></p></a>
 						    			<a href="#" data-safetext-message-id="<?php echo $this_message->id; ?>" class="<?php if ($this->getValue('folder')=='drafts') echo 'safetext-editdraft-button'; else echo 'safetext-delete-button'; ?>"></a>
 						    		</li>
