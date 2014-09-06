@@ -184,6 +184,7 @@ textarea {
 	max-width: 100%;
 	word-wrap: break-word;
 	font-size: 90%;
+	cursor: pointer;
 }
 
 .bubble:before, .bubble:after {
@@ -253,6 +254,13 @@ textarea {
 	float: left;
 }
 
+/* Delete icon on bubble hover */
+.safetext-delete-bubble-icon {
+	position: absolute;
+	right:-5px;
+	top:-20px;
+	display: none;
+}
 
 /* Conversation Container */
 .safetext-conversation-container {

@@ -262,6 +262,11 @@
 								// add as a new listing
 								Safetext.lastPage.find(".safetext-chat-container").append(entryContent.html());
 								
+								// add new message id
+								Safetext.lastPage.find(".safetext-chat-container").find(".bubble").filter(":last")
+									.attr('data-id', result.data.key)
+									.append('<a href="index.html" class="safetext-delete-bubble-icon ui-btn ui-shadow ui-corner-all ui-icon-delete ui-btn-icon-notext">Delete</a>');
+								
 								// increment sent counter
 								var sentCount = parseInt(Safetext.lastPage.find(".safetext-sent-counter").html());
 								sentCount++;
@@ -541,7 +546,7 @@
 	 * This event will run when a message's confirm delete dialog's "Delete" button is clicked.
 	 * Deletes message at server and sync's the update to all participants' devices.
 	 */
-	$(document).on('click', '.safetext-messages .safetext-confirm-delete-button', function(event) {	
+	$(document).on('click', '.safetext-confirm-delete-button', function(event) {	
 		// get reference to target event's ID
 		var dialog = $(event.target);
 		var messageId = dialog.attr('data-safetext-deletemessage-id');
@@ -1197,6 +1202,11 @@
 										// add as a new listing
 										Safetext.lastPage.find(".safetext-chat-container").append(entryContent.html());
 										
+										// add new message id as attribute
+										Safetext.lastPage.find(".safetext-chat-container").find(".bubble")
+											.filter(":last").attr('data-id', result.data.key)
+											.append('<a href="index.html" class="safetext-delete-bubble-icon ui-btn ui-shadow ui-corner-all ui-icon-delete ui-btn-icon-notext">Delete</a>');
+										
 										// increment sent counter
 										var sentCount = parseInt(Safetext.lastPage.find(".safetext-sent-counter").html());
 										sentCount++;
@@ -1252,8 +1262,32 @@
 	}
 	
 	
+	/**
+	 * Confirm Delete Conversation Message.
+	 * This event will run when a message in the conversation view is clicked on.
+	 * Opens the confirm delete dialog box.
+	 */
+	$(document).on('click', '.bubble', function(){
+		// open the confirmation dialog as a pop-up
+		Safetext.lastPage.find(".safetext-confirm-delete-popup").popup( "open");
 	
+		// set reference to clicked event's ID
+		var entry = $(event.target);
+		var messageId = $(this).attr('data-id');
+		Safetext.lastPage.find(".safetext-confirm-delete-button").attr('data-safetext-deletemessage-id', messageId);
+
+		return false;
+	});
 	
+	/**
+	 * Hover on conversation bubble to display delete icon
+	 */
+	$(document).on('mouseenter', '.bubble', function(){
+		$(this).find(".safetext-delete-bubble-icon").show();
+	});
+	$(document).on('mouseleave', '.bubble', function(){
+		$(this).find(".safetext-delete-bubble-icon").hide();
+	});
 	
 	/**
 	 * Startup:
