@@ -633,6 +633,11 @@ BEGIN
 	/* use username in the cases where firstname and lastname are empty */
 	UPDATE results_table SET firstname=username WHERE firstname='' AND lastname='';
 
+	/* remove any blocked contacts */
+	DELETE FROM results_table WHERE id IN (
+		SELECT user_id FROM contacts WHERE contact_user_id=userIdIn AND is_blocked='1'
+	);
+
 	/* return stored hits */
 	SELECT id AS `key`, TRIM(CONCAT_WS(' ',firstname,lastname)) AS `name`,phone FROM results_table;
 

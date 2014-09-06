@@ -26,7 +26,7 @@
 						<div>
 						    <ul data-role="listview" data-autodividers="true" data-split-icon="edit" data-filter="true" data-inset="true">
 						    	<?php foreach ($this->getValue('contacts') as $this_contact) : ?>
-						    		<?php if ($this->getValue('filter') === '' || $this_contact->is_blocked === '1') : ?>
+						    		<?php if (($this->getValue('filter') === 'blocked' && $this_contact->is_blocked==='1') || ($this->getValue('filter') === '' && $this_contact->is_blocked === '0')) : ?>
 						    		<li><a href="/webclient/conversation/contact/<?php echo $this_contact->contact_user_id; ?>">
 						    			<h2><?php echo $this_contact->label(); ?></h2>
 						    			<?php if ($this_contact->phone !== '') : ?>
