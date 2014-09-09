@@ -340,48 +340,12 @@ class SafetextDevice extends SafetextModel {
 	        if ($result === FALSE) {
 	            $this->config['log']->write(' - Message not delivered');
 	        } else {
-		        $this->config['log']->write(' - Message delivered, api key used: ' . $this->config['gcm']['apikey'] . ', reg id: ' . $this->android_id . ', result: ' . $result);
+		        $this->config['log']->write(' - Message delivered');
 	        }
 	 
 	        // Close connection
 	        curl_close($ch);
-			
-			
-			
-			// **** Try with the other API key ****
-			$this->config['log']->write('Now trying to send Android notification using the second API key');
-			
-			$headers = array(
-	            'Authorization: key=' . $this->config['gcm']['secondarykey'],
-	            'Content-Type: application/json'
-	        );
-			
-			// Open connection
-	        $ch = curl_init();
-	 
-	        // Set the url, number of POST vars, POST data
-	        curl_setopt($ch, CURLOPT_URL, $this->config['gcm']['endpoint']);
-	        
-	        curl_setopt($ch, CURLOPT_POST, true);
-	        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-	        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	        
-	        // Disabling SSL Certificate support temporarly
-	        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-	        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-	        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
-			
-			// Execute post
-	        $result = curl_exec($ch);
-	        if ($result === FALSE) {
-	            $this->config['log']->write(' - Message not delivered');
-	        } else {
-		        $this->config['log']->write(' - Message delivered, api key used: ' . $this->config['gcm']['secondarykey'] . ', reg id: ' . $this->android_id . ', result: ' . $result);
-	        }
-	 
-	        // Close connection
-	        curl_close($ch);
-	        
+
 	        
 	        
 	        
