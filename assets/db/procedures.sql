@@ -49,7 +49,7 @@ BEGIN
 					/* make sure that there aren’t too many devices already registered */
 					SET @numDevices = (SELECT COUNT(*) FROM `sync_device` WHERE user_id=userId AND signature != 'webclient');
 
-					IF @numDevices < 2 OR deviceSig = 'webclient' THEN
+					IF @numDevices < 999 OR deviceSig = 'webclient' THEN
 						/* create new device entry */
 						SET @tokenString = CAST(MD5(CONCAT(CONCAT('SafeText-hashsalt', usernameIn), UNIX_TIMESTAMP())) AS CHAR);
 						INSERT INTO sync_device (id,user_id,signature,ios_id,android_id,description,is_initialized,token,token_expires) VALUES('', userId, deviceSig, iosId, androidId, deviceDesc, '0', @tokenString, DATE_ADD(CURDATE(),INTERVAL 5 DAY));
