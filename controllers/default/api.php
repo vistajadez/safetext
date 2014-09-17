@@ -795,7 +795,7 @@ class ApiController extends MsController {
 										$db->CALL("syncContact('" . $user->id . "','" . $this->params['contact'] . "','" . $name . "','" . $email . "','" . $phone . "','" . $whitelist . "','" . $blocked . "')");
 										
 										// if we're blocking the contact, delete this user as the blockee's contact, if exists
-										$db->CALL("syncContactDelete('" . $this->params['contact'] . "', '" . $user->id . "')");
+										if ($blocked == '1') $db->CALL("syncContactDelete('" . $this->params['contact'] . "', '" . $user->id . "')");
 										
 											
 										// send feedback to client

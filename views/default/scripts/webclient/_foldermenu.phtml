@@ -2,11 +2,14 @@
 
 <div class="safetext-folder-menu">
     <ul data-role="listview" data-count-theme="b" data-inset="true">
-	    <li><a href="/webclient/messages/folder/inbox"><?php echo $this->t('Inbox'); ?> <span class="ui-li-count safetext-inbox-counter"><?php echo $folderStats['inbox']; ?></span></a></li>
-	    <li><a href="/webclient/messages/folder/important"><?php echo $this->t('Important'); ?> <span class="ui-li-count safetext-important-counter"><?php echo $folderStats['important']; ?></span></a></li>
+	    <!--<li><a href="/webclient/messages/folder/inbox"><?php echo $this->t('Inbox'); ?> <span class="ui-li-count safetext-inbox-counter"><?php echo $folderStats['inbox']; ?></span></a></li>-->
+	    <li><a href="/webclient/messages"><?php echo $this->t('Messages'); ?> <span class="ui-li-count safetext-inbox-counter"><?php echo $folderStats['inbox']; ?></span></a></li>
+	    <!--<li><a href="/webclient/messages/folder/important"><?php echo $this->t('Important'); ?> <span class="ui-li-count safetext-important-counter"><?php echo $folderStats['important']; ?></span></a></li>-->
 	    <li><a href="/webclient/messages/folder/sent"><?php echo $this->t('Sent'); ?> <span class="ui-li-count safetext-sent-counter"><?php echo $folderStats['sent']; ?></span></a></li>
-	    <li><a href="/webclient/messages/folder/drafts"><?php echo $this->t('Drafts'); ?> <span class="ui-li-count safetext-drafts-counter"><?php echo $folderStats['drafts']; ?></span></a></li>
+	    <!--<li><a href="/webclient/messages/folder/drafts"><?php echo $this->t('Drafts'); ?> <span class="ui-li-count safetext-drafts-counter"><?php echo $folderStats['drafts']; ?></span></a></li>-->
 	    <li><a href="/webclient/contacts"><?php echo $this->t('Contacts'); ?> <span class="ui-li-count"><?php echo $folderStats['contacts']; ?></span></a></li>
-	    <li><a href="/webclient/contacts/filter/blocked"><?php echo $this->t('Black List'); ?> <span class="ui-li-count"><?php echo $folderStats['blacklist']; ?></span></a></li>
+	    <li><a href="/settings"><?php echo $this->t('Settings'); ?></a></li>
+	    <li><a href="/webclient/contacts/filter/blocked"><?php echo $this->t('Blocked List'); ?> <span class="ui-li-count"><?php echo $folderStats['blacklist']; ?></span></a></li>
+	    <li><a href="/auth/logout" data-ajax="false"><?php echo $this->t('Log Out'); ?></a></li>	
 	</ul>
 </div>

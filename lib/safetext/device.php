@@ -78,6 +78,9 @@ class SafetextDevice extends SafetextModel {
 										array_key_exists('is_blocked', $values)? $is_blocked = $values['is_blocked']: $is_blocked = '0';
 										$this->db->call("syncContact('" . $this->getValue('user_id') . "','" . $values['key'] . 
 											"','$name','$email','$phone','$is_whitelist','$is_blocked')");
+										
+										// if we're blocking the contact, delete this user as the blockee's contact, if exists
+										if ($is_blocked == '1') $this->db->call("syncContactDelete('" . $values['key'] . "', '" . $this->getValue('user_id') . "')");
 									}
 								} else if ($table === 'messages') {
 									// push a message
