@@ -343,7 +343,8 @@ class SafetextDevice extends SafetextModel {
 	        if ($result === FALSE) {
 	            $this->config['log']->write(' - Message not delivered');
 	        } else {
-		        $this->config['log']->write(' - Message delivered');
+		        //$this->config['log']->write(' - Message delivered');
+		        $this->config['log']->write(' - Message delivered, api key used: ' . $this->config['gcm']['apikey'] . ', reg id: ' . $this->android_id . ', result: ' . $result);
 	        }
 	 
 	        // Close connection
