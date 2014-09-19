@@ -378,14 +378,16 @@ class ApiController extends MsController {
 					
 					if ($user instanceof SafetextUser && $user->isValid()) {
 						if ($user->getRelationship('device') instanceof SafetextDevice && $user->getRelationship('device')->isValid()) {
-							// log the sync request
-							$this->config['log']->write('User: ' . $user->id . ' (' . $user->username . '), Device: ' . $user->getRelationship('device')->id . ', Data: ' . json_encode($this->params['data']), 'Sync Request');
-						
 							// execute sync (pass mobile device records to server and obtain records to send to mobile device)
 							$recordsOut = $user->getRelationship('device')->sync($this->params['data']);
+							
+							// log the sync request ONLY IF SOMETHING RELEVANT IS BEING PASSED/RECEIVED
+							if (sizeof($this->params['data']) > 0) {
+								$this->config['log']->write('User: ' . $user->id . ' (' . $user->username . '), Device: ' . $user->getRelationship('device')->id . ', Data: ' . json_encode($this->params['data']), 'Sync Request');
+							}
+							
 							// log the output
 							if (sizeof($recordsOut) > 0) $this->config['log']->write('Records Out: ' . json_encode($recordsOut));
-								else $this->config['log']->write('No outgoing records');
 
 							// load output into view
 							$viewObject->setValue('status', 'success');

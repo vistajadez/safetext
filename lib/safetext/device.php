@@ -111,7 +111,7 @@ class SafetextDevice extends SafetextModel {
 			else $arrayOut = array();
 		
 		$pullRecords = $this->db->call("syncPull('" . $this->getValue('user_id') . "','" . $this->getValue('id') . "')");
-		$this->config['log']->write('PULL SYNC: ' . sizeof($pullRecords) . ' records pulled');
+		if (sizeof($pullRecords) > 0) $this->config['log']->write('PULL SYNC: ' . sizeof($pullRecords) . ' records pulled');
 		
 		// package pull sync results in correct array structure for JSON output
 		$cipher = new SafetextCipher($this->config['hashSalt']);
