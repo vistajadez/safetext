@@ -737,7 +737,7 @@
 		// set reference to clicked event's ID
 		var entry = $(event.target).closest("li");
 		var deviceId = entry.attr('data-safetext-device-id');
-		Safetext.lastPage.find(".safetext-confirm-delete-button").attr('data-safetext-deletedevice-id', deviceId);
+		Safetext.lastPage.find(".safetext-confirm-unregister-button").attr('data-safetext-deletedevice-id', deviceId);
 
 		return false;
 	});
@@ -748,7 +748,7 @@
 	 * This event will run when the confirm unregister device's Unregister button is clicked.
 	 * Unregisters the referenced device at the server.
 	 */
-	$(document).on('click', '.safetext-settings .safetext-confirm-delete-button', function(event) {	
+	$(document).on('click', '.safetext-settings .safetext-confirm-unregister-button', function(event) {	
 		var deviceId = $(event.target).attr('data-safetext-deletedevice-id');
 		
 		if (deviceId != '') {
