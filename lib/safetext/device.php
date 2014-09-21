@@ -243,6 +243,7 @@ class SafetextDevice extends SafetextModel {
 	public function sendNotification($content)
 	{
 		if ($this->ios_id === '' && $this->android_id === '') return;
+		if ($this->is_initialized !== '1' || $this->token === '') return;
 		
 		// cleanse content for sending
 		$content = strip_tags($content);
