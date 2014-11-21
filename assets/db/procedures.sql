@@ -4,7 +4,7 @@
 -- --------------------------------------------------------------------------------
 DELIMITER $$
 
-CREATE PROCEDURE `generateToken` (IN usernameIn VARCHAR(24), IN passIn VARCHAR(24), IN deviceSig VARCHAR(64), IN deviceDesc VARCHAR(64))
+CREATE DEFINER=`maxdistrodb`@`%.%.%.%` PROCEDURE `generateToken`(IN usernameIn VARCHAR(24), IN passIn VARCHAR(24), IN deviceSig VARCHAR(64), IN deviceDesc VARCHAR(64), IN iosId VARCHAR(92), IN androidId TEXT)
 BEGIN
 	declare userId int unsigned;
 	declare storedPass varchar(16);
