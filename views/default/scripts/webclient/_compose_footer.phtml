@@ -57,17 +57,23 @@
 <!-- attach image popup message -->
 <div data-role="popup" data-theme="a" class="safetext-message-attach-popup ui-corner-all">
 	<a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
-	<form action="https://safe-text.us/api/images/" method="post" enctype="multipart/form-data" class="safetext-message-attach-form">
-        <div style="padding:10px 20px;">
-            <h3><?php echo $this->t('Send Image'); ?></h3>
-            <fieldset data-role="controlgroup" data-theme="a">
-			    <input type="file" name="image">
-            </fieldset>
-            
-            <a href="#" class="safetext-message-attach-send-button ui-btn ui-corner-all ui-shadow"><?php echo $this->t('Send'); ?></a>
-        </div>
-    </form>
-	<div id="progressbox" ><div id="progressbar"></div ><div id="statustxt">0%</div></div>
-	<div id="output"></div>
+	<?php if ($this->getValue('user')->subscription_level < 1) : ?>
+		<div style="padding:10px 20px;">
+			<?php echo $this->t('Subscribe today to enable image uploads!'); ?>
+		</div>
+	<?php else: ?>
+		<form action="https://safe-text.us/api/images/" method="post" enctype="multipart/form-data" class="safetext-message-attach-form">
+	        <div style="padding:10px 20px;">
+	            <h3><?php echo $this->t('Send Image'); ?></h3>
+	            <fieldset data-role="controlgroup" data-theme="a">
+				    <input type="file" name="image">
+	            </fieldset>
+	            
+	            <a href="#" class="safetext-message-attach-send-button ui-btn ui-corner-all ui-shadow"><?php echo $this->t('Send'); ?></a>
+	        </div>
+	    </form>
+		<div id="progressbox" ><div id="progressbar"></div ><div id="statustxt">0%</div></div>
+		<div id="output"></div>
+	<?php endif; ?>
 </div>
 <!-- /attach image -->
