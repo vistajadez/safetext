@@ -419,7 +419,7 @@ class SettingsController extends SafetextClientController {
 								$db->call("putPayment('" . $response['id'] . "','" . $user->id . "','" . $selectedSubscription['cpm'] . "','" . $response['state'] . "')");	
 								
 								// determine new expiration date
-								if ($user->subscription_expires === '0000-00-00 00:00:00')
+								if ($user->subscription_expires === '0000-00-00')
 									$expireDate = new DateTime();
 								else 
 									$expireDate = new DateTime($user->subscription_expires);
