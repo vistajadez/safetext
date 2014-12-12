@@ -10,12 +10,13 @@
 					data-safetext-isdraft="0"
 					data-safetext-isimportant="0"
 					data-safetext-lifetime="24"
-					name="composer" data-mini="true" placeholder="<?php if ($this->getValue('user')->subscription_level < 1) echo $this->t('Subscribe to enable messaging'); else echo $this->t('New Message'); ?>" data-clear-btn="true" data-theme="a"></textarea>
+					name="composer" data-mini="true" placeholder="<?php if ($this->getValue('user')->subscription_level < 1) echo $this->t('Subscribe to enable messaging'); else echo $this->t('New Message'); ?>" data-clear-btn="false" data-theme="a"></textarea>
 			</div>
 			<div class="safetext-footer-composer-button">
 				<div class="ui-grid-a center">
 				    <div data-role="controlgroup" data-type="horizontal" data-mini="true" class="safetext-mobile-only">
 					    <a href="#" class="safetext-new-message-button ui-btn ui-corner-all ui-icon-carat-r ui-btn-icon-notext"><?php echo $this->t('Send'); ?></a>
+					    <a href="#" class="safetext-message-attach-button ui-btn ui-corner-all ui-icon-camera ui-btn-icon-notext"><?php echo $this->t('Image Send'); ?></a>
 					    <a href="#" class="safetext-message-settings-button ui-btn ui-corner-all ui-icon-gear ui-btn-icon-notext"><?php echo $this->t('Settings'); ?></a>
 					</div>
 					<div data-role="controlgroup" data-type="horizontal" class="safetext-mobile-hidden">
