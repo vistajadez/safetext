@@ -42,7 +42,7 @@ $urlArray = explode('?', trim($_SERVER['REQUEST_URI']));
 $url = explode('/', trim($urlArray[0], '/'));
 $controller = array_shift($url);
 $action = array_shift($url);
-
+// Edited By Jayanta on 24.12.2014
 // organize the parameters
 $params = array();
 $name = '';
