@@ -256,10 +256,11 @@ class SafetextDevice extends SafetextModel {
 			$this->config['log']->write('Sending iOS notification to device #' . $this->id);
 			
 			// structure payload
+			// Edited By Jayanta on 29.12.2014
 			$body = array();
 			$body['aps'] = array(
 				//'alert' => $content, 
-				'alert' => 'You have a new Safe-Text message',
+				'alert' => 'You have a new Safe Text message',
 				'sound' => 'default'
 			);
 			$payload = json_encode($body);
@@ -316,7 +317,7 @@ class SafetextDevice extends SafetextModel {
 			// structure the alerts
 			$fields = array(
 	            'registration_ids' => array($this->android_id),
-	            'data' => array("m" => 'You have a new Safe-Text message')
+	            'data' => array("m" => 'You have a new Safe Text message')
 	        );
 			
 			$headers = array(
