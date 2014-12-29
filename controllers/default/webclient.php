@@ -41,10 +41,11 @@ class WebclientController extends SafetextClientController {
 			$folderStats = current($this->db->call("folderStats('" . $this->user->getValue('id') . "')"));
 			
 			// load contacts
-			$contactsArray = $this->db->call("contacts('" . $this->user->getValue('id') . "','name','0','999999')");
+			$contactsArray = $this->db->call("contacts('" . $this->user->getValue('id') . "')");
+			
 			$contacts = new SafetextModelCollection('SafetextContact', $this->config, $this->db);
 			$contacts->load($contactsArray);
-			
+			//print_r($contactsArray);exit;
 			// add blocked contacts flag
 			array_key_exists('filter', $this->params) ? $filter = $this->params['filter']: $filter = '';
 			
@@ -77,7 +78,8 @@ class WebclientController extends SafetextClientController {
 			$folderStats = current($this->db->call("folderStats('" . $this->user->getValue('id') . "')"));
 			
 			// load contacts
-			$contactsArray = $this->db->call("contacts('" . $this->user->getValue('id') . "','name','0','999999')");
+			//$contactsArray = $this->db->call("contacts('" . $this->user->getValue('id') . "','name','0','999999')");
+			$contactsArray = $this->db->call("contacts('" . $this->user->getValue('id') . "')");
 			$contacts = new SafetextModelCollection('SafetextContact', $this->config, $this->db);
 			$contacts->load($contactsArray);
 			
@@ -128,14 +130,19 @@ class WebclientController extends SafetextClientController {
 			$folderStats = current($this->db->call("folderStats('" . $this->user->getValue('id') . "')"));
 			
 			// load contacts
-			$contactsArray = $this->db->call("contacts('" . $this->user->getValue('id') . "','name','0','999999')");
+			//$contactsArray = $this->db->call("contacts('" . $this->user->getValue('id') . "','name','0','999999')");
+			$contactsArray = $this->db->call("contacts('" . $this->user->getValue('id') . "')");
 			$contacts = new SafetextModelCollection('SafetextContact', $this->config, $this->db);
 			$contacts->load($contactsArray);
+			
+			//print_r($contactsArray);
 			
 			// load the conversation
 			$conversation = new SafetextModelCollection('SafetextMessage', $this->config, $this->db);
 			$conversationArray = $this->db->call("conversation('" . $this->user->getValue('id') . "','" . $contact . "','0','999999')");
 			$conversation->load($conversationArray);
+			
+			//print_r($conversation);
 			
 			// mark all messages in the conversation as "read"
 			foreach ($conversation as $this_message) {
