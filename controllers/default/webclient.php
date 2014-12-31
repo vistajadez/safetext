@@ -82,7 +82,7 @@ class WebclientController extends SafetextClientController {
 			$contactsArray = $this->db->call("contacts('" . $this->user->getValue('id') . "')");
 			$contacts = new SafetextModelCollection('SafetextContact', $this->config, $this->db);
 			$contacts->load($contactsArray);
-			
+			//print_r($contactsArray);exit;
 			// are we viewing a specific folder?
 			array_key_exists('folder', $this->params) ? $folder = $this->params['folder']: $folder = 'conversations';
 			
@@ -91,13 +91,58 @@ class WebclientController extends SafetextClientController {
 				// default is to show list of conversations. Get the list from DB and store in view
 				$conversationsArray = $this->db->call("conversations('" . $this->user->getValue('id') . "','0','999999')");
 				$conversations->load($conversationsArray);
+				
 			} else if ($folder==='sent' || $folder==='inbox' || $folder==='drafts' || $folder==='important') {
 				$messagesArray = $this->db->call("messages('" . $this->user->getValue('id') . "','" . $folder . "','0','999999')");
 				$messages = new SafetextModelCollection('SafetextMessage', $this->config, $this->db);
 				$messages->load($messagesArray);
 				$viewObject->setValue($folder, $messages);
+				
 			}
+			//print_r($conversations);exit;
+			//title
+			$viewObject->setTitle(ucfirst($folder));
 			
+			// store data in view
+			$viewObject->setValue('folderStats', $folderStats);
+			$viewObject->setValue('conversations', $conversations);
+			$viewObject->setValue('folder', $folder);
+			$viewObject->setValue('contacts', $contacts);
+			
+		}
+	 }
+	 
+	 public function messages2Action(&$viewObject) {
+		// forward to the login page if not logged in
+		if (!$this->init($viewObject)) {
+			$this->forward($viewObject, 'login', 'auth');
+		} else {
+			// load stats for all contacts and messages for current user
+			$folderStats = current($this->db->call("folderStats('" . $this->user->getValue('id') . "')"));
+			
+			// load contacts
+			//$contactsArray = $this->db->call("contacts('" . $this->user->getValue('id') . "','name','0','999999')");
+			$contactsArray = $this->db->call("contacts('" . $this->user->getValue('id') . "')");
+			$contacts = new SafetextModelCollection('SafetextContact', $this->config, $this->db);
+			$contacts->load($contactsArray);
+			//print_r($contactsArray);exit;
+			// are we viewing a specific folder?
+			array_key_exists('folder', $this->params) ? $folder = $this->params['folder']: $folder = 'conversations';
+			
+			$conversations = new SafetextModelCollection('SafetextMessage', $this->config, $this->db);
+			if ($folder === 'conversations') {
+				// default is to show list of conversations. Get the list from DB and store in view
+				$conversationsArray = $this->db->call("conversations('" . $this->user->getValue('id') . "','0','999999')");
+				$conversations->load($conversationsArray);
+				
+			} else if ($folder==='sent' || $folder==='inbox' || $folder==='drafts' || $folder==='important') {
+				$messagesArray = $this->db->call("messages('" . $this->user->getValue('id') . "','" . $folder . "','0','999999')");
+				$messages = new SafetextModelCollection('SafetextMessage', $this->config, $this->db);
+				$messages->load($messagesArray);
+				$viewObject->setValue($folder, $messages);
+				
+			}
+			//print_r($conversations);exit;
 			//title
 			$viewObject->setTitle(ucfirst($folder));
 			
@@ -142,7 +187,7 @@ class WebclientController extends SafetextClientController {
 			$conversationArray = $this->db->call("conversation('" . $this->user->getValue('id') . "','" . $contact . "','0','999999')");
 			$conversation->load($conversationArray);
 			
-			//print_r($conversation);
+			
 			
 			// mark all messages in the conversation as "read"
 			foreach ($conversation as $this_message) {
@@ -170,6 +215,57 @@ class WebclientController extends SafetextClientController {
 	 }
 	 
 	 
+	 public function conversation2Action(&$viewObject) {
+		// forward to the login page if not logged in
+		if (!$this->init($viewObject)) {
+			$this->forward($viewObject, 'login', 'auth');
+		} else {
+			array_key_exists('contact', $this->params) ? $contact = $this->params['contact']: $contact = '';
+			
+			// load stats for all contacts and messages for current user
+			$folderStats = current($this->db->call("folderStats('" . $this->user->getValue('id') . "')"));
+			
+			// load contacts
+			//$contactsArray = $this->db->call("contacts('" . $this->user->getValue('id') . "','name','0','999999')");
+			$contactsArray = $this->db->call("contacts('" . $this->user->getValue('id') . "')");
+			$contacts = new SafetextModelCollection('SafetextContact', $this->config, $this->db);
+			$contacts->load($contactsArray);
+			
+			//print_r($contactsArray);
+			
+			// load the conversation
+			$conversation = new SafetextModelCollection('SafetextMessage', $this->config, $this->db);
+			$conversationArray = $this->db->call("conversation('" . $this->user->getValue('id') . "','" . $contact . "','0','999999')");
+			$conversation->load($conversationArray);
+			
+			
+			
+			// mark all messages in the conversation as "read"
+			foreach ($conversation as $this_message) {
+				if ($this_message->is_read == '0') {
+					if ($this_message->recipient == $this->user->getValue('id')) {
+						$this_message->is_read = '1';
+						$this_message->save($this->user->getValue('id')); // saves update and sync's to all participants' devices
+					}
+				}
+			}
+			
+			//title
+			$contactObject = $contacts->find('contact_user_id', $contact);
+			if ($contactObject instanceof SafetextContact) $contactName = $contactObject->label();
+				else $contactName = 'Unknown';
+			$viewObject->setTitle($contactName);
+			
+			//store data in view
+			$viewObject->setValue('folderStats', $folderStats);
+			$viewObject->setValue('conversation', $conversation);
+			$viewObject->setValue('contact', $contact);
+			$viewObject->setValue('contactName', $contactName);
+			$viewObject->setValue('contacts', $contacts);
+		}
+	 }
+	 
+	  
 	/**
 	 * Contact Action.
 	 * 
@@ -248,5 +344,8 @@ class WebclientController extends SafetextClientController {
 			$viewObject->setValue('results', $results);
 		}
 	 }
+	 
+	 
+	
 	 
 }
