@@ -1,6 +1,14 @@
 // SafeText Main JS Startup File
 
 (function() {
+
+
+	
+	
+	
+	
+
+
 	
 	// Create the Safetext namespace
 	if (typeof Safetext == 'undefined') {
@@ -539,6 +547,12 @@
 
 		return false;
 	});
+	
+	/* open image popup */
+	
+	
+	
+	
 	
 	
 	/**
@@ -1197,7 +1211,9 @@
 										/** add new chat entry **/
 										// generate the new listing content
 										var entryContent = Safetext.lastPage.find(".kit-new-message-content");
-										entryContent.find(".bubble").html('<div class="safetext-image-container"><img src="' + new_filename + '" /></div>'); // update text
+										entryContent.find(".bubble").html('<div class="safetext-image-container"><img class="safetext_img" src="' + new_filename + '" /></div>');
+										
+										
 				 				
 										// add as a new listing
 										Safetext.lastPage.find(".safetext-chat-container").append(entryContent.html());
@@ -1246,6 +1262,24 @@
 		return false; 
 	}); 
 		
+	$(document).on('click', '.safetext_img', function(event) {	
+		// open the confirmation dialog as a pop-up
+		
+		
+		var source = $(this).attr('src');
+		//alert(source);
+		Safetext.lastPage.find(".safetext-msg-image").popup( "open");
+		$("#safe_image").html("<div align='center' style='margin:20% 0 0 0%'><img src='"+source+"' height='400px' width='300px'><br><a href='#' id='close'>close</a></div>");
+		// set reference to clicked event's ID
+		$( "#safe_image-popup" ).css({ "position": "", "top": "0", "left": "" });
+		$( "#safe_image-popup" ).css({ "position": "absolute", "top": "50%", "left": "40%" });
+		return false;
+	});
+	
+	$(document).on('click', '#close', function(event) {	
+		Safetext.lastPage.find(".safetext-msg-image").popup( "close");
+	});	
+		
 
 	//progress bar function
 	function OnProgress(event, position, total, percentComplete)
@@ -1268,6 +1302,7 @@
 	 * Opens the confirm delete dialog box.
 	 */
 	$(document).on('click', '.bubble', function(){
+		
 		// open the confirmation dialog as a pop-up
 		Safetext.lastPage.find(".safetext-confirm-delete-popup").popup( "open");
 	
@@ -1278,6 +1313,31 @@
 
 		return false;
 	});
+	
+	
+	$("#setting_apply").click(function() {
+	
+		var filter = /^[\w\-\.\+]+\@[a-zA-Z0-9\.\-]+\.[a-zA-z0-9]{2,4}$/;
+		var email = $("#setting_email").val();
+		
+		if (filter.test(email)) {
+		return true;
+		}
+		else
+		{
+		alert("Invalid Email Address");
+		return false;
+		}
+	});
+	
+	$(window).load(function() {
+	});
+	
+	
+	
+	
+	
+
 	
 	/**
 	 * Hover on conversation bubble to display delete icon
@@ -1301,6 +1361,61 @@
 		Safetext.pageManager = new MsPageManager(); // single instance of this object, to be used by all pages		
 		Safetext.pageManager.pageChange(Safetext.startPage); // run any pagechange tasks on the initial page	
 	});
+	
+	
+	
+	
+	setInterval(chat, 5000);
+	
+	function chat() {
+	
+	
+	
+	var cur_url = document.URL;
+	var redirect1 = cur_url.replace("conversation", "conversation2");
+	
+	//var url = cur_url.split("/");
+	
+	
+	
+	$.post( redirect1 , function( data ) {
+	//alert(data);
+	var success1 =  $($.parseHTML(data)).filter(".conversation_main");
+	$(".safetext-chat-container").html("");
+	$(".safetext-chat-container").html(success1);
+	exit;
+	});
+	
+	}
+	
+	
+	setInterval(message_main, 5000);
+	
+	var cur_url2 = document.URL;
+	
+	
+	
+	function message_main() {
+	
+	
+	
+	var cur_url2 = document.URL;
+	var redirect2 = cur_url2.replace("messages", "messages2");
+	
+	//var url = cur_url.split("/");
+	
+	
+	
+	$.post( redirect2 , function( data ) {
+	//alert(data);
+	var success2 =  $($.parseHTML(data)).filter(".message_main");
+	$(".msgListWrapper").html("");
+	$(".msgListWrapper").html(success2);
+	exit;
+	});
+	
+	}
+	
 	
 	
 	
