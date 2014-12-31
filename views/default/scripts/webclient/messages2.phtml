@@ -1,0 +1,54 @@
+<div class="message_main">
+<form class="ui-filterable"><div class="ui-input-search ui-shadow-inset ui-input-has-clear ui-body-inherit ui-corner-all"><input data-type="search" placeholder="Filter items..."><a href="#" class="ui-input-clear ui-btn ui-icon-delete ui-btn-icon-notext ui-corner-all ui-input-clear-hidden" title="Clear text">Clear text</a></div></form>
+<ul data-role="listview" data-filter="true" data-split-icon="<?php if ($this->getValue('folder')=='drafts') echo 'gear'; else echo 'delete'; ?>" data-inset="true" class="ui-listview ui-listview-inset ui-corner-all ui-shadow">
+						    	<?php foreach ($this->getValue($this->getValue('folder')) as $this_message) : 
+							    	// get sender label
+							    	if ($this_message->sender === $this->getValue('user')->id) {
+							    		$sender = 'Me';
+							    	} else {
+							    		$contact = $this->getValue('contacts')->find('contact_user_id', $this_message->sender);
+							    		if ($contact instanceof SafetextContact) $sender = $contact->label();
+							    			else $sender = 'Unknown';
+							    	}
+							    	
+							    	// get recipient label
+							    	if ($this_message->recipient === $this->getValue('user')->id) {
+							    		$recipient = 'Me';
+							    	} else {
+							    		$contact = $this->getValue('contacts')->find('contact_user_id', $this_message->recipient );
+							    		if ($contact instanceof SafetextContact) $recipient = $contact->label();
+							    			else $recipient = 'Unknown';
+							    	}
+							    	
+							    	// get time to expire
+							    	$secsLeft = strtotime($this_message->expire_date) - time();
+							    	if ($secsLeft < 0) $secsLeft = 0;
+							    	$minsLeft = round($secsLeft /60, 0, PHP_ROUND_HALF_DOWN);
+							    	$hrsLeft = round($minsLeft /60, 0, PHP_ROUND_HALF_DOWN);
+							    	
+							    	if ($hrsLeft < 1) {
+							    		$timeLeft = $minsLeft . ' ' . $this->t('min');
+							    		if ($minsLeft > 1 || $minsLeft === 0) $timeLeft .= 's';
+							    	} else {
+							    		$timeLeft = $hrsLeft . ' ' . $this->t('hr');
+							    		if ($hrsLeft > 1) $timeLeft .= 's';
+							    	}
+						    	?>
+						    		<li class="ui-li-has-alt ui-first-child ui-last-child">
+						    		<a href="/webclient/conversation/contact/<?php echo $contact->contact_user_id; ?>" class="ui-btn">
+						    			<?php if ($this_message->image_name != ''): ?>
+						    				<img src="/assets/images/users/<?php echo $this_message->image_name; ?>-s.jpg" />
+						    			<?php endif; ?>
+						    			<?php if ($this->getValue('folder') !== 'sent' && $this->getValue('folder') !== 'drafts' && $this_message->is_read === '0') : ?>
+						    				<p style="white-space:normal;"><strong><em><?php echo $sender; ?></em> <?php echo $this->t('to'); ?> <em><?php echo $recipient; ?></em></strong></p>
+						    			<?php else: ?>
+						    				<p style="white-space:normal;"><em><?php echo $sender; ?></em> <?php echo $this->t('to'); ?> <em><?php echo $recipient; ?></em></p>
+						    			<?php endif; ?>
+						    			<p><?php echo $this_message->content; ?></p>
+						    			<p style="font-size:.68em;">sent <?php echo $this_message->sent_date; ?></p>
+						    			<p class="ui-li-aside"><strong><?php echo $this->t('time left'); ?>: <?php echo $timeLeft; ?></strong></p></a>
+						    			<a href="#" data-safetext-message-id="<?php echo $this_message->id; ?>" class="safetext-delete-button ui-btn ui-btn-icon-notext ui-icon-delete"></a>
+						    		</li>
+						    	<?php endforeach; ?>
+</ul>
+</div>
