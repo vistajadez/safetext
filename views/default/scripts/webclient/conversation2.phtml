@@ -1,0 +1,50 @@
+<div class="conversation_main">
+<?php $lastHrsElapsed = ''; ?>
+						    	<?php foreach ($this->getValue('conversation') as $this_message) : 
+							    	// get time since its been sent
+							    	$secsElapsed = time() - strtotime($this_message->sent_date);
+							    	$minsElapsed = round($secsElapsed /60, 0, PHP_ROUND_HALF_DOWN);
+							    	$hrsElapsed = round($minsElapsed /60, 0, PHP_ROUND_HALF_DOWN);
+							    	if ($hrsElapsed < 1) {
+							    		$timeElapsed = $minsElapsed . ' ' . $this->t('min');
+							    		if ($minsElapsed > 1 || $minsElapsed === 0) $timeElapsed .= 's';
+							    	} else {
+							    		$timeElapsed = $hrsElapsed . ' ' . $this->t('hr');
+							    		if ($hrsElapsed > 1) $timeElapsed .= 's';
+							    	}
+							    	
+							    	// get time to expire
+							    	$secsLeft = strtotime($this_message->expire_date) - time();
+							    	if ($secsLeft < 0) $secsLeft = 0;
+							    	$minsLeft = round($secsLeft /60, 0, PHP_ROUND_HALF_DOWN);
+							    	$hrsLeft = round($minsLeft /60, 0, PHP_ROUND_HALF_DOWN);
+							    	
+							    	if ($hrsLeft < 1) {
+							    		$timeLeft = $minsLeft . ' ' . $this->t('min');
+							    		if ($minsLeft > 1 || $minsLeft === 0) $timeLeft .= 's';
+							    	} else {
+							    		$timeLeft = $hrsLeft . ' ' . $this->t('hr');
+							    		if ($hrsLeft > 1) $timeLeft .= 's';
+							    	}
+						    	?>
+								
+					    		<div class="<?php if ($this_message->sender === $this->getValue('user')->id) echo 'bubble bubble--alt'; else echo 'bubble'; ?>" data-id="<?php echo $this_message->id; ?>">
+					    			<?php echo $this_message->content; ?>
+					    			<?php if ($this_message->image_name != ''): ?>
+									<img class="safetext_img" src="/assets/images/users/<?php echo $this_message->image_name; ?>-s.jpg" />
+									
+					    			<?php endif; ?>	
+					    			<a href="#" class="safetext-delete-bubble-icon ui-btn ui-shadow ui-corner-all ui-icon-delete ui-btn-icon-notext">Delete</a>
+					    		</div>
+								
+								
+								
+					    		<div class="safetext-timedetails-<?php if ($this_message->sender === $this->getValue('user')->id) echo 'right'; else echo 'left'; ?>">
+					    			<?php if ($lastHrsElapsed === '' || ($lastHrsElapsed - $hrsElapsed) > 1) : // only post time details if significant difference ?>
+						    			<?php echo $this->t('sent'); ?> <?php echo $timeElapsed; ?> <?php echo $this->t('ago'); ?>,
+						    			<?php echo $this->t('deletes in'); ?> <?php echo $timeLeft; ?>
+					    			<?php endif; ?>
+					    			<?php $lastHrsElapsed = $hrsElapsed; ?>
+					    		</div>
+						    	<?php endforeach; ?>
+</div>						    	
