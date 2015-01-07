@@ -1,9 +1,9 @@
-<div data-role="page" class="safetext-page safetext-conversation" data-title="<?php echo $this->t('Conversation'); ?> - <?php echo $this->getValue('contactName'); ?>">
+<div class="safetext-page safetext-conversation" data-title="<?php echo $this->t('Conversation'); ?> - <?php echo $this->getValue('contactName'); ?>">
 		
-		<div data-role="panel" class="leftpanel" data-position="left" data-display="reveal" data-theme="b"></div>
-		<?php echo $this->render('webclient/_header_conversation.phtml'); ?>
+		<?php echo $this->render('webclient/_leftpanel.phtml'); ?>
+		<?php echo $this->render('webclient/_header.phtml'); ?>
 	
-	    <div data-role="content" class="safetext-content" data-theme="a">
+	    <div data-role="content" class="safetext-content chatWrapper" data-theme="a">
 	    	
 		    <div class="safetext-client-grid">
 		    	<!-- Left-hand Folder Column -->
@@ -26,10 +26,12 @@
 							<h3><?php echo $this->getValue('contactName'); ?></h3>
 						</div>
 						
+						
+						
 						<div class="safetext-chat-container">
 								<?php $lastHrsElapsed = ''; ?>
 						    	<?php foreach ($this->getValue('conversation') as $this_message) : 
-							    	// get time since it's been sent
+							    	// get time since its been sent
 							    	$secsElapsed = time() - strtotime($this_message->sent_date);
 							    	$minsElapsed = round($secsElapsed /60, 0, PHP_ROUND_HALF_DOWN);
 							    	$hrsElapsed = round($minsElapsed /60, 0, PHP_ROUND_HALF_DOWN);
@@ -55,15 +57,18 @@
 							    		if ($hrsLeft > 1) $timeLeft .= 's';
 							    	}
 						    	?>
+								
 					    		<div class="<?php if ($this_message->sender === $this->getValue('user')->id) echo 'bubble bubble--alt'; else echo 'bubble'; ?>" data-id="<?php echo $this_message->id; ?>">
 					    			<?php echo $this_message->content; ?>
 					    			<?php if ($this_message->image_name != ''): ?>
-					    				<div class="safetext-image-container">
-					    					<img src="/assets/images/users/<?php echo $this_message->image_name; ?>-s.jpg" />
-					    				</div>
-					    			<?php endif; ?>
-					    			<a href="index.html" class="safetext-delete-bubble-icon ui-btn ui-shadow ui-corner-all ui-icon-delete ui-btn-icon-notext">Delete</a>
+									<img class="safetext_img" src="/assets/images/users/<?php echo $this_message->image_name; ?>-s.jpg" />
+									
+					    			<?php endif; ?>	
+					    			<a href="#" class="safetext-delete-bubble-icon ui-btn ui-shadow ui-corner-all ui-icon-delete ui-btn-icon-notext">Delete</a>
 					    		</div>
+								
+								
+								
 					    		<div class="safetext-timedetails-<?php if ($this_message->sender === $this->getValue('user')->id) echo 'right'; else echo 'left'; ?>">
 					    			<?php if ($lastHrsElapsed === '' || ($lastHrsElapsed - $hrsElapsed) > 1) : // only post time details if significant difference ?>
 						    			<?php echo $this->t('sent'); ?> <?php echo $timeElapsed; ?> <?php echo $this->t('ago'); ?>,
@@ -86,7 +91,13 @@
 	    
 	    </div><!-- /content -->
 	    
-	    <!-- delete message popup -->
+	    <!-- image popup -->
+		<div id="safe_image" class="safetext-msg-image" data-role="popup" data-overlay-theme="b" data-theme="b" data-dismissible="false" style="max-width:400px;">
+	    	
+	    	</div>
+	    
+	    	
+		<!-- delete message popup -->
 		<div class="safetext-confirm-delete-popup" data-role="popup" data-overlay-theme="b" data-theme="b" data-dismissible="false" style="max-width:400px;">
 	    	<a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
 	        <div data-role="header" data-theme="a">
@@ -103,8 +114,11 @@
 	            </fieldset>
 	        </div>
 	    </div>
+		
+	<div class="test"></div>	
     <!-- /delete message popup -->
 	
 	<?php echo $this->render('webclient/_compose_footer.phtml'); ?>
 		
 </div> <!--/page-->
+
