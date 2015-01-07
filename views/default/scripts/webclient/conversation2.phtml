@@ -31,8 +31,9 @@
 					    		<div class="<?php if ($this_message->sender === $this->getValue('user')->id) echo 'bubble bubble--alt'; else echo 'bubble'; ?>" data-id="<?php echo $this_message->id; ?>">
 					    			<?php echo $this_message->content; ?>
 					    			<?php if ($this_message->image_name != ''): ?>
-									<img class="safetext_img" src="/assets/images/users/<?php echo $this_message->image_name; ?>-s.jpg" />
-									
+								<a class="example-image-link" href="/assets/images/users/<?php echo $this_message->image_name; ?>-l.jpg" data-lightbox="ss">
+								<img class="safetext_img" src="/assets/images/users/<?php echo $this_message->image_name; ?>-s.jpg" />
+								</a>
 					    			<?php endif; ?>	
 					    			<a href="#" class="safetext-delete-bubble-icon ui-btn ui-shadow ui-corner-all ui-icon-delete ui-btn-icon-notext">Delete</a>
 					    		</div>
