@@ -2,7 +2,9 @@
 		
 		<?php echo $this->render('webclient/_leftpanel.phtml'); ?>
 		<?php echo $this->render('webclient/_header.phtml'); ?>
-	
+<link rel="stylesheet" href="https://safe-text.us/assets/css-lightbox/lightbox.css" media="screen"/>
+<script src="https://safe-text.us/assets/js-lightbox/jquery-1.10.2.min.js"></script>
+<script src="https://safe-text.us/assets/js-lightbox/lightbox-2.6.min.js"></script>	
 	    <div data-role="content" class="safetext-content chatWrapper" data-theme="a">
 	    	
 		    <div class="safetext-client-grid">
@@ -61,8 +63,9 @@
 					    		<div class="<?php if ($this_message->sender === $this->getValue('user')->id) echo 'bubble bubble--alt'; else echo 'bubble'; ?>" data-id="<?php echo $this_message->id; ?>">
 					    			<?php echo $this_message->content; ?>
 					    			<?php if ($this_message->image_name != ''): ?>
-									<img class="safetext_img" src="/assets/images/users/<?php echo $this_message->image_name; ?>-s.jpg" />
-									
+					    			<a class="example-image-link" href="/assets/images/users/<?php echo $this_message->image_name; ?>-l.jpg" data-lightbox="ss">
+								<img src="/assets/images/users/<?php echo $this_message->image_name; ?>-s.jpg" />
+								</a>	
 					    			<?php endif; ?>	
 					    			<a href="#" class="safetext-delete-bubble-icon ui-btn ui-shadow ui-corner-all ui-icon-delete ui-btn-icon-notext">Delete</a>
 					    		</div>
@@ -91,10 +94,8 @@
 	    
 	    </div><!-- /content -->
 	    
-	    <!-- image popup -->
-		<div id="safe_image" class="safetext-msg-image" data-role="popup" data-overlay-theme="b" data-theme="b" data-dismissible="false" style="max-width:400px;">
-	    	
-	    	</div>
+	   
+		
 	    
 	    	
 		<!-- delete message popup -->
@@ -121,4 +122,3 @@
 	<?php echo $this->render('webclient/_compose_footer.phtml'); ?>
 		
 </div> <!--/page-->
-
