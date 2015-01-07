@@ -39,9 +39,9 @@
 							</ul>
 						</form>
 
-						<?php if ($this->getValue('results') instanceof MsModelCollection) : ?>
+						<?php if ($this->getValue('results')) : ?>
 							<?php if (sizeof($this->getValue('results')) > 0) : ?>
-								<div>
+								<div style="clear:both">
 								    <ul data-role="listview" data-autodividers="true" data-inset="true" data-icon="plus">
 								    	<?php foreach ($this->getValue('results') as $this_contact) : ?>
 								    		<li data-safetext-id="<?php echo $this_contact->key; ?>" data-safetext-name="<?php echo $this_contact->label(); ?>" data-safetext-phone="<?php echo $this_contact->phone; ?>" data-safetext-email="<?php echo $this_contact->email; ?>"><a class="safetext-add-contact-record" href="#">
@@ -57,14 +57,17 @@
 									</ul>
 								</div>
 							<?php else : ?>
-								<ul data-role="listview" data-inset="true">
-		                            <div data-role="content" class="ui-body-c">
-		                                <div class="safetext-content">
-		                                    <p><?php echo $this->t("No results"); ?></p>
-		                                </div>
-		                            </div>
-						    	</ul>
+							<ul data-role="listview" data-inset="true">
+								<li class="w96">
+								<div data-role="content" class="ui-body-c">
+								<div class="safetext-content">
+					                            <p class="redctext"><?php echo $this->t("No results found"); ?></p>
+					                        </div> 
+					                        </div> 
+					                        </li>
+					                </ul>          
 							<?php endif; ?>
+							
 						<?php endif; ?>
 						    
 			    	</div>
