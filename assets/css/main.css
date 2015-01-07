@@ -702,3 +702,10 @@ width:auto;
 .pad {
 	padding: 15px !important;
 }
+.w96 { width:96% !important; }
+
+.safetext-content p.redctext{
+ text-align: center;
+color: red;
+margin-top: 20px !important;
+}
