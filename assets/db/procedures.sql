@@ -469,7 +469,7 @@ BEGIN
 
 			/* send new message */
 			SET sentDate = NOW();
-			SET expireDate = DATE_ADD(NOW(),INTERVAL lifetimeIn MINUTE);
+			SET expireDate = DATE_ADD(NOW(),INTERVAL lifetimeIn HOUR);
 			INSERT INTO messages (`id`,`content`,`is_important`,`is_draft`,`sent_date`,`expire_date`) VALUES(NULL, contentIn,isImportantIn,isDraftIn,sentDate,expireDate);
 
 			/* obtain the new message ID */
@@ -812,14 +812,16 @@ END
 -- --------------------------------------------------------------------------------
 DELIMITER $$
 
-CREATE PROCEDURE `contacts` (IN userIdIn INT UNSIGNED)
+CREATE PROCEDURE `contacts` (IN userIdIn INT UNSIGNED, IN orderIn VARCHAR(24), IN startIn INT UNSIGNED, limitIn INT UNSIGNED)
 BEGIN
 
-	PREPARE STMT FROM " SELECT * FROM contacts WHERE user_id=? ORDER BY name LIMIT 0,1000 ";
+	PREPARE STMT FROM " SELECT * FROM contacts WHERE user_id=? ORDER BY ? LIMIT ?,? ";
 
 	SET @userId = userIdIn;
-	
-	EXECUTE STMT USING @userId;
+	SET @orderBy = orderIn;
+	SET @start = startIn;
+	SET @limit = limitIn;
+	EXECUTE STMT USING @userId, @orderBy, @start, @limit;
 	DEALLOCATE PREPARE STMT;
 
 END
@@ -1194,18 +1196,6 @@ BEGIN
 
 	SELECT COUNT(*) AS `count` FROM participants p, messages m 
 		WHERE p.message_id = m.id AND p.contact_id = userId AND p.is_sender = 0 AND m.is_draft = 0 AND m.is_read = 0 AND m.expire_date > NOW();
-
-END
-
--- --------------------------------------------------------------------------------
--- Procedure to get Notification
--- 
--- --------------------------------------------------------------------------------
-
-CREATE DEFINER=`maxdistrodb`@`%.%.%.%` PROCEDURE `getisread`(IN `UserId` INT UNSIGNED)
-BEGIN
-
- SELECT COUNT(messages.id) AS count_unread FROM messages, participants WHERE participants.`contact_id` = UserId AND participants.`is_sender` =0 AND messages.`is_read` = 0 AND messages.id=participants.message_id;
 
 END
 
