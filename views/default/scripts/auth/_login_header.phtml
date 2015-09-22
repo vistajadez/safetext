@@ -1,0 +1,89 @@
+<!-- header - with web client nav -->
+<!-- fixed header -->
+<script src="/assets/js/classie.js"></script>
+<script>
+    function init() {
+        window.addEventListener('scroll', function(e){
+            var distanceY = window.pageYOffset || document.documentElement.scrollTop,
+                shrinkOn = 300,
+                header = document.querySelector("header");
+            if (distanceY > shrinkOn) {
+                classie.add(header,"smaller");
+            } else {
+                if (classie.has(header,"smaller")) {
+                    classie.remove(header,"smaller");
+                }
+            }
+        });
+    }
+    window.onload = init();
+</script>
+<!-- end -->
+<header data-role="header" class="safetext-header" data-position="fixed">
+<div class="menuWrapper">
+
+<div class="safetext-nav newbgnav clearfix">
+
+<div class="topbar">
+<a href="#"><img src="https://safe-text.com/wp-content/uploads/2015/02/logoHeader1.png" alt=""></a>
+<ul>
+	<li><a href="http://st.maxdistro.com/" class="homeicon"><img src="http://st.maxdistro.com/wp-content/uploads/2015/02/home.png" alt=""></a></li>
+    <li class="company"><a href="http://st.maxdistro.com/the-company/">The Company</a></li>
+    <li class="app"><a href="http://st.maxdistro.com/the-app/">The App</a></li>
+    <li class="difference"><a href="http://st.maxdistro.com/the-difference/">The Difference</a></li>
+    <li class="join"><a href="/webclient/">Join/Login</a></li>
+</ul>
+</div>
+</div>
+
+</div>
+
+    <?php if($this->getValue('user')->username!="") {?>
+	<div class="toparea">
+    <h1><?php echo $this->title; ?></h1>
+    <div class="userDiv">
+        	<p>Welcome</p>
+            <a href="/webclient/messages" data-transition="fade"><?php echo $this->getValue('user')->username; ?></a>
+        </div>
+	<div class="safetext-nav clearfix"> 
+        <ul class="clearfix">
+		   <li><a href="/settings" data-transition="fade"><?php echo $this->t('Settings'); ?></a></li>  
+		   <li><a href="<?php if ($this->getValue('user')->subscription_level > 0) echo '/settings/payments'; else echo '/settings/subscribe'; ?>" data-transition="fade"><?php if ($this->getValue('user')->subscription_level > 0) echo $this->t('Payments'); else echo $this->t('Subscribe'); ?></a></li>
+		   <li><a href="/auth/logout" data-ajax="false"><?php echo $this->t('Logout'); ?></a></li>
+        </ul>
+    </div>
+	</div>
+    <?php }?>	
+    <a data-role="button" onclick="$('.leftpanel:visible').panel('open');" href="#" data-icon="bars"
+		data-iconpos="notext" class="ui-btn-left">Menu</a>
+</header>
+<!-- /header -->
+
+<style>
+.safetext-header { position:fixed;top:0;left:0;z-index: 99999; }
+.menuWrapper{background-image: none;background-color: #C93F3C;border-bottom: 3px solid #fff;}
+.topMenuWP{float:right; }
+#menu-top-menu li{display: block;float: left; border:0px;}
+
+#menu-top-menu li a {
+text-transform: uppercase;
+padding: 0 .8em;
+font-size: 20px;
+padding-top: 34px;
+text-shadow: none !important;
+}
+#menu-top-menu li a:hover {
+-webkit-box-shadow: inset 0 4px 0 0 #ffffff;
+box-shadow: inset 0 4px 0 0 #ffffff;
+background: transparent;
+}
+</style>
+
+<script type="text/javascript">
+            $(function() {
+                $('.topMenuWP').Mnav({
+                    mobileButtonPos: 'right',
+		    theme:'mnav-theme'
+                });
+            });
+        </script>

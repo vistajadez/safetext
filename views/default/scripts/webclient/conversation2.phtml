@@ -1,4 +1,21 @@
 <div class="conversation_main">
+<?php 
+//$cur_time = date('l jS \of F Y h:i:s A');
+
+$date = new DateTime($cur_time, new DateTimeZone('US/Pacific'));
+$date->setTimezone(new DateTimeZone($this->getValue('timezone')));
+$result = $date->format('Y-m-d h:i:s');
+
+$date1 = date_create($result);
+$date_format = date_format($date1, 'l jS F Y g:ia');
+$new_format = explode(" ",$date_format);
+//print_r($new_format);
+$day = substr($new_format[0],0,3);
+$month = substr($new_format[2],0,3);
+						    		
+$cur_time = $day.', '.$new_format[1].' '.$month.' '.$new_format[3].' '.$new_format[4];
+?>
+<input type="hidden" value="<?php echo $cur_time;?>" id="cur_time">
 <?php $lastHrsElapsed = ''; ?>
 						    	<?php foreach ($this->getValue('conversation') as $this_message) : 
 							    	// get time since its been sent
@@ -36,16 +53,43 @@
 								</a>
 					    			<?php endif; ?>	
 					    			<a href="#" class="safetext-delete-bubble-icon ui-btn ui-shadow ui-corner-all ui-icon-delete ui-btn-icon-notext">Delete</a>
+									
+									<br>
+					    			<?php
+					    			$date = new DateTime($this_message->sent_date, new DateTimeZone('Europe/Berlin'));
+							        $date->setTimezone(new DateTimeZone($this->getValue('timezone')));
+							        $result = $date->format('Y-m-d H:i:s');
+					    			
+					    			
+						    		//$date = explode(" ",$result);
+						    		$date1 = date_create($result);
+						    		$date_format = date_format($date1, 'l jS F Y g:ia');
+						    		$new_format = explode(" ",$date_format);
+						    		//print_r($new_format);
+						    		$day = substr($new_format[0],0,3);
+						    		$month = substr($new_format[2],0,3);
+						    		
+						    		echo $day.', '.$new_format[1].' '.$month.' '.$new_format[3].' '.$new_format[4];
+						    		?>
+									
+									<?php
+									if ($this_message->sender === $this->getValue('user')->id) {
+					    			if($this_message->is_read==0) {?>
+					    			<img src="/assets/images/tick.png">
+					    			<?php } else { ?>
+					    			<img src="/assets/images/right.png">
+					    			<?php }
+									}?>
 					    		</div>
 								
 								
 								
 					    		<div class="safetext-timedetails-<?php if ($this_message->sender === $this->getValue('user')->id) echo 'right'; else echo 'left'; ?>">
-					    			<?php if ($lastHrsElapsed === '' || ($lastHrsElapsed - $hrsElapsed) > 1) : // only post time details if significant difference ?>
+					    			<?php /*?><?php if ($lastHrsElapsed === '' || ($lastHrsElapsed - $hrsElapsed) > 1) : // only post time details if significant difference ?>
 						    			<?php echo $this->t('sent'); ?> <?php echo $timeElapsed; ?> <?php echo $this->t('ago'); ?>,
 						    			<?php echo $this->t('deletes in'); ?> <?php echo $timeLeft; ?>
 					    			<?php endif; ?>
-					    			<?php $lastHrsElapsed = $hrsElapsed; ?>
+					    			<?php $lastHrsElapsed = $hrsElapsed; ?><?php */?>
 					    		</div>
 						    	<?php endforeach; ?>
 </div>						    	

@@ -1,0 +1,55 @@
+<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jstimezonedetect/1.0.4/jstz.min.js"></script>
+
+<div data-role="page" class="safetext-page safetext-contacts" data-title="<?php if ($this->getValue('filter') === 'blocked') echo $this->t('Blocked'); ?> <?php echo $this->t('Contacts'); ?>">
+		
+		<?php echo $this->render('webclient/_leftpanel.phtml'); ?>
+		<?php echo $this->render('admin/_header.phtml'); ?>
+	
+	    <div data-role="content" class="safetext-content" data-theme="a">
+	    	
+		    <div class="safetext-client-grid">
+		    	<!-- Left-hand Folder Column -->
+			    <div class="safetext-block-a">
+			    	<div class="ui-body ui-body-d">
+					    <?php //echo $this->render('webclient/_foldermenu.phtml'); ?>
+					</div>
+			    </div>
+			    
+			    <!-- Main Content Column -->
+			    <div class="safetext-block-b">
+			    	<div class="ui-body ui-body-d">
+				    	<div class="ui-grid-a safetext-mobile-hidden">
+						   
+						    <div class="ui-block-b" style="width:100% !important"><a href="#" class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-user ui-btn-active">Users</a></div>
+						</div>
+						
+						<div class="contactListWrapper">
+						    <ul data-role="listview" data-autodividers="true" data-split-icon="edit" data-filter="true" data-inset="true">
+						    	<?php 
+									foreach ($this->getValue('contacts') as $this_contact) : ?>
+						    		<li><a href="#">
+						    			<h2><?php echo $this_contact['username']; ?></h2>
+										</a>
+										<a href="/admin/contact/id/<?php echo $this_contact['id']; ?>"></a>
+						    		</li>
+						    	<?php endforeach; ?>
+							</ul>
+						</div>
+						    
+			    	</div>
+			    </div>
+
+			</div>
+	    
+	    </div><!-- /content -->
+	
+	<?php echo $this->render('webclient/_footer.phtml'); ?>
+	<style>
+
+	
+	.ui-block-a {
+  clear: none;
+}
+	</style>		
+</div> <!--/page-->

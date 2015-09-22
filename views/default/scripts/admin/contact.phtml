@@ -1,0 +1,83 @@
+<div data-role="page" class="safetext-page safetext-contact" data-title="<?php echo $this->t('Edit'); ?> <?php echo $this->getValue('contactName'); ?>">
+		
+		<!--<div data-role="panel" class="leftpanel" data-position="left" data-display="reveal" data-theme="b"></div>-->
+		<?php echo $this->render('webclient/_leftpanel.phtml'); ?>
+		<?php echo $this->render('admin/_header.phtml'); ?>
+	
+	    <div data-role="content" class="safetext-content" data-theme="a">
+	    	
+		    <div class="safetext-client-grid">
+		    	<!-- Left-hand Folder Column -->
+			    <div class="safetext-block-a">
+			    	<div class="ui-body ui-body-d">
+					    
+					    <?php //echo $this->render('webclient/_foldermenu.phtml'); ?>
+					</div>
+			    </div>
+			    
+			    <!-- Main Content Column -->
+			    <div class="safetext-block-b">
+			    	<div class="ui-body ui-body-d">
+				    	
+						
+						<div class="contactEditWrapper">
+						    	<!-- edit contact form -->
+						    	<form class="safetext-admin-save-pass-form">
+									<?php 
+									foreach ($this->getValue('contact') as $this_contact) : ?>
+								    <ul data-role="listview" data-inset="true">
+								    	<li data-role="list-divider"><?php echo $this->t('Edit'); ?> <?php echo $this_contact['firstname'].' '.$this_contact['lastname']; ?></li>
+								        <li class="ui-field-contain">
+								            <label for="name"><?php echo $this->t('Name'); ?>:</label>
+								            <input type="text" name="name" value="<?php echo $this_contact['username']; ?>" data-clear-btn="false" readonly>
+								        </li>
+								        <li class="ui-field-contain">
+								            <label for="phone"><?php echo $this->t('Password'); ?>:</label>
+								            <input type="text" name="pass" value="" data-clear-btn="true">
+								        </li>
+								        
+								        <li class="ui-field-contain" style="width:95.5%">
+								            <fieldset class="ui-grid-a safetext-mobile-hidden">
+								                    <div class="ui-block-a" style="width:50%"><a href="/admin/users/" class="ui-btn ui-icon-carat-l ui-btn-icon-left ui-corner-all ui-shadow"><?php echo $this->t('Cancel'); ?></a></div>
+								                    <div class="ui-block-b" style="width:50%"><a href="#" class="safetext-admin-save-pass-button ui-btn ui-icon-check ui-btn-icon-left ui-corner-all ui-shadow"><?php echo $this->t('Save'); ?></a></div>
+								                    
+								            </fieldset>
+								        </li>
+								        
+								    </ul>
+								    <input type="hidden" name="contact" value="<?php echo $this_contact['id']; ?>" />
+									<?php endforeach; ?>
+								</form>
+								<!-- /edit contact form -->
+						    
+						</div>
+						    
+			    	</div>
+			    </div>
+
+			</div>
+	    
+	    </div><!-- /content -->
+	
+	<!-- remove contact popup -->
+	<div data-role="popup" id="safetext-removecontact-<?php echo $this->getValue('contact'); ?>" data-overlay-theme="b" data-theme="b" data-dismissible="false" style="max-width:400px;">
+    	<a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
+        <div data-role="header" data-theme="a">
+            <h1><?php echo $this->t('Remove Contact'); ?>?</h1>
+        </div>
+        <div role="main" class="ui-content">
+            <h3 class="ui-title"><?php echo $this->t('Confirm remove contact'); ?></h3>
+            <p><?php echo $this->t('This contact will no longer appear in your contacts list'); ?>.</p>
+            <fieldset class="ui-grid-a">
+	            <div class="ui-block-a"><a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-b" data-rel="back">Cancel</a></div>
+	            <div class="ui-block-b"><a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-b safetext-remove-contact-button" 
+	                data-safetext-contact="<?php echo $this->getValue('contact'); ?>"
+					data-rel="back" data-transition="flow"><?php echo $this->t('Remove'); ?></a></div>
+            </fieldset>
+        </div>
+    </div>
+    <!-- /remove contact popup -->
+	
+	<?php echo $this->render('webclient/_footer.phtml'); ?>
+		
+</div> <!--/page-->

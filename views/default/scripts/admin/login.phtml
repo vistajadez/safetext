@@ -1,59 +1,49 @@
-<div data-role="page" class="safetext-page safetext-register">
+<div data-role="page" class="safetext-page safetext-login">
 		
 		<?php echo $this->render('front/_leftpanel.phtml'); ?>
+		<?php //echo $this->render('front/_header_no_nav.phtml'); ?>
 		<?php echo $this->render('front/_login_header.phtml'); ?>
-
-
+		
 		<div class="loginmenumobile">
 			<ul>
 				<li>Menu
 					<ul>
 
-						<li><a  href="https://safe-text.com/">Home</a></li>
-						<li ><a href="https://safe-text.com/the-company/" >The Company</a></li>
-						<li ><a href="https://safe-text.com/the-app/" >The App</a></li>
-						<li ><a href="https://safe-text.com/the-difference/" >The Difference</a></li>
-						<li ><a href="/web-client/" >Join/Login</a></li>
+						<li><a  href="http://st.maxdistro.com/">Home</a></li>
+						<li ><a href="http://st.maxdistro.com/the-company/" >The Company</a></li>
+						<li ><a href="http://st.maxdistro.com/the-app/" >The App</a></li>
+						<li ><a href="http://st.maxdistro.com/the-difference/" >The Difference</a></li>
+						<li ><a href="http://st.maxdistro.com/web-client/" >Join/Login</a></li>
 					</ul>
 				</li>        
 			</ul>
 		</div>
-
-            <div data-role="content" class="safetext-content safetext-backsplash" data-theme="a">
+		
+		<div data-role="content" class="safetext-content safetext-backsplash" data-theme="a">
 			<!-- login grid -->
 			<div class="content" style="margin-top:90px;">
 			
 			<div class="login">
-
-                <div class="fleft"> <span style="font-size: 30px; font-weight: normal;text-align: center;display: block;margin-top: 25px; color: #333;">Already registered?</span>
-
+                <div class="fleft"> <span style="font-size: 30px; font-weight: normal;text-align: center;display: block;margin-top: 25px; color: #333;">Administration</span>
+                    <br>
                 
                     <div style="text-align:center"><img src="/assets/images/splash.png" width="100%" class="logonlogin">
                     </div>
-                    <p style="" class="regp"><a href="/auth/login" class="rg regbut" >Sign In Now</a>
                     </p>
                 </div>
-
-                <div class="fright"> 
-                                        <h3><?php echo $this->t('Register a New Account'); ?></h3>
-					<p><?php echo $this->t('Sign up for Safe Text by completing the registration below.'); ?></p>
-					<form class="safetext-register-form">
-					<input type="text" name="name" placeholder="<?php echo $this->t('Your Alias (optional)'); ?>" data-clear-btn="true" data-theme="a" />
-					<input type="text" name="username" placeholder="<?php echo $this->t('Select a Username'); ?>" data-clear-btn="true" data-theme="a" />
-					<input type="text" name="email" placeholder="<?php echo $this->t('Email (optional)'); ?>" data-clear-btn="true" data-theme="a" />
-                                        <input type="password" name="password" placeholder="<?php echo $this->t('Select a Password'); ?>" data-clear-btn="true" data-theme="a" />
-
-
+				<div class="fright"> <span style="font-size:16px;">Sign In</span>
+					<form class="safetext-admin-login-form">
+					<input type="text" name="name" id="username" placeholder="<?php echo $this->t('Username'); ?>" data-clear-btn="true" value="<?php echo $_COOKIE['username']; ?>" />
+					<input type="password" name="password" id="password" placeholder="<?php echo $this->t('Password'); ?>" data-clear-btn="true" value="<?php echo $_COOKIE['password']; ?>" />
+						<br>
 						<div data-role="fieldcontain">
-                                                <button type="button" class="ui-btn ui-btn-inline ui-icon-carat-r ui-btn-icon-right ui-corner-all safetext-register-button"><?php echo $this->t('Register'); ?></button>
-
+						<button type="submit" class="ui-btn ui-btn-inline ui-icon-carat-r ui-btn-icon-right ui-corner-all safetext-admin-login-button"><?php echo $this->t('Login'); ?></button>
 						</div>
 						<br>
 					</form>
 					<div class="mobileaccount">
-                        <div class="txt"></div>
-                        <p style="" class="regp"><a href="/auth/login" class="rg regbut" >Sign In Now</a>
-                    </p>
+                        <div class="txt">Administration</div>
+                        <p style="" class="regp"></p>
                     </div>
 				</div>
                 <div class="clear"></div>
@@ -62,8 +52,10 @@
 
 		</div>
 		</div>
-   
-        <style>
+					
+	
+	<?php //echo $this->render('front/_footer.phtml'); ?>
+<style>
 	#login { display:none; }	
     .regp{text-align: center;margin-top: -190px;}
 		.ui-panel-wrapper {
@@ -246,5 +238,3 @@
 
         </style>
 </div> <!--/page-->
-
-	    <!-------------->

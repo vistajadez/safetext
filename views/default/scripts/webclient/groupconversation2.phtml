@@ -1,0 +1,52 @@
+						<div class="conversation_main">
+							
+							<?php 
+							
+							foreach ($this->getValue('conversation') as $this_message) : ?>
+							<div class="<?php if ($this_message->sender_id === $this->getValue('user')->id) echo 'bubble bubble--alt'; else echo 'bubble'; ?>" data-id="<?php echo $this_message->id; ?>" style="margin-bottom: 14px;">
+							<?php echo $this_message->content; ?>
+							<?php if ($this_message->image != ''): ?>
+					    			<a class="example-image-link" href="/assets/images/users/<?php echo $this_message->image_name; ?>-l.jpg" data-lightbox="ss">
+								<img src="/assets/images/users/<?php echo $this_message->image_name; ?>-s.jpg" />
+								</a>	
+					    	<?php endif; ?>
+							<br>
+							<?php
+							//Get Browser Time Zone
+							$date = new DateTime($this_message->sent_date, new DateTimeZone('Europe/Berlin'));
+							$date->setTimezone(new DateTimeZone($this->getValue('timezone')));
+							$result = $date->format('Y-m-d H:i:s');
+					    			
+					    			
+						    //$date = explode(" ",$result);
+						    $date1 = date_create($result);
+						    $date_format = date_format($date1, 'l jS F Y g:ia');
+						    $new_format = explode(" ",$date_format);
+						    //print_r($new_format);
+						    $day = substr($new_format[0],0,3);
+						    $month = substr($new_format[2],0,3);
+						    		
+						    echo $day.', '.$new_format[1].' '.$month.' '.$new_format[3].' '.$new_format[4]
+							?>
+							
+							<?php
+									if ($this_message->sender_id === $this->getValue('user')->id) {
+					    			if($this_message->tot_read==0) {?>
+					    			<img src="/assets/images/tick.png">
+					    			<?php } else { ?>
+					    			<img src="/assets/images/right.png">
+					    			<?php }
+									}
+							?>
+							
+							<br>
+							<?php if ($this_message->sender_id != $this->getValue('user')->id) { ?>
+							-----<?php echo $this_message->sender_name; ?>
+							<?php }?>
+							</div>
+							<br>
+							<?php endforeach; 
+							
+							?>
+							
+						</div>

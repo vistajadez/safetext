@@ -1,9 +1,9 @@
-<div data-role="page" class="safetext-page safetext-register">
+<div data-role="page" class="safetext-page safetext-login">
 		
 		<?php echo $this->render('front/_leftpanel.phtml'); ?>
+		<?php //echo $this->render('front/_header_no_nav.phtml'); ?>
 		<?php echo $this->render('front/_login_header.phtml'); ?>
-
-
+		
 		<div class="loginmenumobile">
 			<ul>
 				<li>Menu
@@ -18,41 +18,44 @@
 				</li>        
 			</ul>
 		</div>
-
-            <div data-role="content" class="safetext-content safetext-backsplash" data-theme="a">
+		
+		<div data-role="content" class="safetext-content safetext-backsplash" data-theme="a">
 			<!-- login grid -->
 			<div class="content" style="margin-top:90px;">
 			
 			<div class="login">
-
-                <div class="fleft"> <span style="font-size: 30px; font-weight: normal;text-align: center;display: block;margin-top: 25px; color: #333;">Already registered?</span>
-
+                <div class="fleft"> <span style="font-size: 30px; font-weight: normal;text-align: center;display: block;margin-top: 25px; color: #333;">Don't have an account?</span>
+                    <br>
                 
                     <div style="text-align:center"><img src="/assets/images/splash.png" width="100%" class="logonlogin">
                     </div>
-                    <p style="" class="regp"><a href="/auth/login" class="rg regbut" >Sign In Now</a>
+                    <p style="" class="regp"><a href="/auth/register" class="rg regbut" >Register Now</a>
                     </p>
                 </div>
-
-                <div class="fright"> 
-                                        <h3><?php echo $this->t('Register a New Account'); ?></h3>
-					<p><?php echo $this->t('Sign up for Safe Text by completing the registration below.'); ?></p>
-					<form class="safetext-register-form">
-					<input type="text" name="name" placeholder="<?php echo $this->t('Your Alias (optional)'); ?>" data-clear-btn="true" data-theme="a" />
-					<input type="text" name="username" placeholder="<?php echo $this->t('Select a Username'); ?>" data-clear-btn="true" data-theme="a" />
-					<input type="text" name="email" placeholder="<?php echo $this->t('Email (optional)'); ?>" data-clear-btn="true" data-theme="a" />
-                                        <input type="password" name="password" placeholder="<?php echo $this->t('Select a Password'); ?>" data-clear-btn="true" data-theme="a" />
-
-
+				<div class="fright"> <span style="font-size:16px;">Sign In</span>
+					<form class="safetext-login-form">
+					<input type="text" name="name" value="<?php echo $this->getValue('username'); ?>" placeholder="<?php echo $this->t('Username'); ?>" data-clear-btn="true" />
+					<input type="password" name="password" value="" placeholder="<?php echo $this->t('Password'); ?>" data-clear-btn="true" />
+						<table width="100%" cellpadding="0" cellspacing="0" class="logintable">
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" name="keep_login" value="1"> <span class="ksignin">Keep me Signed in</span>
+                                    </td>
+                                    <td align="right"><a href="javascript:void(0)" onclick="#">Forgot Password</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <br>
 						<div data-role="fieldcontain">
-                                                <button type="button" class="ui-btn ui-btn-inline ui-icon-carat-r ui-btn-icon-right ui-corner-all safetext-register-button"><?php echo $this->t('Register'); ?></button>
-
+						<button type="submit" class="ui-btn ui-btn-inline ui-icon-carat-r ui-btn-icon-right ui-corner-all safetext-login-button"><?php echo $this->t('Login'); ?></button>
 						</div>
 						<br>
 					</form>
 					<div class="mobileaccount">
-                        <div class="txt"></div>
-                        <p style="" class="regp"><a href="/auth/login" class="rg regbut" >Sign In Now</a>
+                        <div class="txt">Don't have an account?</div>
+                        <p style="" class="regp"><a href="/auth/register" class="rg regbut" >Register Now</a>
                     </p>
                     </div>
 				</div>
@@ -62,8 +65,10 @@
 
 		</div>
 		</div>
-   
-        <style>
+					
+	
+	<?php //echo $this->render('front/_footer.phtml'); ?>
+<style>
 	#login { display:none; }	
     .regp{text-align: center;margin-top: -190px;}
 		.ui-panel-wrapper {
@@ -246,5 +251,3 @@
 
         </style>
 </div> <!--/page-->
-
-	    <!-------------->

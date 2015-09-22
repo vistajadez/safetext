@@ -18,6 +18,7 @@ class SafetextLog
 	 * @return void
 	 */
 	public function write($message, $title='') {
+	//return; // logging is currently disabled - 11/20/2014
 		$entry = '';
 		
 		if ($title != '') {

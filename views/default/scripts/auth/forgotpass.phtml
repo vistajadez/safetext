@@ -1,0 +1,42 @@
+<div data-role="page" class="safetext-page safetext-resetpassword" data-title="<?php echo $this->t('Forgot Password'); ?>">
+		
+		<?php echo $this->render('front/_leftpanel.phtml'); ?>
+		<?php //echo $this->render('front/_header.phtml'); ?>
+		<?php echo $this->render('front/_login_header.phtml'); ?>
+	
+	   <div data-role="content" class="safetext-content" data-theme="a">
+
+	   <h2><?php echo $this->t('Forgot Password'); ?></h2>
+	   <p>
+      	<?php echo $this->t('Please enter your username to reset your password'); ?>.
+	   </p>
+
+       <div class="safetext-login-form">
+              <div class="ui-bar ui-bar-a">
+                <h3><?php echo $this->t('Username'); ?></h3>
+              </div>
+              
+              <div class="ui-body ui-body-b">
+                    <form class="safetext-forgotpass-form">
+                        <ul data-role="listview" data-inset="true" data-theme="a">                            
+                            <li class="ui-field-contain" style="width:95%">
+							    <label for="password"><?php echo $this->t('Username'); ?>:</label>
+							    <input type="text" name="username" id="username" data-clear-btn="true">
+							</li>
+                                                               
+                            <li class="ui-body ui-body-b" style="width:97%">
+                                <fieldset class="ui-grid-a">
+                                        <button type="button" class="ui-btn ui-corner-all ui-btn-a forgotpassbtn"><?php echo $this->t('Submit'); ?></button>
+                                </fieldset>
+                            </li>
+                        </ul>
+                    </form>
+              </div>
+        </div>
+	    <br /><br />
+	    </div><!-- /content -->
+	    
+	    
+	<?php echo $this->render('front/_footer.phtml'); ?>
+		
+</div> <!--/page-->

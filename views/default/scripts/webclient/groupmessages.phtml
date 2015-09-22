@@ -1,0 +1,70 @@
+<div data-role="page" class="safetext-page safetext-contacts" data-title="<?php if ($this->getValue('filter') === 'blocked') echo $this->t('Blocked'); ?> <?php echo $this->t('Groups'); ?>">
+		
+		<?php echo $this->render('webclient/_leftpanel.phtml'); ?>
+		<?php echo $this->render('webclient/_header.phtml'); ?>
+	
+	    <div data-role="content" class="safetext-content" data-theme="a">
+	    	
+		    <div class="safetext-client-grid">
+		    	<!-- Left-hand Folder Column -->
+			    <div class="safetext-block-a">
+			    	<div class="ui-body ui-body-d">
+					    <div><a href="/webclient/groupcontacts" class="safetext-add-contact-button ui-btn ui-icon-plus ui-btn-icon-left ui-corner-all ui-shadow"><?php echo $this->t('Add Group'); ?></a></div>
+					    <?php echo $this->render('webclient/_foldermenu.phtml'); ?>
+					</div>
+			    </div>
+			    
+			    <!-- Main Content Column -->
+			    <div class="safetext-block-b">
+			    	<div class="ui-body ui-body-d">
+				    	<div class="ui-grid-a safetext-mobile-hidden">
+						    <div class="ui-block-a" style="width:49.5%;float:left;clear:none"><a href="/webclient/contacts" class="ui-btn ui-corner-all ui-btn-icon-left ui-icon-user">Contacts</a></div>
+						    <div class="ui-block-a" style="width:49.5%;float:left;clear:none"><a href="/webclient/groupmessages" class="ui-btn ui-corner-all ui-btn-icon-left ui-icon-user ui-btn-active">Groups</a></div>
+						</div>
+						
+						<div class="contactListWrapper">
+						    <ul data-role="listview" data-autodividers="true" data-split-icon="edit" data-filter="true" data-inset="true">
+						    <?php //print_r($this->getValue('groups'));?>
+						    	<?php foreach ($this->getValue('groups') as $this_group) : ?>
+						    		<li>
+									<?php
+									$url = "/webclient/groupconversation/group_id/".$this_group->id."/participants_id/".$this_group->participants_id;
+									?>
+									<a href="#" onclick="timezone('<?php echo $url;?>');">
+									<h2><?php if($this_group->group_user_name!="") { echo $this_group->group_user_name; } else { echo $this_group->group_name; }?></h2>
+									</a>
+									<a href="/webclient/groupedit/id/<?php echo $this_group->id;?>"></a>
+									</li>
+						    	<?php endforeach; ?>
+							</ul>
+						</div>
+						    
+			    	</div>
+			    </div>
+
+			</div>
+	    
+	    </div><!-- /content -->
+	
+	<?php echo $this->render('webclient/_footer.phtml'); ?>
+		
+</div> <!--/page-->
+
+<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jstimezonedetect/1.0.4/jstz.min.js"></script>
+<script type="text/javascript">
+
+function timezone(redirect_url) {
+	
+	//alert(redirect_url);
+	var tz = jstz.determine(); 
+	var timezone1 = tz.name();
+	
+	var timezone2 = timezone1.split("/");
+	var timezone = timezone2[0]+"-"+timezone2[1];
+	
+	var url = redirect_url+"/timezone/"+timezone;
+	window.location.href = url;
+	
+}
+</script>

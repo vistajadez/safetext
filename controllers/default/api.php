@@ -30,7 +30,32 @@ class ApiController extends MsController {
 		}
 	 }
 	 
-
+	 public function lifetimeAction(&$viewObject) {
+	 	
+	 	$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+	 	// ensure we're using http
+	 	array_key_exists('user_id', $this->params)? $user_id= $this->params['user_id']: $user_id= '';
+		array_key_exists('lifetime', $this->params)? $lifetime= $this->params['lifetime']: $lifetime= '';
+		
+		$result = current($db->query("UPDATE users SET expiretime='$lifetime' WHERE id='$user_id'"));
+		echo "Success";
+	 }
+	 
+	 public function bubblecolorAction(&$viewObject) {
+	 	
+	 	$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+	 	// ensure we're using http
+	 	array_key_exists('user_id', $this->params)? $user_id= $this->params['user_id']: $user_id= '';
+		array_key_exists('color', $this->params)? $color= $this->params['color']: $color= '';
+		$check = current($db->query("SELECT id FROM bubble_color WHERE user_id = '$user_id'"));
+		if($check[0]['id'] == "") {
+                $sql_insert = "INSERT INTO bubble_color(user_id,color) VALUES($user_id,'$color')";
+		$result = current($db->query($sql_insert));
+                }
+		else
+		$result = current($db->query("UPDATE bubble_color SET color='$color' WHERE user_id='$user_id'"));
+		echo "Success";
+	 }
 
 	/**
 	 * Auth Action.
@@ -64,9 +89,13 @@ class ApiController extends MsController {
 				
 									// generate token via db stored procedure
 									require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
-									$tokenDetails = SafetextUser::generateToken($_SERVER['HTTP_X_SAFETEXT_USERNAME'], $_SERVER['HTTP_X_SAFETEXT_PASSWORD'], $this->params['device_signature'], $this->params['device_description'], $ios_id, $android_id, $db, $this->config);
+									$tokenDetails = SafetextUser::generateToken($_SERVER['HTTP_X_SAFETEXT_USERNAME'], md5($_SERVER['HTTP_X_SAFETEXT_PASSWORD']), $this->params['device_signature'], $this->params['device_description'], $ios_id, $android_id, $db, $this->config);
 									
 									if ($tokenDetails['id'] > 0) {
+
+                                                                                //set panic to zero
+										$updatePanic = current($db->CALL("UpdatePanicButton('".$tokenDetails['id']."')"));
+
 									
 										$viewObject->setValue('status', 'success');
 										$viewObject->setValue('data', array('token' => $tokenDetails['token'], 'user' => $tokenDetails['id']));
@@ -260,8 +289,8 @@ class ApiController extends MsController {
 										// check all message options
 										array_key_exists('is_important', $this->params)? $is_important = $this->params['is_important']: $is_important = '0';
 										array_key_exists('is_draft', $this->params)? $is_draft = $this->params['is_draft']: $is_draft = '0';
-										array_key_exists('lifetime', $this->params)? $lifetime = $this->params['lifetime']: $lifetime = '24';
-										if ($lifetime > 24) $lifetime = 24; // message lifetime cannot be more than 24 hrs
+										array_key_exists('lifetime', $this->params)? $lifetime = $this->params['lifetime']: $lifetime = '1440';
+										if ($lifetime > 1440) $lifetime = 1440; // message lifetime cannot be more than 24 hrs
 										array_key_exists('image', $this->params)? $image = $this->params['image']: $image = '';
 										
 										// log the send message request
@@ -277,13 +306,24 @@ class ApiController extends MsController {
 											
 											// send device notification(s) to recipient
 											$recipientSettings = current($db->CALL("getSettings('" . current($this->params['recipients']) . "')"));
+											
+											
 											if ($recipientSettings['notifications_on'] == '1') {
 												// load all registered devices
 												$devicesArray = $db->call("devices('" . current($this->params['recipients']) . "')");
 												$devices = new SafetextModelCollection('SafetextDevice', $this->config, $db);
 												$devices->load($devicesArray);
 												//foreach ($devices as $this_device) $this_device->sendNotification($user->fullName() . ': ' . $this->params['content']);
-												foreach ($devices as $this_device) $this_device->sendNotification('You received a new message');
+												
+												foreach ($devices as $this_device) 
+												{
+												//$val_is_read = current($db->CALL("getisread('" .current($this->params['recipients']). "')"));
+												$value_unread = current($db->CALL("getgroupisread('" .current($this->params['recipients']). "')"));
+											
+												$badge = $value_unread['tot_unread'];
+												
+												$this_device->sendNotification('You have a new Safe Text',$badge,current($this->params['recipients']));
+												}	
 											}
 											
 											// load successful output into view
@@ -338,6 +378,145 @@ class ApiController extends MsController {
 		}
 	}
 	
+	
+	/** Group Message
+	 */
+	 
+	 public function groupmessagesAction(&$viewObject) {
+	 	$viewObject->setResponseType('json');
+		
+		// ensure we're using https
+		if (MS_PROTOCOL === 'https') {
+			if (MS_REQUEST_METHOD === 'POST') {
+				if (array_key_exists('HTTP_X_SAFETEXT_TOKEN', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_TOKEN'] !== '') {
+					
+					// Create a database connection to share
+					$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+					
+					// authenticate token with stored procedure
+					require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
+					$user = SafetextUser::tokenToUser($_SERVER['HTTP_X_SAFETEXT_TOKEN'], $db, $this->config);
+					
+					if ($user instanceof SafetextUser && $user->isValid()) {
+						if ($user->getRelationship('device') instanceof SafetextDevice && $user->getRelationship('device')->isValid()) {
+							if (array_key_exists('group_id', $this->params)) {
+								if (array_key_exists('content', $this->params)) {
+									if (strlen($this->params['content']) <= $this->config['maxMessageLength']) {
+										
+										array_key_exists('is_important', $this->params)? $is_important = $this->params['is_important']: $is_important = '0';
+										array_key_exists('is_draft', $this->params)? $is_draft = $this->params['is_draft']: $is_draft = '0';
+										array_key_exists('lifetime', $this->params)? $lifetime = $this->params['lifetime']: $lifetime = '1440';
+										if ($lifetime > 1440) $lifetime = 1440; // message lifetime cannot be more than 24 hrs
+										array_key_exists('image', $this->params)? $image = $this->params['image']: $image = '';
+										
+										// log the send message request
+										$this->config['log']->write('User: ' . $user->id . ", Device: " . $user->getRelationship('device')->id . ", image: " . $image, 'Send Group Message Request');
+										$this->config['log']->write('Request body: ' . file_get_contents('php://input'));
+										
+										// get participants id from group id
+										$participants = current($db->query("SELECT participants_id FROM groups WHERE id = '".$this->params['group_id']."'"));
+										$participants_a = explode(",",$participants[0]['participants_id']);
+										
+										$count = count($participants_a);
+										
+										$key = array_search($user->id, $participants_a);
+										unset($participants_a[$key]);
+										
+										$sql_username = "SELECT `username` FROM `users` WHERE `id` IN (".$participants[0]['participants_id'].")";
+										$f_username = current($db->query($sql_username));
+										
+										foreach($f_username as $this_username) {
+											$arr_username[] = $this_username['username'];
+										}
+										$username = implode(",",$arr_username);
+										
+										$sql_sender_username = "SELECT `username` FROM `users` WHERE `id`='".$user->id."'";
+										$f_sender_username = current($db->query($sql_sender_username));
+										
+										// execute send via stored procedure
+										$cipher = new SafetextCipher($this->config['hashSalt']);
+										$result = current($db->call("sendGroupMessage('" . $user->id . "','" . $f_sender_username[0]['username'] . "','".$participants[0]['participants_id']."','" . $this->params['group_id'] . "','" . $this->escapeForDb($cipher->encrypt($this->params['content'])) . "','" . $is_important . "','" . $is_draft . "','" . $lifetime . "','" . $image . "')"));
+										
+										/*send notification*/
+										for($i=0;$i<$count;$i++) {
+										
+										
+										$recipientSettings = current($db->CALL("getSettings('" .$participants_a[$i]. "')"));
+										
+										if ($recipientSettings['notifications_on'] == '1') {
+										
+										$devicesArray = $db->call("devices('".$participants_a[$i]."')");
+										$devices = new SafetextModelCollection('SafetextDevice', $this->config, $db);
+										$devices->load($devicesArray);		
+
+											foreach ($devices as $this_device) {
+											
+												$value_unread = current($db->CALL("getgroupisread('" .$participants_a[$i]. "')"));
+												
+												$badge = $value_unread['tot_unread'];
+												
+												$this_device->sendNotification('You have a new Safe Text',$badge);
+							 
+											}	
+										
+										}
+										
+										}
+										/*notification end*/
+										
+										// load successful output into view
+										$viewObject->setValue('status', 'success');
+										$viewObject->setValue('token', $user->getRelationship('device')->token);
+										$viewObject->setValue('data', array('key' => $result['key']));
+									}
+									else { // content exceeds max message length
+										$viewObject->setValue('status', 'fail');
+										$viewObject->setValue('token', $user->getRelationship('device')->token);
+										$viewObject->setValue('data', array('message' => 'Message length cannot exceed ' . $this->config['maxMessageLength']));
+									}
+								}	
+								else { // no content
+									$viewObject->setValue('status', 'fail');
+									$viewObject->setValue('token', $user->getRelationship('device')->token);
+									$viewObject->setValue('data', array('message' => 'Empty message'));
+									$this->config['log']->write('Fail: Empty message');
+								}
+							}
+							else { // no recipients listed
+								$viewObject->setValue('status', 'fail');
+								$viewObject->setValue('token', $user->getRelationship('device')->token);
+								$viewObject->setValue('data', array('message' => 'Group Id Empty'));
+								$this->config['log']->write('Fail: Group Id Empty');
+							}
+						}
+						else { // invalid device
+							$viewObject->setValue('status', 'fail');
+							$viewObject->setValue('data', array('message' => 'Problem trying to load device details for that token'));
+						}
+					}
+					else { // invalid token
+						$viewObject->setValue('status', 'fail');
+						$viewObject->setValue('data', array('message' => 'That auth token is not valid'));
+					}
+				}
+				else { // no username
+					$viewObject->setValue('status', 'fail');
+					$viewObject->setValue('data', array('message' => 'Missing SafeText auth token. Please log in'));
+				}
+			}
+			else { // non-POST request
+				$viewObject->setValue('status', 'fail');
+				$viewObject->setValue('data', array('message' => MS_REQUEST_METHOD . ' requests are not supported for this web service'));
+			}
+		}
+		else { // insecure
+			$viewObject->setValue('status', 'fail');
+			$viewObject->setValue('data', array('message' => 'Insecure (non-HTTPS) access denied'));
+		}	
+	 
+	 }
+	  
+	 
 	
 	/**
 	 * Sync Action.
@@ -512,6 +691,8 @@ class ApiController extends MsController {
 						// load output into view
 						$viewObject->setValue('status', 'success');
 						$viewObject->setValue('token', $user->getRelationship('device')->token);
+						$viewObject->setValue('timezone', date_default_timezone_get());
+						$viewObject->setValue('timezone_short', date('T'));
 						$viewObject->setValue('data', $result);
 						
 						// log the request
@@ -529,10 +710,85 @@ class ApiController extends MsController {
 						array_key_exists('notifications_on', $this->params)? $notifications_on = $this->params['notifications_on']: $notifications_on = '0';
 						array_key_exists('whitelist_only', $this->params)? $whitelist_only = $this->params['whitelist_only']: $whitelist_only = '0';
 						array_key_exists('enable_panic', $this->params)? $enable_panic = $this->params['enable_panic']: $enable_panic = '0';
-						
+						array_key_exists('notes', $this->params)? $notes = $this->params['notes']: $notes = '';
+
+
+                                                array_key_exists('timedelay', $this->params)? $timedelay = $this->params['timedelay']: $timedelay = '0';
+						array_key_exists('fonts', $this->params)? $fonts = $this->params['fonts']: $fonts = 'Small';
+						array_key_exists('bubblecolor', $this->params)? $bubblecolor = $this->params['bubblecolor']: $bubblecolor = 'Default';
+						array_key_exists('expiretime', $this->params)? $expiretime = $this->params['expiretime']: $expiretime = '1440';
+
 						if (strlen($username) > 3 && strlen($username) < 17) {
 							// Put settings via stored procedure
-							$result = current($db->CALL("putSettings('" . $user->id . "','$username','$firstname','$lastname','$email','$phone','$pass','$language','$notifications_on','$whitelist_only','$enable_panic')"));
+							$cipher = new SafetextCipher($this->config['hashSalt']);
+							
+							$result = current($db->CALL("putSettings('" . $user->id . "','$username','$firstname','$lastname','$email','$phone','".md5($pass)."','$language','$notifications_on','$whitelist_only','$enable_panic','$notes','$timedelay','$fonts','$bubblecolor','$expiretime')"));
+
+                                                        /* For enabling Panic Button */
+							
+							if($enable_panic==1) {
+								$groupsArray = $db->call("getGroupDetails('" . $user->id . "')");
+								foreach ($groupsArray as $this_group) {
+									$participants_id = explode(",",$this_group['participants_id']);
+									$new_participants_id = array_diff($participants_id,array($user->id));
+									$cur_participants = implode(",",$new_participants_id);
+									
+									$resultUpdate = current($db->CALL("UpdateParticipants('" . $cur_participants . "','".$this_group['id']."')"));	
+
+                                                                        // Send Group Name to Sync
+									
+									$array_cur_participants = explode(",",$cur_participants);
+									$participants = array_values($array_cur_participants);
+									//print_r($participants);
+									$count = count($participants);
+									
+									for($k=0;$k<$count;$k++) {
+							
+									$o_participant = array();
+									$o_participant = array_diff($participants, array($participants[$k]));
+									
+									//echo $participants[$k];
+									//print_r($o_participant);
+									$count_username = count($participants);	
+									
+									$username1 = array();
+									for($j=0;$j<$count_username;$j++) {
+							
+									//echo "getGroupUsername('".$o_participant[$j]."','".$participants[$k]."')";
+									$f_username = current($db->call("getGroupUsername('".$o_participant[$j]."','".$participants[$k]."')"));
+									if($f_username['name']!="")
+									$username1[] = $f_username['name'];
+									else if($f_username['username']!="")
+									$username1[] = $f_username['username'];
+									}
+									
+									$username1 = implode(",",$username1);
+							
+									$user_group_name = current($db->call("checkGroupname('".$this_group['id']."','".$participants[$k]."')"));
+									if($user_group_name['group_name']!="") {
+										$group_name = $user_group_name['group_name'];
+									}
+									else {
+										$sql_group_name = "SELECT `group_name` FROM groups WHERE `id`='".$this_group['id']."'";
+										$f_group_name = current($db->query($sql_group_name));
+									
+										$group_name = $f_group_name[0]['group_name'];
+									}
+										//echo $group_name;
+										
+										$result = current($db->call("syncGroupContactDelete('".$group_name."','".$this_group['id']."','".$participants[$k]."','".$cur_participants."','".$username1."')"));
+							
+									}	
+									
+									//End Sync								
+								}
+								// call enablePanicButton procedure
+								$deleteAll = current($db->CALL("enablePanicButton('" . $user->id . "')"));
+								
+							}
+							
+							/* End */
+
 							if (!$result['msg']) {
 								$viewObject->setValue('status', 'success');
 								$viewObject->setValue('token', $user->getRelationship('device')->token);
@@ -646,7 +902,7 @@ class ApiController extends MsController {
 	 * @param MsView $viewObject
 	 * @return void
 	 */
-	 public function usersAction(&$viewObject) {
+	 public function usersAction(&$viewObject) { 
 		$viewObject->setResponseType('json');
 		
 		// ensure we're using https
@@ -671,9 +927,15 @@ class ApiController extends MsController {
 											array_key_exists('email', $this->params)? $email = $this->escapeForDb($this->params['email']): $email = '';
 											
 											require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
-											$tokenDetails = SafetextUser::newUser($_SERVER['HTTP_X_SAFETEXT_USERNAME'], $_SERVER['HTTP_X_SAFETEXT_PASSWORD'], $this->params['name'], $email, $this->params['device_signature'], $this->params['device_description'], $ios_id, $android_id, $db, $this->config);
+											$tokenDetails = SafetextUser::newUser($_SERVER['HTTP_X_SAFETEXT_USERNAME'], md5($_SERVER['HTTP_X_SAFETEXT_PASSWORD']), $this->params['name'], $email, $this->params['device_signature'], $this->params['device_description'], $ios_id, $android_id, $db, $this->config);
 											
 											if ($tokenDetails['id'] > 0) {
+											
+												$datetime = new DateTime();
+												$datetime->modify('+1 months');
+								
+												$sql_account_status = "UPDATE `users` SET `subscription_level`='30',`subscription_expires`='".$datetime->format('Y-m-d')."' WHERE `username`='".$_SERVER['HTTP_X_SAFETEXT_USERNAME']."'";
+												$q_account_status = current($db->query($sql_account_status));
 											
 												$viewObject->setValue('status', 'success');
 												$viewObject->setValue('data', array('token' => $tokenDetails['token'], 'user' => $tokenDetails['id']));
@@ -797,7 +1059,7 @@ class ApiController extends MsController {
 										$db->CALL("syncContact('" . $user->id . "','" . $this->params['contact'] . "','" . $name . "','" . $email . "','" . $phone . "','" . $whitelist . "','" . $blocked . "')");
 										
 										// if we're blocking the contact, delete this user as the blockee's contact, if exists
-										if ($blocked == '1') $db->CALL("syncContactDelete('" . $this->params['contact'] . "', '" . $user->id . "')");
+										if ($blocked == '1') $db->CALL("syncBlockContactDelete('" . $this->params['contact'] . "', '" . $user->id . "')");
 										
 											
 										// send feedback to client
@@ -1000,13 +1262,38 @@ $this->config['log']->write('call: ' . "syncMessage('" . $user->id . "','" . $th
 						$file = current($_FILES);
 						if(isset($file) && is_uploaded_file($file['tmp_name'])) {
 							
+							$status = "";
 							$ImageName 		= str_replace(' ','-',strtolower($file['name'])); //get image name
 							$ImageSize 		= $file['size']; // get original image size
 							$TempSrc	 	= $file['tmp_name']; // Temp name of image file stored in PHP tmp folder
-							$ImageType	 	= $file['type']; //get file type, returns "image/png", image/jpeg, text/plain etc.
+							//$ImageType	 	= $file['type']; //get file type, returns "image/png", image/jpeg, text/plain etc.
+							
+							$ImageType1 = end(explode(".",$file['name']));
+							$ImageType = strtolower($ImageType1);
+							
+							if($ImageType=='jpeg' || $ImageType=='pjpeg' || $ImageType=='jpg')
+							{
+								$CreatedImage = imagecreatefromjpeg($file['tmp_name']);
+							}
+							else if($ImageType=='png')
+							{
+								$CreatedImage =  @imagecreatefrompng($file['tmp_name']);
+								if($CreatedImage==false) {
+								    $CreatedImage = true;
+									$status = "upload";
+								}
+							}
+							else if($ImageType=='gif')
+							{
+								$CreatedImage =  imagecreatefromgif($file['tmp_name']);
+							}
+							else
+							{
+								$CreatedImage = false;
+							}
 							
 							//Let's check allowed $ImageType, we use PHP SWITCH statement here
-							switch(strtolower($ImageType))
+							/*switch(strtolower($ImageType))
 							{
 								case 'image/png':
 									//Create a new image from file 
@@ -1021,7 +1308,7 @@ $this->config['log']->write('call: ' . "syncMessage('" . $user->id . "','" . $th
 									break;
 								default:
 									$CreatedImage = false;
-							}
+							}*/
 							
 							if ($CreatedImage !== false) {
 								//PHP getimagesize() function returns height/width from image file stored in PHP tmp folder.
@@ -1035,10 +1322,54 @@ $this->config['log']->write('call: ' . "syncMessage('" . $user->id . "','" . $th
 								// base filename with prepended path
 								$NewImageDest = MS_PATH_BASE . DS . 'assets' . DS . 'images' . DS . 'users' . DS . $NewImageName;
 								
+								
+								if($status=="upload") {
+									
+									$path1 = MS_PATH_BASE . DS . 'assets' . DS . 'images' . DS . 'users' . DS . $NewImageName.'-s.jpg';
+									$path2 = MS_PATH_BASE . DS . 'assets' . DS . 'images' . DS . 'users' . DS . $NewImageName.'-m.jpg';
+									$path3 = MS_PATH_BASE . DS . 'assets' . DS . 'images' . DS . 'users' . DS . $NewImageName.'-l.jpg';
+									
+									move_uploaded_file($file['tmp_name'],$path1);
+									copy($path1,$path2);
+									copy($path1,$path3);
+									
+									$result = current($db->call("putImage('" . $user->id . "','$NewImageName')"));
+									if ($result['key'] != '') {
+						
+										$viewObject->setValue('status', 'success');
+										$viewObject->setValue('token', $user->getRelationship('device')->token);
+										$viewObject->setValue('data', array(
+											'key' => $result['key'],
+											'large' => MS_URL_BASE . '/assets/images/users/' . $NewImageName . '-l.jpg',
+											'medium' => MS_URL_BASE . '/assets/images/users/' . $NewImageName . '-m.jpg',
+											'small' => MS_URL_BASE . '/assets/images/users/' . $NewImageName . '-s.jpg',
+											'deletes_in' => round((strtotime($result['expire_date']) - time())/60)
+										));
+										
+										// log the request
+										$this->config['log']->write('User: ' . $user->id . ' (' . $user->username . ')', 'Image Upload');						
+									
+									} else {
+										$viewObject->setValue('status', 'fail');
+										$viewObject->setValue('token', $user->getRelationship('device')->token);
+										$viewObject->setValue('data', array('message' => $result['msg']));
+									}
+									
+								}
+								else {
 								//Resize image to Specified Size by calling resizeImage function.
-								if($this->_resizeImage($CurWidth,$CurHeight,$this->config['imagesLargeWidth'],$NewImageDest . '-l.jpg',$CreatedImage,$this->config['imagesQuality'])) {
-									$this->_resizeImage($CurWidth,$CurHeight,$this->config['imagesMediumWidth'],$NewImageDest . '-m.jpg',$CreatedImage,$this->config['imagesQuality']);
-									$this->_resizeImage($CurWidth,$CurHeight,$this->config['imagesSmallWidth'],$NewImageDest . '-s.jpg',$CreatedImage,$this->config['imagesQuality']);
+								$large_file = max($CurWidth,$CurHeight);
+								
+								if($large_file < 375) {
+									$large = 600;
+								}
+								else {
+									$large = $large_file;
+								}
+								
+								if($this->_resizeImage($CurWidth,$CurHeight,$large,$NewImageDest . '-l.jpg',$CreatedImage,$this->config['imagesQuality'])) {
+									$this->_resizeImage($CurWidth,$CurHeight,375,$NewImageDest . '-m.jpg',$CreatedImage,$this->config['imagesQuality']);
+									$this->_resizeImage($CurWidth,$CurHeight,150,$NewImageDest . '-s.jpg',$CreatedImage,$this->config['imagesQuality']);
 							
 									// store database reference and generate an image key
 									$result = current($db->call("putImage('" . $user->id . "','$NewImageName')"));
@@ -1068,6 +1399,8 @@ $this->config['log']->write('call: ' . "syncMessage('" . $user->id . "','" . $th
 									$viewObject->setValue('token', $user->getRelationship('device')->token);
 									$viewObject->setValue('data', array('message' => 'Unable to resize image'));
 								}
+							}
+							/* end */	
 							} else {
 								$viewObject->setValue('status', 'fail');
 								$viewObject->setValue('token', $user->getRelationship('device')->token);
@@ -1166,14 +1499,14 @@ $this->config['log']->write('call: ' . "syncMessage('" . $user->id . "','" . $th
 		if (MS_PROTOCOL === 'https') {
 			if (MS_REQUEST_METHOD === 'POST') {
 				if (array_key_exists('HTTP_X_SAFETEXT_CODE', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_CODE'] !== '') {
-					if (array_key_exists('password', $this->params) && $this->params['password'] !== '') {
+					if (array_key_exists('pass', $this->params) && $this->params['pass'] !== '') {
 						
 						// Create a database connection to share
 						$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
 	
 						// generate verification code
 						require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
-						$resultDetails = SafetextUser::resetPass($this->params['password'], $_SERVER['HTTP_X_SAFETEXT_CODE'], $db, $this->config);
+						$resultDetails = SafetextUser::resetPass(md5($this->params['pass']), $_SERVER['HTTP_X_SAFETEXT_CODE'], $db, $this->config);
 						
 						if ($resultDetails[id] > 0) {
 							$viewObject->setValue('status', 'success');
@@ -1249,9 +1582,9 @@ $this->config['log']->write('call: ' . "syncMessage('" . $user->id . "','" . $th
 		$NewCanves 			= imagecreatetruecolor($NewWidth, $NewHeight);
 		
 		// Resize Image
-		if(imagecopyresampled($NewCanves, $SrcImage,0, 0, 0, 0, $NewWidth, $NewHeight, $CurWidth, $CurHeight))
+		if(@imagecopyresampled($NewCanves, $SrcImage,0, 0, 0, 0, $NewWidth, $NewHeight, $CurWidth, $CurHeight))
 		{
-			imagejpeg($NewCanves,$DestFolder,$Quality);
+			@imagejpeg($NewCanves,$DestFolder,$Quality);
 			
 			//Destroy image, frees memory	
 			if(is_resource($NewCanves)) {imagedestroy($NewCanves);} 
@@ -1265,9 +1598,10 @@ $this->config['log']->write('call: ' . "syncMessage('" . $user->id . "','" . $th
 		$viewObject->setResponseType('json');
 		
 		$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
-		$result = $db->call("syncPull('3','8');");
-		
-		$test = '';
+		//$result = $db->call("syncPull('3','8');");
+		$result = $db->call("getGroupusername('97','100');");
+		print_r($result);
+		/*$test = '';
 		if (is_array($result)) {
 			foreach ($result as $row) {
 				foreach ($row as $key=>$val) {
@@ -1278,8 +1612,918 @@ $this->config['log']->write('call: ' . "syncMessage('" . $user->id . "','" . $th
 			$test = $result;
 		}
 		
-		$viewObject->setValue('Test', $test);
+		$viewObject->setValue('Test', $test);*/
+
+		echo date_default_timezone_get().date('T');
 		
 	}
+	
+	public function addgroupAction(&$viewObject) {
+	
+	 		$viewObject->setResponseType('json');
+	 	
+			if (MS_PROTOCOL === 'https') {
+		
+				if (MS_REQUEST_METHOD === 'POST') {
+				
+					if (array_key_exists('HTTP_X_SAFETEXT_TOKEN', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_TOKEN'] !== '') {
+					
+						$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+					
+						// authenticate token with stored procedure
+						require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
+						$user = SafetextUser::tokenToUser($_SERVER['HTTP_X_SAFETEXT_TOKEN'], $db, $this->config);
+			
+						if ($user instanceof SafetextUser && $user->isValid()) {
+						
+						array_key_exists('participants_id', $this->params)? $participants_id= $this->params['participants_id']: $participants_id= '';
+						array_key_exists('group_name', $this->params)? $group_name= $this->params['group_name']: $group_name= '';
+						
+						$sql_insert = "INSERT INTO groups(group_name,participants_id,token_id) VALUES('$group_name','$participants_id','".$_SERVER['HTTP_X_SAFETEXT_TOKEN']."')";
+						$result = current($db->query($sql_insert));
+						$message = "success";
+				
+						$sql_group_id = "SELECT id FROM groups ORDER BY id DESC LIMIT 1";
+						$f_group_id = current($db->query($sql_group_id));
+						
+						/*$sql_username = "SELECT `username` FROM `users` WHERE `id` IN (".$participants_id.")";
+						$f_username = current($db->query($sql_username));
+						
+						foreach($f_username as $this_username) {
+							$arr_username[] = $this_username['username'];
+						}
+						$username = implode(",",$arr_username);*/
+						
+						$participants = explode(",",$participants_id);
+						
+						$key = array_search($user->id, $participants);
+						unset($participants[$key]);
+							
+						$participants = array_values($participants);
+						$count_p = count($participants);
+						
+						
+						for($i=0;$i<$count_p;$i++) {
+						
+							$f_username = current($db->call("getGroupUsername('".$participants[$i]."','".$user->id."')"));
+							if($f_username['name']!="")
+							$username .= $f_username['name'];
+							else
+							$username .= $f_username['username'];
+							if($i<($count_p-1))
+							$username .= ",";
+						}
+
+                                                /* getting all username */
+						
+						$old_participants = explode(",",$participants_id);
+						//print_r($old_participants);
+						
+						$count = count($old_participants);
+						
+						for($j=0;$j<$count;$j++) {
+							
+							$username1 = array();
+							$o_participant = array();
+							
+							//$o_participant1 = $old_participants;
+							
+							$o_participant = array_diff($old_participants, array($old_participants[$j]));
+							
+							//print_r($o_participant);
+							
+							for($k=0;$k<$count;$k++) {
+								//echo "getGroupUsername('".$o_participant[$k]."','".$old_participants[$j]."')";
+								$f_username = current($db->call("getGroupUsername('".$o_participant[$k]."','".$old_participants[$j]."')"));
+								if($f_username['name']!="")
+								$username1[] = $f_username['name'];
+								else if($f_username['username']!="")
+								$username1[] = $f_username['username'];
+							}
+							
+							$username2 = implode(",",$username1);
+							
+							//echo $old_participants[$j]."--".$username2;
+							
+							//send to sync 
+							$result = current($db->call("syncAddGroup('".$user->id."','".$group_name."','".$f_group_id[0]['id']."','".$participants_id."','".$username2."','".$old_participants[$j]."')"));
+							
+						}
+						
+						/* end */
+
+						
+						
+						//$result = current($db->call("syncAddGroup('".$user->id."','".$group_name."','".$f_group_id[0]['id']."','".$participants_id."','".$username."')"));						
+			
+						$viewObject->setValue('status', $message);
+						$viewObject->setValue('data', array('group_name' => $group_name, 'group_id' => $f_group_id[0]['id'], 'participants_id' => $participants_id, 'participants_name' => $username, 'token' =>$user->getRelationship('device')->token));
+						
+						
+						}
+						else {
+						$viewObject->setValue('status', 'fail');
+						$viewObject->setValue('data', array('message' => 'Problem trying to load device details for that token'));
+						}
+					}
+					else { // no username
+						$viewObject->setValue('status', 'fail');
+						$viewObject->setValue('data', array('message' => 'Missing SafeText auth token. Please log in'));
+					}
+			}
+			else { // non-POST request
+				$viewObject->setValue('status', 'fail');
+				$viewObject->setValue('data', array('message' => MS_REQUEST_METHOD . ' requests are not supported for this web service'));
+			}
+		}
+		else {
+			$viewObject->setValue('status', 'fail');
+			$viewObject->setValue('data', array('message' => 'Insecure (non-HTTPS) access denied'));	
+		}				
+	 }
+	 
+	 public function deletegroupAction(&$viewObject) {
+	 	$viewObject->setResponseType('json');
+		
+		if (MS_PROTOCOL === 'https') {
+		
+			if (MS_REQUEST_METHOD === 'POST') {
+				
+				if (array_key_exists('HTTP_X_SAFETEXT_TOKEN', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_TOKEN'] !== '') {
+			
+					$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+					// ensure we're using http
+			
+					array_key_exists('group_id', $this->params)? $group_id= $this->params['group_id']: $group_id= '';
+					
+					require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
+					$user = SafetextUser::tokenToUser($_SERVER['HTTP_X_SAFETEXT_TOKEN'], $db, $this->config);
+			
+					if ($user instanceof SafetextUser && $user->isValid()) {
+					
+					$sql_participants = "SELECT participants_id FROM groups WHERE id = '$group_id'";
+					$participants = current($db->query($sql_participants));
+					
+					$sql_get_message = "SELECT message_id FROM group_message WHERE group_id = '$group_id'";
+					$f_get_message = current($db->query($sql_get_message));
+					
+					foreach($f_get_message as $this_message) {
+							$sql_del_sync = "DELETE FROM sync_queue WHERE tablename='messages' AND pk='".$this_message['message_id']."'";
+							$del_result = current($db->query($sql_del_sync));
+					}
+					
+					
+					
+					$sql_del_msg = "DELETE FROM group_message WHERE group_id = '$group_id'";
+					$q_del_msg = current($db->query($sql_del_msg));
+			
+					$sql_del = "DELETE FROM groups WHERE id = '$group_id'";
+					$result = current($db->query($sql_del));
+					
+										
+					
+					$result2 = current($db->call("syncGroupDelete('".$group_id."','".$participants[0]['participants_id']."')"));
+					
+					$message = "success";
+				
+					$viewObject->setValue('status', $message);
+					$viewObject->setValue('data', array('group_id' => $group_id, 'token' =>$user->getRelationship('device')->token));
+					}
+					else {
+						$viewObject->setValue('status', 'fail');
+						$viewObject->setValue('data', array('message' => 'Problem trying to load device details for that token'));
+					}
+				}	
+				else { // no username
+					$viewObject->setValue('status', 'fail');
+					$viewObject->setValue('data', array('message' => 'Missing SafeText auth token. Please log in'));
+				}
+			}
+			else { // non-POST request
+					$viewObject->setValue('status', 'fail');
+					$viewObject->setValue('data', array('message' => MS_REQUEST_METHOD . ' requests are not supported for this web service'));
+			}
+		}	
+		else {
+			$viewObject->setValue('status', 'fail');
+			$viewObject->setValue('data', array('message' => 'Insecure (non-HTTPS) access denied'));
+		}		
+	 }
+	 
+	 public function addcontactAction(&$viewObject) {
+	 	$viewObject->setResponseType('json');
+		
+		if (MS_PROTOCOL === 'https') {
+			if (MS_REQUEST_METHOD === 'POST') {
+				
+				if (array_key_exists('HTTP_X_SAFETEXT_TOKEN', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_TOKEN'] !== '') {
+			
+					$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+					// ensure we're using http
+			
+					array_key_exists('group_id', $this->params)? $group_id= $this->params['group_id']: $group_id= '';
+					
+					array_key_exists('contact_id', $this->params)? $contact_id= $this->params['contact_id']: $contact_id= '';
+					
+					require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
+					$user = SafetextUser::tokenToUser($_SERVER['HTTP_X_SAFETEXT_TOKEN'], $db, $this->config);
+					
+					if ($user instanceof SafetextUser && $user->isValid()) {
+						
+						$sql_contact = "SELECT participants_id FROM groups WHERE id='$group_id'";
+						$result_contact = current($db->query($sql_contact));
+						
+						if($contact_id!='') {
+						$new_participants_id = $result_contact[0]['participants_id'].','.$contact_id;
+						}
+						else {
+						$new_participants_id = $result_contact[0]['participants_id'];
+						}
+						
+						/*$sql_username = "SELECT `username` FROM `users` WHERE `id` IN (".$new_participants_id.")";
+						$f_username = current($db->query($sql_username));
+						
+						foreach($f_username as $this_username) {
+							$arr_username[] = $this_username['username'];
+						}
+						$username = implode(",",$arr_username);*/
+						
+						$participants = explode(",",$new_participants_id);
+						$count_p = count($participants);
+						for($i=0;$i<$count_p;$i++) {
+						
+							$f_username = current($db->call("getGroupUsername('".$participants[$i]."','".$user->id."')"));
+							if($f_username['name']!="")
+							$username .= $f_username['name'];
+							else
+							$username .= $f_username['username'];
+							if($i<($count_p-1))
+							$username .= ",";
+						}
+						
+						$sql_update_participant = "UPDATE groups SET participants_id = '$new_participants_id' WHERE id='$group_id'";
+						$result_update = current($db->query($sql_update_participant));
+						
+						$result = current($db->call("syncGroupContactAdd('".$group_id."','".$new_participants_id."','".$username."')"));
+						
+						$message = "success";
+						
+						$viewObject->setValue('status', $message);
+						$viewObject->setValue('data', array('group_id' => $group_id, 'participants_id' => $new_participants_id, 'participants_name' => $username, 'token' =>$user->getRelationship('device')->token));
+					}
+					else {
+						$viewObject->setValue('status', 'fail');
+						$viewObject->setValue('data', array('message' => 'Problem trying to load device details for that token'));
+					}	
+				}
+				else { // no username
+					$viewObject->setValue('status', 'fail');
+					$viewObject->setValue('data', array('message' => 'Missing SafeText auth token. Please log in'));
+				}
+			}
+			else { // non-POST request
+					$viewObject->setValue('status', 'fail');
+					$viewObject->setValue('data', array('message' => MS_REQUEST_METHOD . ' requests are not supported for this web service'));
+			}	
+		}
+		else {
+			$viewObject->setValue('status', 'fail');
+			$viewObject->setValue('data', array('message' => 'Insecure (non-HTTPS) access denied'));
+		}		
+				
+	 }
+	 
+	 public function removecontactAction(&$viewObject) {
+	 	$viewObject->setResponseType('json');
+		
+		if (MS_PROTOCOL === 'https') {
+			if (MS_REQUEST_METHOD === 'POST') {
+				
+				if (array_key_exists('HTTP_X_SAFETEXT_TOKEN', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_TOKEN'] !== '') {
+			
+					$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+					// ensure we're using http
+			
+					array_key_exists('group_id', $this->params)? $group_id= $this->params['group_id']: $group_id= '';
+					
+					array_key_exists('contact_id', $this->params)? $contact_id= $this->params['contact_id']: $contact_id= '';
+					
+					require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
+					$user = SafetextUser::tokenToUser($_SERVER['HTTP_X_SAFETEXT_TOKEN'], $db, $this->config);
+					
+					if ($user instanceof SafetextUser && $user->isValid()) {
+						
+						$sql_contact = "SELECT participants_id FROM groups WHERE id='$group_id'";
+						$result_contact = current($db->query($sql_contact));
+						
+						if($contact_id!='') {
+						$participants_id = explode(",",$result_contact[0]['participants_id']);
+						//print_r($participants_id);
+						
+						$arr_contact = explode(",",$contact_id);
+						$arr = array_diff($participants_id, $arr_contact);
+						//print_r($arr);
+						$new_participants_id = implode(",",$arr);
+						}
+						else {
+						$new_participants_id = $result_contact[0]['participants_id'];
+						}
+																		
+						/*$sql_username = "SELECT `username` FROM `users` WHERE `id` IN (".$new_participants_id.")";
+						$f_username = current($db->query($sql_username));
+						
+						foreach($f_username as $this_username) {
+							$arr_username[] = $this_username['username'];
+						}
+						$username = implode(",",$arr_username);*/
+						
+						$participants = explode(",",$new_participants_id);
+						$count_p = count($participants);
+						for($i=0;$i<$count_p;$i++) {
+						
+							$f_username = current($db->call("getGroupUsername('".$participants[$i]."','".$user->id."')"));
+							if($f_username['name']!="")
+							$username .= $f_username['name'];
+							else
+							$username .= $f_username['username'];
+							if($i<($count_p-1))
+							$username .= ",";
+						}
+						
+						$result = current($db->call("syncGroupContactDelete('".$group_id."','".$result_contact[0]['participants_id']."','".$new_participants_id."','".$username."')"));
+						
+						$sql_update_participant = "UPDATE groups SET participants_id = '$new_participants_id' WHERE id='$group_id'";
+						$result_update = current($db->query($sql_update_participant));
+						$message = "success";
+						
+						$viewObject->setValue('status', $message);
+						$viewObject->setValue('data', array('group_id' => $group_id, 'participants_id' => $new_participants_id, 'participants_name' => $username, 'token' =>$user->getRelationship('device')->token));
+					}
+					else {
+						$viewObject->setValue('status', 'fail');
+						$viewObject->setValue('data', array('message' => 'Problem trying to load device details for that token'));
+					}
+				}
+				else { // no username
+					$viewObject->setValue('status', 'fail');
+					$viewObject->setValue('data', array('message' => 'Missing SafeText auth token. Please log in'));
+				}
+			}
+			else { // non-POST request
+					$viewObject->setValue('status', 'fail');
+					$viewObject->setValue('data', array('message' => MS_REQUEST_METHOD . ' requests are not supported for this web service'));
+			}	
+		}
+		else {
+			$viewObject->setValue('status', 'fail');
+			$viewObject->setValue('data', array('message' => 'Insecure (non-HTTPS) access denied'));
+		}	
+					
+	 }
+	 
+	 /******** Edit Group **********/
+	 
+	 public function editgroupAction(&$viewObject) {
+	 	$viewObject->setResponseType('json');
+		
+		if (MS_PROTOCOL === 'https') {
+			if (MS_REQUEST_METHOD === 'POST') {
+				
+				if (array_key_exists('HTTP_X_SAFETEXT_TOKEN', $_SERVER) && $_SERVER['HTTP_X_SAFETEXT_TOKEN'] !== '') {
+			
+					$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+					// ensure we're using http
+			
+					array_key_exists('group_id', $this->params)? $group_id= $this->params['group_id']: $group_id= '';
+					
+					array_key_exists('contact_id', $this->params)? $contact_id= $this->params['contact_id']: $contact_id= '';
+					
+					array_key_exists('action', $this->params)? $action= $this->params['action']: $action= '';
+					
+					array_key_exists('new_group_name', $this->params)? $new_group_name= $this->params['new_group_name']: $new_group_name= '';
+					
+					require_once ( MS_PATH_BASE . DS . 'lib' . DS . 'safetext' . DS . 'user.php' );
+					$user = SafetextUser::tokenToUser($_SERVER['HTTP_X_SAFETEXT_TOKEN'], $db, $this->config);
+					
+					if ($user instanceof SafetextUser && $user->isValid()) {
+					
+						$sql_contact = "SELECT participants_id FROM groups WHERE id='$group_id'";
+						$result_contact = current($db->query($sql_contact));
+						
+						$new_participants_id = $result_contact[0]['participants_id'];
+						
+						$participants = explode(",",$new_participants_id);
+						
+						
+						$key = array_search($user->id, $participants);
+						unset($participants[$key]);
+							
+						$participants = array_values($participants);
+						$count_p = count($participants);
+						
+						for($i=0;$i<$count_p;$i++) {
+							
+								$f_username = current($db->call("getGroupUsername('".$participants[$i]."','".$user->id."')"));
+								if($f_username['name']!="")
+								$username .= $f_username['name'];
+								else
+								$username .= $f_username['username'];
+								if($i<($count_p-1))
+								$username .= ",";
+							}
+					
+						/* Remove Action */
+						if($action=='remove') {
+						
+							$username = "";
+						
+							$sql_contact = "SELECT participants_id FROM groups WHERE id='$group_id'";
+							$result_contact = current($db->query($sql_contact));
+							
+							if($contact_id!='') {
+							$participants_id = explode(",",$result_contact[0]['participants_id']);
+							//print_r($participants_id);
+							
+							$arr_contact = explode(",",$contact_id);
+							$arr = array_diff($participants_id, $arr_contact);
+							//print_r($arr);
+							$new_participants_id = implode(",",$arr);
+							}
+							else {
+							$new_participants_id = $result_contact[0]['participants_id'];
+							}
+							
+							$participants = explode(",",$new_participants_id);
+							
+							
+							$key = array_search($user->id, $participants);
+							unset($participants[$key]);
+							
+							
+							
+							$participants = array_values($participants);
+							$count_p = count($participants);
+							
+							//$participants = array_values($result_contact[0]['participants_id']);
+							//$count_p = count($participants);
+							//print_r($participants);
+						
+							for($i=0;$i<$count_p;$i++) {
+							
+								$f_username = current($db->call("getGroupUsername('".$participants[$i]."','".$user->id."')"));
+								if($f_username['name']!="")
+								$username .= $f_username['name'];
+								else
+								$username .= $f_username['username'];
+								if($i<($count_p-1))
+								$username .= ",";
+							}
+							
+							$old_participant = explode(",",$result_contact[0]['participants_id']);
+							//print_r($old_participant);
+							$count=count($old_participant);
+							
+							$old_participant1 = array_diff($old_participant, $arr_contact);
+							
+							for($k=0;$k<$count;$k++) {
+							
+							$o_participant = array();
+							
+							$o_participant1 = $old_participant1;
+							
+							
+							$o_participant = array_diff($o_participant1, array($old_participant[$k]));
+							
+							$count_username = count($old_participant);
+							//echo $old_participant[$k];
+							//print_r($o_participant1);
+							$username1 = array();
+							for($j=0;$j<$count_username;$j++) {
+							
+							//echo "getGroupUsername('".$o_participant[$j]."','".$old_participant[$k]."')";
+							$f_username = current($db->call("getGroupUsername('".$o_participant[$j]."','".$old_participant[$k]."')"));
+							if($f_username['name']!="")
+							$username1[] = $f_username['name'];
+							else if($f_username['username']!="")
+							$username1[] = $f_username['username'];
+							//if($j<($count_username-1) && ($o_participant[$j]!=""))
+							//$username1 .= ",";
+							
+							}
+							
+							$username1 = implode(",",$username1);
+							
+							//echo $username1;
+							//echo "<br>";
+
+                                                        /* Get Group Name */
+							
+							$user_group_name = current($db->call("checkGroupname('".$group_id."','".$old_participant[$k]."')"));
+							if($user_group_name['group_name']!="") {
+								$group_name = $user_group_name['group_name'];
+							}
+							else {
+								$sql_group_name = "SELECT `group_name` FROM groups WHERE `id`='".$group_id."'";
+								$f_group_name = current($db->query($sql_group_name));
+							
+								$group_name = $f_group_name[0]['group_name'];
+							}
+							
+							
+							/* End */
+
+
+							
+							$result = current($db->call("syncGroupContactDelete('".$group_name."','".$group_id."','".$old_participant[$k]."','".$new_participants_id."','".$username1."')"));
+							
+							}
+							
+							
+							
+							$sql_update_participant = "UPDATE groups SET participants_id = '$new_participants_id' WHERE id='$group_id'";
+							$result_update = current($db->query($sql_update_participant));
+						
+						}
+						/* Remove Action End */
+
+						
+						/* Add Action */
+						if($action=='add') {
+						
+							$username = "";
+							
+							$sql_contact = "SELECT participants_id FROM groups WHERE id='$group_id'";
+							$result_contact = current($db->query($sql_contact));
+							
+							if($contact_id!='') {
+							$new_participants_id = $result_contact[0]['participants_id'].','.$contact_id;
+							}
+							else {
+							$new_participants_id = $result_contact[0]['participants_id'];
+							}
+							
+							$participants = explode(",",$new_participants_id);
+						
+							$key = array_search($user->id, $participants);
+							unset($participants[$key]);
+							
+							$participants = array_values($participants);
+							$count_p = count($participants);
+							
+							for($i=0;$i<$count_p;$i++) {
+							
+								$f_username = current($db->call("getGroupUsername('".$participants[$i]."','".$user->id."')"));
+								if($f_username['name']!="")
+								$username .= $f_username['name'];
+								else
+								$username .= $f_username['username'];
+								if($i<($count_p-1))
+								$username .= ",";
+							}
+							
+							/*add sync*/
+							
+							$new_participants = explode(",",$new_participants_id);
+							
+							$count=count($new_participants);
+							
+							//print_r($new_participants);
+							
+							$n_participant = array();
+							
+							for($l=0;$l<$count;$l++) {
+							
+							$n_participant = array_diff($new_participants, array($new_participants[$l]));
+							
+							//echo $new_participants[$l];
+							//print_r($n_participant);
+							
+							$username1 = array();
+							$count_username = count($new_participants);
+							
+							for($j=0;$j<$count_username;$j++) {
+							
+							//echo "getGroupUsername('".$n_participant[$j]."','".$new_participants[$l]."')";
+							$f_username = current($db->call("getGroupUsername('".$n_participant[$j]."','".$new_participants[$l]."')"));
+							if($f_username['name']!="")
+							$username1[] = $f_username['name'];
+							else if($f_username['username']!="")
+							$username1[] = $f_username['username'];
+							//if($j<($count_username-1) && ($o_participant[$j]!=""))
+							//$username1 .= ",";
+							
+							}
+							
+							$username1 = implode(",",$username1);
+							
+							//echo $username1;
+							//echo "<br>";
+
+                                                        /* Get Group Name */
+							
+							$user_group_name = current($db->call("checkGroupname('".$group_id."','".$new_participants[$l]."')"));
+							if($user_group_name['group_name']!="") {
+								$group_name = $user_group_name['group_name'];
+							}
+							else {
+								$sql_group_name = "SELECT `group_name` FROM groups WHERE `id`='".$group_id."'";
+								$f_group_name = current($db->query($sql_group_name));
+							
+								$group_name = $f_group_name[0]['group_name'];
+							}
+							
+							/* End */
+							
+							
+							$result = current($db->call("syncGroupContactAdd('".$group_name."','".$group_id."','".$new_participants[$l]."','".$new_participants_id."','".$username1."')"));
+							
+							
+							}
+							
+							/*end*/
+							
+							$sql_update_participant = "UPDATE groups SET participants_id = '$new_participants_id' WHERE id='$group_id'";
+							$result_update = current($db->query($sql_update_participant));
+							
+							
+						
+						
+
+						}
+						/* Add Action End */
+
+						
+						if($new_group_name!="") {
+						
+							$sql_chk_group_name = "SELECT COUNT(`id`) AS `tot_count` FROM `user_group_name` WHERE `user_id`='".$user->id."' AND `group_id`='".$group_id."'";
+							
+							$f_chk_group_name = current($db->query($sql_chk_group_name));
+							
+							if($f_chk_group_name[0]['tot_count'] == 0) {
+								
+								$sql_insert_group_name = "INSERT INTO `user_group_name`(`user_id`,`group_id`,`group_name`) VALUES('".$user->id."','".$group_id."','".$new_group_name."')";
+								
+								$insert_group_name = current($db->query($sql_insert_group_name));
+								
+							}
+							else {
+								
+								$sql_update_group_name = "UPDATE `user_group_name` SET `group_name`='".$new_group_name."' WHERE `user_id`='".$user->id."' AND group_id='".$group_id."'";
+								
+								$update_group_name = current($db->query($sql_update_group_name));
+							}
+						}
+						else {
+							
+							$sql_group_name = "SELECT `group_name` FROM groups WHERE `id`='".$group_id."'";
+							$f_group_name = current($db->query($sql_group_name));
+							
+							$new_group_name = $f_group_name[0]['group_name'];
+						}
+						
+						
+						$message = "success";
+						
+						$viewObject->setValue('status', $message);
+						$result = current($db->call("syncGroupNameEdit('".$new_group_name."','".$group_id."','".$new_participants_id."','".$username."','".$user->id."','".$user->getRelationship('device')->id."')"));
+						$viewObject->setValue('data', array('group_name' => $new_group_name, 'group_id' => $group_id, 'participants_id' => $new_participants_id, 'participants_name' => $username, 'token' =>$user->getRelationship('device')->token));
+						
+					}
+					else {
+						$viewObject->setValue('status', 'fail');
+						$viewObject->setValue('data', array('message' => 'Problem trying to load device details for that token'));
+					}
+				}
+				else { // no username
+					$viewObject->setValue('status', 'fail');
+					$viewObject->setValue('data', array('message' => 'Missing SafeText auth token. Please log in'));
+				}
+			}
+			else { // non-POST request
+					$viewObject->setValue('status', 'fail');
+					$viewObject->setValue('data', array('message' => MS_REQUEST_METHOD . ' requests are not supported for this web service'));
+			}	
+		}
+		else {
+			$viewObject->setValue('status', 'fail');
+			$viewObject->setValue('data', array('message' => 'Insecure (non-HTTPS) access denied'));
+		}	
+					
+	 }
+	 
+	 /******** End **********/
+	 
+	 public function forgotpasswordAction(&$viewObject) {
+	 	$viewObject->setResponseType('json');
+		
+		if (MS_PROTOCOL === 'https') {
+		
+			if (MS_REQUEST_METHOD === 'POST') {
+							
+					$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+					// ensure we're using http
+			
+					array_key_exists('username', $this->params)? $username= $this->params['username']: $username = '';
+                                        
+                                        array_key_exists('st_user', $this->params)? $username_web= $this->params['st_user']: $username_web = '';
+						$sql_pass = "SELECT `pass`,`email` FROM users WHERE username='$username' OR username='$username_web'";
+						$f_pass = current($db->query($sql_pass));
+						
+						if($f_pass[0]['email']=="") {
+							$viewObject->setValue('status', 'fail');
+							$viewObject->setValue('data', array('message' => 'Email ID does not exist for this Username.'));
+						}
+						else {
+						
+							 $result = current($db->call("generateVerificationCode('".$f_pass[0]['email']."')"));
+						
+							 //require_once "Mail.php";
+
+                                                         $from = "Safe Text Password Reset <password@safe-text.com>";
+                                                         //$to = "Brett McReynolds <brett.mcreynolds@safe-text.com>";
+                                                         //$to = "Jayanta Saha <jayanta.freelancer@gmail.com>";
+                                                         //$to = "ST Contact <contact@safe-text.com>";
+                                                        // $to = "Sudeb Mukherjee <sudebmukherjee6@gmail.com>";
+
+                                                         $to = $f_pass[0]['email'];
+
+
+                                                         $subject = "Reset your Safe-Text Password";
+                                                         $body = "You have requested to reset your Safe Text password. Please click here to reset your password.\n\n";
+                                                         $body .= "https://client.safe-text.com/auth/resetpass/verification/".$result['code']."\n\n";
+                                                         $body .= "The Safe-Text Team";
+
+                                                         $host = "mail.safe-text.com";
+                                                         $port = "587";
+                                                         $pearusername = "password@safe-text.com";
+                                                         $pearpassword = "XxyL82#PQRI";
+
+                                                         $headers = array ('From' => $from,
+                                                                           'To' => $to,
+                                                                           'Subject' => $subject);
+                                                         $smtp = Mail::factory('smtp',
+                                                                               array ('host' => $host,
+                                                                                      'port' => $port,
+                                                                                      'auth' => true,
+                                                                                      'username' => $pearusername,
+                                                                                      'password' => $pearpassword));
+                                                         $mail = $smtp->send($to, $headers, $body);
+							 
+							$viewObject->setValue('status', 'success');
+							$viewObject->setValue('data', array('message' => 'Your password has been sent to your Email.'));
+						}
+			}
+			else { // non-POST request
+					$viewObject->setValue('status', 'fail');
+					$viewObject->setValue('data', array('message' => MS_REQUEST_METHOD . ' requests are not supported for this web service'));
+			}
+		}	
+		else {
+			$viewObject->setValue('status', 'fail');
+			$viewObject->setValue('data', array('message' => 'Insecure (non-HTTPS) access denied'));
+		}		
+	 }
+
+
+          /* *************** Screen Capture Notification **********************/
+	 
+	 public function ScreenCaptureAction(&$viewObject) {
+	 
+	 	$viewObject->setResponseType('json');
+		
+		if (MS_PROTOCOL === 'https') {
+			if (MS_REQUEST_METHOD === 'POST') {
+				array_key_exists('sender_id', $this->params)? $sender_id= $this->params['sender_id']: $sender_id = '';
+				array_key_exists('receipient_id', $this->params)? $receipient_id= $this->params['receipient_id']: $receipient_id = '';
+				array_key_exists('group_id', $this->params)? $group_id= $this->params['group_id']: $group_id = '';
+				
+				$db = new MsDb($this->config['dbHost'], $this->config['dbUser'], $this->config['dbPass'], $this->config['dbName']);
+				
+				if($receipient_id=="") {	
+					$sql_contact = "SELECT participants_id FROM groups WHERE id='$group_id'";
+					$result_contact = current($db->query($sql_contact));
+					
+					$participants_a = explode(",",$result_contact[0]['participants_id']);
+					$count = count($participants_a);
+					$key = array_search($sender_id, $participants_a);
+					unset($participants_a[$key]);
+					//print_r($participants_a);
+
+                                        /*send notification message to group */
+					
+					$sql_sender_username = "SELECT `username` FROM `users` WHERE `id`='".$sender_id."'";
+					$f_sender_username = current($db->query($sql_sender_username));
+					
+					$content = $f_sender_username[0]['username'].' has captured your screenshot of your group chat';
+					$is_important = 0;
+					$is_draft = 0;
+					$lifetime = 1440;
+					$image = '';					
+					// execute send via stored procedure
+					$cipher = new SafetextCipher($this->config['hashSalt']);
+					$result = current($db->call("sendGroupMessage('" . $sender_id . "','" . $f_sender_username[0]['username'] . "','".$result_contact[0]['participants_id']."','" . $group_id . "','" . $this->escapeForDb($cipher->encrypt($content)) . "','" . $is_important . "','" . $is_draft . "','" . $lifetime . "','" . $image . "')"));
+
+					/* end */
+					
+					/*send notification*/
+					/*for($i=0;$i<$count;$i++) {
+										
+					$devicesArray = $db->call("devices('".$participants_a[$i]."')");
+					$devices = new SafetextModelCollection('SafetextDevice', $this->config, $db);
+					$devices->load($devicesArray);										
+												
+						foreach ($devices as $this_device) 
+						{
+							$username = "";
+							$f_username = current($db->call("getGroupUsername('".$sender_id."','".$participants_a[$i]."')"));
+							if($f_username['name']!="")
+							$username = $f_username['name'];
+							else if($f_username['username']!="")
+							$username = $f_username['username'];*/
+
+                                                         /* Get Group Name */
+							
+							/*$user_group_name = current($db->call("checkGroupname('".$group_id."','".$participants_a[$i]."')"));
+							if($user_group_name['group_name']!="") {
+								$group_name = $user_group_name['group_name'];
+							}
+							else {
+								$sql_group_name = "SELECT `group_name` FROM groups WHERE `id`='".$group_id."'";
+								$f_group_name = current($db->query($sql_group_name));
+							
+								$group_name = $f_group_name[0]['group_name'];
+							}*/
+                                                         
+							
+							/*$value_unread = current($db->CALL("getgroupisread('" .$participants_a[$i]. "')"));
+							$badge = $value_unread['tot_unread'];
+							$msg = $username.' has captured a screenshot of your group chat';
+							$this_device->sendNotification($msg,$badge);
+						}	
+										
+					}*/
+					
+					
+				}
+				
+				if($group_id=="") {
+					// load all registered devices
+					$devicesArray = $db->call("devices('" . $receipient_id . "')");
+					$devices = new SafetextModelCollection('SafetextDevice', $this->config, $db);
+					$devices->load($devicesArray);
+					//foreach ($devices as $this_device) $this_device->sendNotification($user->fullName() . ': ' . $this->params['content']);
+					
+                                        /* For ScreenCapture Message Notification */
+					$f_username = current($db->call("getGroupUsername('".$sender_id."','".$receipient_id."')"));
+					if($f_username['name']!="")
+					$username = $f_username['name'];
+					else if($f_username['username']!="")
+					$username = $f_username['username'];
+				
+					$is_important = 0;
+					$is_draft = 0;
+					$lifetime = 1440;
+					$image = '';
+				
+					$content = $username.' has captured your screenshot of your chat';
+					$cipher = new SafetextCipher($this->config['hashSalt']);
+					$result = current($db->call("sendMessage('" . $sender_id . "','" . $receipient_id . "','" . $this->escapeForDb($cipher->encrypt($content)) . "','" . $is_important . "','" . $is_draft . "','" . $lifetime . "','" . $image . "')"));
+					/* end */							
+					
+                                        /*foreach ($devices as $this_device) 
+					{
+					$username = "";
+					$f_username = current($db->call("getGroupUsername('".$sender_id."','".$receipient_id."')"));
+					if($f_username['name']!="")
+					$username = $f_username['name'];
+					else if($f_username['username']!="")
+					$username = $f_username['username'];*/
+					//$val_is_read = current($db->CALL("getisread('" .current($this->params['recipients']). "')"));
+					/*$value_unread = current($db->CALL("getgroupisread('" .$receipient_id. "')"));
+											
+					$badge = $value_unread['tot_unread'];
+					
+					$msg = $username.' has captured a screenshot of your chat';
+												
+					$this_device->sendNotification($msg,$badge,$receipient_id);
+					}*/
+				}
+				
+				$viewObject->setValue('status', 'Success');
+				$viewObject->setValue('data', array('message' => 'Notification send for capturing screen.'));
+				
+			}
+			else { // non-POST request
+					$viewObject->setValue('status', 'fail');
+					$viewObject->setValue('data', array('message' => MS_REQUEST_METHOD . ' requests are not supported for this web service'));
+			}
+		}
+		else {
+			$viewObject->setValue('status', 'fail');
+			$viewObject->setValue('data', array('message' => 'Insecure (non-HTTPS) access denied'));
+		}
+			
+	 }
+	 
 	 
 }

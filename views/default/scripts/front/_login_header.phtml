@@ -1,126 +1,5 @@
 <!-- header - with web client nav -->
 <!-- fixed header -->
-
-<!-- auto logout after 30 min -->
-
-<script>
-$(document).ready(function() {
-
-	function getCookie(c_name) {
-			var i, x, y, ARRcookies = document.cookie.split(";");
-			for (i = 0; i < ARRcookies.length; i++) {
-				x = ARRcookies[i].substr(0, ARRcookies[i].indexOf("="));
-				y = ARRcookies[i].substr(ARRcookies[i].indexOf("=") + 1);
-				x = x.replace(/^\s+|\s+$/g, "");
-				if (x == c_name) {
-					return unescape(y);
-				}
-			}
-	}
-
-	var remember = getCookie('remember');
-	
-	//alert(remember);
-	
-	if(remember=='false') {
-	
-		function createCookie(name, value) {
-		   var date = new Date();
-		   date.setTime(date.getTime()+((30*60)*1000));
-		   var expires = "; expires="+date.toGMTString();
-
-		   document.cookie = name+"="+value+expires+"; path=/";
-		}
-
-		createCookie('timelimit',"test");
-		
-		setInterval(checkcookie, 5000);
-		
-		function checkcookie() {
-		
-			function getCookie(c_name) {
-				var i, x, y, ARRcookies = document.cookie.split(";");
-				for (i = 0; i < ARRcookies.length; i++) {
-					x = ARRcookies[i].substr(0, ARRcookies[i].indexOf("="));
-					y = ARRcookies[i].substr(ARRcookies[i].indexOf("=") + 1);
-					x = x.replace(/^\s+|\s+$/g, "");
-					if (x == c_name) {
-						return unescape(y);
-					}
-				}
-			}
-			
-			var getCookie = getCookie('timelimit');
-			
-			if(getCookie!="test") {
-				window.location.href = "/auth/logout";
-			}
-			
-			//alert(getCookie);
-			
-		}
-		
-		$(".safetext-new-message-button").click(function() {
-			function createCookie(name, value) {
-			   var date = new Date();
-			   date.setTime(date.getTime()+((30*60)*1000));
-			   var expires = "; expires="+date.toGMTString();
-
-			   document.cookie = name+"="+value+expires+"; path=/";
-			}
-
-			createCookie('timelimit',"test");
-		});
-		
-		$(".safetext-new-group-message-button").click(function() {
-			function createCookie(name, value) {
-			   var date = new Date();
-			   date.setTime(date.getTime()+((30*60)*1000));
-			   var expires = "; expires="+date.toGMTString();
-
-			   document.cookie = name+"="+value+expires+"; path=/";
-			}
-
-			createCookie('timelimit',"test");
-		});
-	
-	}
-	
-	
-    $("a").click(function () {
-        window.onbeforeunload = null;
-	});	
-	
-	
-	
-	window.onbeforeunload = function (event) {
-		
-		/*var message = '';
-		if (typeof event == 'undefined') {
-			event = window.event;
-		}
-		if (event) {
-			event.returnValue = message;
-		}*/
-
-		var url = "/auth/logout/";
-		
-		$.post(url , function( data ) {
-				
-		});
-		
-		//return message;
-	};
-	
-	
-});	
-
-
-
-</script>
-
-<!-- end -->
-
 <script src="/assets/js/classie.js"></script>
 <script>
     function init() {
@@ -141,26 +20,25 @@ $(document).ready(function() {
 </script>
 <!-- end -->
 <header data-role="header" class="safetext-header" data-position="fixed">
+<div class="menuWrapper">
 
-	<div class="menuWrapper">
+<div class="safetext-nav newbgnav clearfix">
 
-	<div class="safetext-nav newbgnav clearfix">
+<div class="topbar">
+<a href="#"><img src="https://safe-text.com/wp-content/uploads/2015/02/logoHeader1.png" alt=""></a>
+<ul>
+	<li><a href="https://safe-text.com/" class="homeicon"><img src="https://safe-text.com/wp-content/uploads/2015/02/home.png" alt=""></a></li>
+    <li class="company"><a href="https://safe-text.com/the-company/" style="padding-top:40px !important;">The Company</a></li>
+    <li class="app"><a href="https://safe-text.com/the-app/" style="padding-top:40px !important;">The App</a></li>
+    <li class="difference"><a href="https://safe-text.com/the-difference/" style="padding-top:40px !important;">The Difference</a></li>
+    <li class="join"><a href="/webclient/" style="padding-top:40px !important;">Join/Login</a></li>
+</ul>
+</div>
+</div>
 
-	<div class="topbar">
-	<a href="#"><img src="https://safe-text.com/wp-content/uploads/2015/02/logoHeader1.png" alt=""></a>
-	<ul>
-		<li><a href="https://safe-text.com/" class="homeicon"><img src="https://safe-text.com/wp-content/uploads/2015/02/home.png" alt=""></a></li>
-		<li class="company"><a href="https://safe-text.com/the-company/" style="padding-top:40px !important;">The Company</a></li>
-		<li class="app"><a href="https://safe-text.com/the-app/" style="padding-top:40px !important;">The App</a></li>
-		<li class="difference"><a href="https://safe-text.com/the-difference/" style="padding-top:40px !important;">The Difference</a></li>
-		<li class="join"><a href="/auth/logout" style="padding-top:40px !important;">Logout</a></li>
-	</ul>
-	</div>
-	</div>
+</div>
 
-	</div>
-
-	<?php if($this->getValue('user')->username!="") {?>
+    <?php if($this->getValue('user')->username!="") {?>
 	<div class="toparea">
     <h1><?php echo $this->title; ?></h1>
     <div class="userDiv">
@@ -175,11 +53,12 @@ $(document).ready(function() {
         </ul>
     </div>
 	</div>
-	<?php }?>
+    <?php }?>	
     <a data-role="button" onclick="$('.leftpanel:visible').panel('open');" href="#" data-icon="bars"
 		data-iconpos="notext" class="ui-btn-left">Menu</a>
 </header>
 <!-- /header -->
+
 <style>
 .safetext-header { position:fixed;top:0;left:0;z-index: 99999; }
 .menuWrapper{background-image: none;background-color: #C93F3C;border-bottom: 3px solid #fff;}
@@ -271,3 +150,12 @@ background: transparent;
   border:none !important;
 }
 </style>
+
+<script type="text/javascript">
+            $(function() {
+                $('.topMenuWP').Mnav({
+                    mobileButtonPos: 'right',
+		    theme:'mnav-theme'
+                });
+            });
+        </script>

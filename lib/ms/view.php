@@ -17,7 +17,7 @@ class MsView {
 	protected $cacheExpireSeconds;		// seconds to instruct the client browser to store this content in cache
 	protected $doctype = '<!DOCTYPE html>';
 	protected $controllerName;
-	protected $title = 'Mediasoft Technologies, Inc.'; 		// HTML page title
+	protected $title = 'Safe-Text.com'; 		// HTML page title
 	
 	protected $metaTags = array();		// HTML meta tags
 	protected $scriptIncludes = array();	// js files to include

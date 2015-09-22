@@ -1,7 +1,8 @@
 <div data-role="page" class="safetext-page safetext-contact" data-title="<?php echo $this->t('Edit'); ?> <?php echo $this->getValue('contactName'); ?>">
 		
-		<div data-role="panel" class="leftpanel" data-position="left" data-display="reveal" data-theme="b"></div>
-		<?php echo $this->render('webclient/_header_contact.phtml'); ?>
+		<!--<div data-role="panel" class="leftpanel" data-position="left" data-display="reveal" data-theme="b"></div>-->
+		<?php echo $this->render('webclient/_leftpanel.phtml'); ?>
+		<?php echo $this->render('webclient/_header.phtml'); ?>
 	
 	    <div data-role="content" class="safetext-content" data-theme="a">
 	    	
@@ -23,7 +24,7 @@
 						    <div class="ui-block-c"><a href="/settings" class="ui-btn ui-corner-all ui-btn-icon-left ui-icon-gear">Settings</a></div>
 						</div>
 						
-						<div>
+						<div class="contactEditWrapper">
 						    <?php if ($this->getValue('contactObject') instanceof SafetextContact) : ?>
 						    	<!-- edit contact form -->
 						    	<form class="safetext-edit-contact-form">
@@ -41,6 +42,7 @@
 								            <label for="email"><?php echo $this->t('Email'); ?>:</label>
 								            <input type="text" name="email" value="<?php echo $this->getValue('contactObject')->email; ?>" data-clear-btn="true">
 								        </li>
+										<!--
 								        <li class="ui-field-contain">
 								            <label for="whitelist"><?php echo $this->t('Whitelist'); ?>:</label>
 								            <select name="whitelist" data-role="slider">
@@ -48,6 +50,7 @@
 								                <option value="1"<?php if ($this->getValue('contactObject')->is_whitelist === '1') echo ' selected'; ?>><?php echo $this->t('Yes'); ?></option>
 								            </select>
 								        </li>
+										-->
 								        <li class="ui-field-contain">
 								            <label for="blocked"><?php echo $this->t('Blocked'); ?>:</label>
 								            <select name="blocked" data-role="slider">
@@ -55,18 +58,21 @@
 								                <option value="1"<?php if ($this->getValue('contactObject')->is_blocked === '1') echo ' selected'; ?>><?php echo $this->t('Yes'); ?></option>
 								            </select>
 								        </li>
-								        <li class="ui-field-contain">
+								        
+								        <li style="border:none">
+								            
+								        </li>
+								        
+								        
+								        <li class="ui-field-contain" style="width:95.5%">
 								            <fieldset class="ui-grid-a safetext-mobile-hidden">
-								                    <div class="ui-block-a"><a href="#" data-rel="back" class="ui-btn ui-icon-carat-l ui-btn-icon-left ui-corner-all ui-shadow"><?php echo $this->t('Cancel'); ?></a></div>
-								                    <div class="ui-block-b"><a href="#" class="safetext-save-contact-button ui-btn ui-icon-check ui-btn-icon-left ui-corner-all ui-shadow"><?php echo $this->t('Save'); ?></a></div>
+								                    <div class="ui-block-a" style="width:33.3%"><a href="https://safe-text.us/webclient/contacts/" class="ui-btn ui-icon-carat-l ui-btn-icon-left ui-corner-all ui-shadow"><?php echo $this->t('Cancel'); ?></a></div>
+								                    <div class="ui-block-b" style="width:33.3%"><a href="#" class="safetext-save-contact-button ui-btn ui-icon-check ui-btn-icon-left ui-corner-all ui-shadow"><?php echo $this->t('Save'); ?></a></div>
+								                    <div class="ui-block-b" style="width:33.3%"><a href="#safetext-removecontact-<?php echo $this->getValue('contact'); ?>" class="ui-btn ui-icon-delete ui-btn-icon-left ui-corner-all ui-shadow" data-rel="popup" data-transition="pop"><?php echo $this->t('Remove Contact'); ?></a>
+								                    </div>
 								            </fieldset>
 								        </li>
-								        <li data-role="list-divider" data-theme="c"><?php echo $this->t('Remove This Contact'); ?></li>
-								        <li class="ui-field-contain" data-theme="c">
-								        	<fieldset class="center">
-								            	<a href="#safetext-removecontact-<?php echo $this->getValue('contact'); ?>" class="ui-btn ui-icon-delete ui-btn-icon-left ui-corner-all ui-shadow" data-rel="popup" data-transition="pop"><?php echo $this->t('Remove Contact'); ?></a>
-								            </fieldset>
-								        </li>
+								        
 								    </ul>
 								    <input type="hidden" name="contact" value="<?php echo $this->getValue('contact'); ?>" />
 								</form>

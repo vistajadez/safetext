@@ -6,7 +6,7 @@
 				<label for="composer" class="ui-hidden-accessible">Compose Input:</label>
 				<textarea class="safetext-new-message"
 					<?php if ($this->getValue('user')->subscription_level < 1 || $this->getValue('user')->subscription_expires < date('Y-m-d')) : ?>disabled="disabled"<?php endif; ?>
-					data-safetext-contact="<?php echo $this->getValue('contact'); ?>"
+					data-safetext-group="<?php echo $this->getValue('group_id'); ?>"
 					data-safetext-isdraft="0"
 					data-safetext-isimportant="0"
 					data-safetext-lifetime="24"
@@ -15,14 +15,13 @@
 			<div class="safetext-footer-composer-button">
 				<div class="ui-grid-a center">
 				    <div data-role="controlgroup" data-type="horizontal" data-mini="true" class="safetext-mobile-only">
-					    <a href="#" class="safetext-new-message-button ui-btn ui-corner-all ui-icon-carat-r ui-btn-icon-notext"><?php echo $this->t('Send'); ?></a>
+					    <a href="#" class="safetext-new-group-message-button ui-btn ui-corner-all ui-icon-carat-r ui-btn-icon-notext"><?php echo $this->t('Send'); ?></a>
 					    <a href="#" class="safetext-message-attach-button ui-btn ui-corner-all ui-icon-camera ui-btn-icon-notext"><?php echo $this->t('Image Send'); ?></a>
-						<!--
-					    <a href="#" class="safetext-message-settings-button ui-btn ui-corner-all ui-icon-gear ui-btn-icon-notext"><?php echo $this->t('Settings'); ?></a>
-						-->
+					    <!--
+					    <a href="#" class="safetext-message-settings-button ui-btn ui-corner-all ui-icon-gear ui-btn-icon-notext"><?php echo $this->t('Settings'); ?></a>-->
 					</div>
 					<div data-role="controlgroup" data-type="horizontal" class="safetext-mobile-hidden">
-					    <a href="#" class="safetext-new-message-button ui-btn ui-corner-all ui-icon-carat-r ui-btn-icon-right"><?php echo $this->t('Send'); ?></a>
+					    <a href="#" class="safetext-new-group-message-button ui-btn ui-corner-all ui-icon-carat-r ui-btn-icon-right"><?php echo $this->t('Send'); ?></a>
 					    <a href="#" class="safetext-message-attach-button ui-btn ui-corner-all ui-icon-camera ui-btn-icon-right">&nbsp;</a>
 					    
 					</div>
@@ -34,27 +33,8 @@
 <!-- /footer-->
 
 <!-- settings popup menu -->
-<div data-role="popup" data-theme="a" class="safetext-message-settings-popup ui-corner-all">
-	<a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
-    <form class="safetext-message-settings-form">
-        <div style="padding:10px 20px;">
-            <h3><?php echo $this->t('Message Settings'); ?></h3>
-            <!--
-            <fieldset data-role="controlgroup" data-theme="a">
-			    <input type="checkbox" name="isdraft" id="isdraft">
-			    <label for="isdraft"><?php echo $this->t('Draft'); ?></label>
-			    <input type="checkbox" name="isimportant" id="isimportant">
-			    <label for="isimportant"><?php echo $this->t('Important'); ?></label>
-            </fieldset>
-            -->
-            
-            <label for="lifetime"><?php echo $this->t('Minutes to expire'); ?>:</label>
-            <input type="text" name="lifetime" value="1440" data-theme="a">
-            
-            <a href="#" class="safetext-message-settings-apply-button ui-btn ui-corner-all ui-shadow"><?php echo $this->t('Apply'); ?></a>
-        </div>
-    </form>
-</div>
+
+    
 <!-- /settings -->
 
 <!-- attach image popup message -->
@@ -65,18 +45,18 @@
 			<?php echo $this->t('Subscribe today to enable image uploads!'); ?>
 		</div>
 	<?php else: ?>
-		<form action="/api/images/" method="post" enctype="multipart/form-data" class="safetext-message-attach-form">
-		<a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right message-attach-close">Close</a>
+		<form action="/api/images" method="post" enctype="multipart/form-data" class="safetext-message-attach-form">
+		<a href="#" id="close" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right message-attach-close">Close</a>
 	        <div style="padding:10px 20px;">
 	            <h3><?php echo $this->t('Send Image'); ?></h3>
 	            <fieldset data-role="controlgroup" data-theme="a">
 				    <input type="file" name="image">
 	            </fieldset>
 	            
-	            <a href="#" class="safetext-message-attach-send-button ui-btn ui-corner-all ui-shadow"><?php echo $this->t('Send'); ?></a>
+	            <a href="#" id="send" class="safetext-group-message-attach-send-button ui-btn ui-corner-all ui-shadow"><?php echo $this->t('Send'); ?></a>
 	        </div>
 	    </form>
-		<div id="progressbox" width="100%"><div id="progressbar"></div ><div id="statustxt">0%</div></div>
+		<div id="progressbox" width="100%" ><div id="progressbar"></div ><div id="statustxt">0%</div></div>
 		<div id="output" class="output"></div>
 	<?php endif; ?>
 </div>

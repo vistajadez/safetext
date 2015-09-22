@@ -22,15 +22,36 @@ class MsDb
 	 * @return void
 	 */
 	function __construct($host, $user, $password, $database) {
+
+
+//mysqli_ssl_set($con,"/etc/ssl/mysql/mysql-client-key-sha256.pem","/etc/ssl/mysql/mysql-client-cert-sha256.pem","/etc/ssl/mysql/mysql-ca-cert-sha256.pem",NULL,NULL);
 		if (class_exists('mysqli')) {
+
+$this->connection=mysqli_init();
+
+//$con = mysqli_init();
+
+
 			// Default: Use MySQLi
-			$this->connection = new mysqli($host, $user, $password, $database);
-			if ($this->connection->connect_errno) $this->connection = false; //error_log($mysqli->connect_errno, 3, "path/to/error/file");
+
+		mysqli_ssl_set($this->connection,"/etc/ssl/mysql/mysql-client-key-sha256.pem","/etc/ssl/mysql/mysql-client-cert-sha256.pem","/etc/ssl/mysql/mysql-ca-cert-sha256.pem",NULL,NULL);
+
+		mysqli_real_connect($this->connection,$host, $user, $password, $database);
+
+
+
+		//$this->connection = new mysqli($host, $user, $password, $database);
+//print_r($this->connection);
+			
+
+			if ($this->connection->connect_errno>0) { $this->connection = false; }//error_log($mysqli->connect_errno, 3, "path/to/error/file");
 		} else {
 			// Last resort: Use MySQL
-		   	if ($this->connection = mysql_connect($host, $user, $password)) {
+		   	if ($this->connection = mysql_connect($host, $user, $password,false,MYSQL_CLIENT_SSL)) {
 				mysql_select_db($database);
+
 			} else {
+
 				$this->connection = false;
 				//error_log($mysqli->connect_errno, 3, "path/to/error/file");
 			}
@@ -59,10 +80,14 @@ class MsDb
 			*/
 		if (class_exists('mysqli')) {
 			// Default: Use MySQLi
+                        //echo "123";
 			return new MsDbResult($this->connection->query($query));
 		} else {
 			// Last resort: Use MySQL
+//echo $query;die();
 			return new MsDbResult(mysql_query($query));
+
+			//return (mysql_query($query));
 		}
 	}
 	
@@ -76,6 +101,8 @@ class MsDb
 	 * @return mixed[] Array of all rows returned.
 	 */
 	public function call($query) {
+
+
 		$returnArray = array();
 		
 		if (!$this->connection) return $returnArray;
@@ -83,9 +110,12 @@ class MsDb
 		if ($query == '') return $returnArray;
 
 		if (class_exists('mysqli')) {
-			// Only Use MySQLi
+
+
 			$this->connection->multi_query('CALL ' . $query);
+
 			do {
+			   
 			    if ($res = $this->connection->store_result()) {
 			    	while ($this_result = $res->fetch_assoc()) {
 			    		$returnArray[] = $this_result;
@@ -94,6 +124,7 @@ class MsDb
 			    }
 			} while ($this->connection->more_results() && $this->connection->next_result());			
 		}
+
 		
 		return $returnArray;
 	}

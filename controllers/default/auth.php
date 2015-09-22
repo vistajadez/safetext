@@ -98,6 +98,26 @@ class AuthController extends SafetextClientController {
 	 }
 
 
+         /**
+	 * Forgot Password Link.
+	 * @param MsView $viewobject
+	 * @return void
+	 */
+	 public function forgotpassAction(&$viewObject) {
+	 	// ensure we're using https
+		if (MS_PROTOCOL !== 'https') {
+			$redirect = "https://".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+			header("Location: $redirect");
+				
+			return; // terminate controller action
+		}
+		
+		// Page title
+		$viewObject->setTitle($this->config['productName'] . ' - ' . $viewObject->t('Forgot Password'));
+
+	 }
+
+
 	/**
 	 * Reset Password.
 	 * 

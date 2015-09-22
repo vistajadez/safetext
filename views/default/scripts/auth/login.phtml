@@ -1,41 +1,254 @@
 <div data-role="page" class="safetext-page safetext-login">
 		
 		<?php echo $this->render('front/_leftpanel.phtml'); ?>
-		<?php echo $this->render('front/_header_no_nav.phtml'); ?>
-	
-	    <div data-role="content" class="safetext-content safetext-backsplash" data-theme="a">
-	    	<!-- login grid -->
-			<div class="ui-grid-b safetext-login-grid">
-			    <div class="ui-block-a"><div class="ui-body ui-body-d">
-			    	<a href="/story" class="ui-btn ui-icon-carat-r ui-btn-icon-right ui-corner-all ui-shadow"><?php echo $this->t('Our Story'); ?></a>
-			    	<a href="/product" class="ui-btn ui-icon-carat-r ui-btn-icon-right ui-corner-all ui-shadow"><?php echo $this->t('Our Product'); ?></a>
-			    	<a href="/auth/register" class="ui-btn ui-btn-inline ui-icon-carat-r ui-corner-all ui-mini" style="margin-top:25px;"><?php echo $this->t('New User Registration'); ?></a>
-			    </div></div>
-			    <div class="ui-block-b"><div class="ui-body ui-body-d">
-			   		<h2><?php echo $this->t('Safe Login'); ?></h2>
-			    	<form class="safetext-login-form">
-						<div>
-							<label for="name" class="ui-hidden-accessible"><?php echo $this->t('Username'); ?>:</label>
-							<input type="text" name="name" value="<?php echo $this->getValue('username'); ?>" placeholder="<?php echo $this->t('Username'); ?>" data-clear-btn="true" />
-						</div>
-						<div>
-							<label for="password" class="ui-hidden-accessible"><?php echo $this->t('Password'); ?>:</label>
-							<input type="password" name="password" value="" placeholder="<?php echo $this->t('Password'); ?>" data-clear-btn="true" />
-						</div>
-						
-						<div data-role="fieldcontain">
-							<a href="#" class="ui-btn ui-btn-inline ui-icon-carat-r ui-btn-icon-right ui-corner-all safetext-login-button"><?php echo $this->t('Login'); ?></a>
-						</div>
-					</form>
-			    </div></div>
-			    <div class="ui-block-c"><div class="ui-body ui-body-d">
-			    	<a href="/rules" class="ui-btn ui-icon-carat-r ui-btn-icon-right ui-corner-all ui-shadow"><?php echo $this->t('Our Rules'); ?></a>
-			    	<a href="/answers" class="ui-btn ui-icon-carat-r ui-btn-icon-right ui-corner-all ui-shadow"><?php echo $this->t('Our Answers'); ?></a>
-			    	<a href="/auth/password" class="ui-btn ui-btn-inline ui-icon-carat-r ui-corner-all ui-mini" style="margin-top:25px;"><?php echo $this->t('Recover Password / Username'); ?></a>
-			    </div></div>
-			</div><!-- /login grid -->
-	    </div><!-- /content -->
-	
-	<?php echo $this->render('front/_footer.phtml'); ?>
+		<?php //echo $this->render('front/_header_no_nav.phtml'); ?>
+		<?php echo $this->render('front/_login_header.phtml'); ?>
 		
+		<div class="loginmenumobile">
+			<ul>
+				<li>Menu
+					<ul>
+
+						<li><a  href="https://safe-text.com/">Home</a></li>
+						<li ><a href="https://safe-text.com/the-company/" >The Company</a></li>
+						<li ><a href="https://safe-text.com/the-app/" >The App</a></li>
+						<li ><a href="https://safe-text.com/the-difference/" >The Difference</a></li>
+						<li ><a href="/web-client/" >Join/Login</a></li>
+					</ul>
+				</li>        
+			</ul>
+		</div>
+		
+		<div data-role="content" class="safetext-content safetext-backsplash" data-theme="a">
+			<!-- login grid -->
+			<div class="content" style="margin-top:90px;">
+			
+			<div class="login">
+                <div class="fleft"> <span style="font-size: 30px; font-weight: normal;text-align: center;display: block;margin-top: 25px; color: #333;">Don't have an account?</span>
+                    <br>
+                
+                    <div style="text-align:center"><img src="/assets/images/splash.png" width="100%" class="logonlogin">
+                    </div>
+                    <p style="" class="regp"><a href="/auth/register" class="rg regbut" >Register Now</a>
+                    </p>
+                </div>
+				<div class="fright"> <span style="font-size:16px;">Sign In</span>
+					<form class="safetext-login-form">
+					<input type="text" name="name" value="<?php echo $this->getValue('username'); ?>" placeholder="<?php echo $this->t('Username'); ?>" data-clear-btn="true" />
+					<input type="password" name="password" value="" placeholder="<?php echo $this->t('Password'); ?>" data-clear-btn="true" />
+						<table width="100%" cellpadding="0" cellspacing="0" class="logintable">
+                            <tbody>
+                                <tr>
+                                    <td>
+                                     <input type="checkbox" name="keep_login" id="keep_login" value="1" <?php if($_COOKIE['remember']=='true') { echo "checked"; }?>>   
+                                     <span class="ksignin">Keep me Signed in</span>
+                                    </td>
+                                    <td align="right"><a href="/auth/forgotpass" onclick="#">Forgot Password</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <br>
+						<div data-role="fieldcontain">
+						<button type="submit" class="ui-btn ui-btn-inline ui-icon-carat-r ui-btn-icon-right ui-corner-all safetext-login-button"><?php echo $this->t('Login'); ?></button>
+						</div>
+						<br>
+					</form>
+					<div class="mobileaccount">
+                        <div class="txt">Don't have an account?</div>
+                        <p style="" class="regp"><a href="/auth/register" class="rg regbut" >Register Now</a>
+                    </p>
+                    </div>
+				</div>
+                <div class="clear"></div>
+            </div>
+        </div>
+
+		</div>
+		</div>
+					
+	
+	<?php //echo $this->render('front/_footer.phtml'); ?>
+<style>
+	#login { display:none; }	
+    .regp{text-align: center;margin-top: -190px;}
+		.ui-panel-wrapper {
+			margin-top: 10px !important; 
+			margin-bottom: 0; 
+		}
+            .customer {
+                padding: 0px;
+                margin: 0px;
+                font-size: 16px;
+            }
+            .safetext-content {
+                min-height: 605px;
+                overflow: hidden;
+            }
+            .content p {
+                font-size: 13px;
+            }
+            .fleft {
+                float: left;
+                width: 48%;
+            }
+            .fright {
+                float: right;
+                width: 46%;
+                padding: 40px 2% 50px 3%;
+                border-left: solid 1px #CCC;
+            }
+            .login {
+                font-size: 12px;
+				margin-top: 20px;
+            }
+            .safetext-backsplash {
+                background-image: none
+            }
+            a.rg {
+                color: #FFF !important;
+                text-decoration: none;
+                background: #40476F;
+                
+                display: inline-block;
+                
+                text-shadow: none;
+                
+            }
+            .ksignin {
+                margin-top: -7px;
+                margin-left: 31px;
+                position: absolute;
+            }
+			
+			.safetext-page.safetext-login {
+				min-height: 300px !important;
+			}
+
+            .logintable{
+                max-width: 600px;
+                width:100%;
+            }
+
+            .logonlogin{
+                width: 100%;
+                max-width: 450px;
+
+            }
+
+            .regbut{
+                margin-top:4px; 
+                display:inline-block;
+                font-size: 28px;
+                font-weight: normal;
+                letter-spacing: 5px;
+                padding: 5px 30px;
+                border-radius: 8px; 
+                box-shadow: 3px 3px 3px #3C3C3C;
+            }
+            .mobileaccount{display: none;}
+            .loginmenumobile{
+                display: none;
+            }
+            @media (max-width: 625px) {
+
+                .regbut{padding: 5px 10px;}
+                .regp{text-align: center;margin-top: -110px;} 
+            }
+             @media (max-width: 560px) {
+                .mobileaccount{display: block;}
+                .fright{
+                    border: 0 none;
+                    float: none;
+                    margin: auto;
+                    width: 80%;
+                }
+                .fleft{
+                    display:none;
+                }
+
+                .mobileaccount .txt {font-size:20px; text-align: center;}
+                .regbut{font-size: 23px;    padding: 5px 16px;}
+                .regp{text-align: center;margin-top: 10px;} 
+                .ui-field-contain {
+                    border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+                }
+
+
+            }           
+
+             @media (max-width: 879px){
+
+                ul {
+                  text-align: left;
+                  display: inline;
+                  margin: 0;
+                  padding: 15px 4px 17px 0;
+                  list-style: none;
+                  -webkit-box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
+                  -moz-box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
+                  box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
+                  background-color: #C93F3C;
+                }
+                ul li {
+                  font: bold 14px/18px sans-serif;
+                  display: inline-block;
+                  margin-right: -4px;
+                  position: relative;
+                  padding: 15px 20px;
+                  background: #C93F3C;
+                  cursor: pointer;
+                  -webkit-transition: all 0.2s;
+                  -moz-transition: all 0.2s;
+                  -ms-transition: all 0.2s;
+                  -o-transition: all 0.2s;
+                  transition: all 0.2s;
+                  color: #fff;
+                  text-shadow: 1px 1px 1px #000;
+                }
+                ul li:hover {
+                  background: #0E619F;
+                  color: #fff;
+                }
+                ul li ul {
+                  padding: 0;
+                  position: absolute;
+                  z-index: 1000;
+                  top: 48px;
+                  left: 0;
+                  width: 150px;
+                  -webkit-box-shadow: none;
+                  -moz-box-shadow: none;
+                  box-shadow: none;
+                  display: none;
+                  opacity: 0;
+                  visibility: hidden;
+                  -webkit-transiton: opacity 0.2s;
+                  -moz-transition: opacity 0.2s;
+                  -ms-transition: opacity 0.2s;
+                  -o-transition: opacity 0.2s;
+                  -transition: opacity 0.2s;
+                }
+                ul li ul li { 
+                  background: #0E619F; 
+                  display: block; 
+                  color: #fff;
+                  text-shadow: 0 -1px 0 #000;
+                }
+                ul li ul li:hover { background: #C93F3C; }
+                ul li:hover ul {
+                  display: block;
+                  opacity: 1;
+                  visibility: visible;
+                }
+                ul li a{color:#fff !important;}   
+                .loginmenumobile{
+                    display: block;
+                     background: none repeat scroll 0 0 #000;
+                        height: 49px;
+                } 
+                .content{margin-top: 0px !important;}
+            }
+
+        </style>
 </div> <!--/page-->

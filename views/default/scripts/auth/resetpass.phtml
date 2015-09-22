@@ -1,19 +1,17 @@
 <div data-role="page" class="safetext-page safetext-resetpassword" data-title="<?php echo $this->t('Reset Password'); ?>">
 		
 		<?php echo $this->render('front/_leftpanel.phtml'); ?>
-		<?php echo $this->render('front/_header.phtml'); ?>
+		<?php //echo $this->render('front/_header.phtml'); ?>
+		<?php echo $this->render('front/_login_header.phtml'); ?>
 	
 	   <div data-role="content" class="safetext-content" data-theme="a">
 
 	   <h2><?php echo $this->t('Reset Password'); ?></h2>
-	   <p>
-      	<?php echo $this->t('Select a new password using the form below'); ?>.
-	   </p>
 	   <p><em><strong>
-      	<?php echo $this->t('Important: for security purposes, resetting your password will permanently delete all of your current contacts and messages'); ?>.
+      	<?php echo $this->t('Select a new password using the form below'); ?>.
 	   </strong></em></p>
 
-       <div class="ui-corner-all safetext-rounded-corners">
+       <div class="safetext-login-form">
               <div class="ui-bar ui-bar-a">
                 <h3><?php echo $this->t('Select a New Password'); ?></h3>
               </div>
@@ -22,14 +20,19 @@
                     <form class="safetext-resetpassword-form">
                     	<input type="hidden" name="code" value="<?php echo $this->getValue('code'); ?>" />
                         <ul data-role="listview" data-inset="true" data-theme="a">                            
-                            <li class="ui-field-contain">
+                            <li class="ui-field-contain" style="width:95%">
 							    <label for="password"><?php echo $this->t('Password'); ?>:</label>
-							    <input type="text" name="password" data-clear-btn="true">
+							    <input type="password" name="password" data-clear-btn="true">
 							</li>
+
+                            <li class="ui-field-contain" style="width:95%">
+							    <label for="Confirm password"><?php echo $this->t('Confirm Password'); ?>:</label>
+							    <input type="password" name="c-password" data-clear-btn="true">
+			    </li>
                                                                
-                            <li class="ui-body ui-body-b">
+                            <li class="ui-body ui-body-b" style="width:97%">
                                 <fieldset class="ui-grid-a">
-                                        <button type="button" class="ui-btn ui-corner-all ui-btn-a safetext-send-button"><?php echo $this->t('Reset'); ?></button>
+                                        <button type="button" id="st-reset-btn" class="ui-btn ui-corner-all ui-btn-a safetext-resetpassword"><?php echo $this->t('Reset'); ?></button>
                                 </fieldset>
                             </li>
                         </ul>
@@ -40,6 +43,6 @@
 	    </div><!-- /content -->
 	    
 	    
-	<?php echo $this->render('front/_footer.phtml'); ?>
+	<?php //echo $this->render('front/_footer.phtml'); ?>
 		
 </div> <!--/page-->

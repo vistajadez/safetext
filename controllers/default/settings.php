@@ -21,8 +21,26 @@ class SettingsController extends SafetextClientController {
 		if (!$this->init($viewObject)) {
 			$this->forward($viewObject, 'login', 'auth');
 		} else {
+			//count unread messages
+			$sql_unread = "SELECT count(is_read) as unread_msg FROM messages,participants WHERE participants.contact_id='". $this->user->getValue('id')."' AND participants.is_sender=0 AND messages.is_read=0 AND participants.message_id=messages.id";
+			$unread = current($this->db->query($sql_unread));
+			
+			if($unread[0]['unread_msg']>0) {
+			$unread_message = $unread[0]['unread_msg'];
+			}
+			else {
+			$unread_message = 0;
+			}
+			
 			// load stats for all contacts and messages for current user
 			$folderStats = current($this->db->call("folderStats('" . $this->user->getValue('id') . "')"));
+			
+			
+			//load notes
+			$notes = current($this->db->query("SELECT notes,expiretime FROM users WHERE id='" . $this->user->getValue('id') . "'"));
+			
+			//load bubble color
+			$bubble = current($this->db->query("SELECT color FROM bubble_color WHERE user_id='" . $this->user->getValue('id') . "'"));
 			
 			// load all registered devices
 			$devicesArray = $this->db->call("devices('" . $this->user->getValue('id') . "')");
@@ -31,13 +49,23 @@ class SettingsController extends SafetextClientController {
 			
 			// load membership levels
 			$subscriptionLevels = $this->db->call("subscriptionLevels()");
+			
+			// load groups
+			$groups = new SafetextModelCollection('SafetextMessage', $this->config, $this->db);
+			$groupsArray = $this->db->call("getGroupDetails('" . $this->user->getValue('id') . "')");
+			$groups->load($groupsArray);
 
 			//title
 			$viewObject->setTitle('Settings');
 			
 			// set view data
 			$viewObject->setValue('folderStats', $folderStats);
+			$viewObject->setValue('unread_msg', $unread_message);
+			$viewObject->setValue('count_group', count($groups));
 			$viewObject->setValue('devices', $devices);
+			$viewObject->setValue('lifetime', $notes[0]['expiretime']);
+			$viewObject->setValue('color', $bubble[0]['color']);
+			$viewObject->setValue('notes', $notes[0]['notes']);
 			$viewObject->setValue('subscription_levels', $subscriptionLevels);
 		}
 	 }
@@ -472,6 +500,19 @@ class SettingsController extends SafetextClientController {
 		if (!$this->init($viewObject)) {
 			$this->forward($viewObject, 'login', 'auth');
 		} else {
+			//count unread messages
+			$sql_unread = "SELECT count(is_read) as unread_msg FROM messages,participants WHERE participants.contact_id='". $this->user->getValue('id')."' AND participants.is_sender=0 AND messages.is_read=0 AND participants.message_id=messages.id";
+			$unread = current($this->db->query($sql_unread));
+			
+			if($unread[0]['unread_msg']>0) {
+			$unread_message = $unread[0]['unread_msg'];
+			}
+			else {
+			$unread_message = 0;
+			}
+			
+			
+			$folderStats = current($this->db->call("folderStats('" . $this->user->getValue('id') . "')"));
 			// load all registered devices
 			$payments = $this->db->call("payments('" . $this->user->getValue('id') . "')");
 
@@ -479,6 +520,8 @@ class SettingsController extends SafetextClientController {
 			$viewObject->setTitle('Payment History');
 			
 			// set view data
+			$viewObject->setValue('folderStats', $folderStats);
+			$viewObject->setValue('unread_msg', $unread_message);
 			$viewObject->setValue('payments', $payments);
 		}
 	 }

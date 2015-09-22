@@ -1,11 +1,19 @@
 <div data-role="page" class="safetext-page safetext-payments" data-title="<?php echo $this->t('Payment History'); ?>">
+		<div class="heaver-img"></div>	
+		<div data-role="panel" class="leftpanel" data-position="left" data-display="reveal" data-theme="b"></div> 
+        
+		<?php echo $this->render('webclient/_leftpanel.phtml'); ?>
 		
-		<div data-role="panel" class="leftpanel" data-position="left" data-display="reveal" data-theme="b"></div>
-		<?php echo $this->render('webclient/_header_conversation.phtml'); ?>
-	
+		<?php echo $this->render('webclient/_header.phtml'); ?>
 	    <div data-role="content" class="safetext-content" data-theme="a">
-	    	
-            <div class="ui-corner-all safetext-rounded-corners">
+		    <div class="safetext-client-grid">
+		    	<!-- Left-hand Folder Column -->
+			    <div class="safetext-block-a">
+			    	<div class="ui-body ui-body-d">
+					    <?php echo $this->render('webclient/_foldermenu.phtml'); ?>
+					</div>
+			    </div>	    	
+            <div class="safetext-block-b">
             	<div class="ui-bar ui-bar-a">
                     <h3><?php echo $this->t('Settings'); ?></h3>
                   </div>

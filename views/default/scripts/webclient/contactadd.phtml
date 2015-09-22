@@ -16,17 +16,15 @@
 			    <!-- Main Content Column -->
 			    <div class="safetext-block-b">
 			    	<div class="ui-body ui-body-d">
-				    	<div class="ui-grid-b safetext-mobile-hidden">
-						    <div class="ui-block-a"><a href="/webclient/messages" class="ui-btn ui-corner-all ui-btn-icon-left ui-icon-mail">Messages</a></div>
-						    <div class="ui-block-b"><a href="/webclient/contacts" class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-user ui-btn-active">Contacts</a></div>
-						    <div class="ui-block-c"><a href="/settings" class="ui-btn ui-corner-all ui-btn-icon-left ui-icon-gear">Settings</a></div>
+				    		<div class="ui-grid-a safetext-mobile-hidden">
+						    <div class="ui-block-a" style="width:100%"><a href="/webclient/contacts" class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-user ui-btn-active">Contacts</a></div>
 						</div>
 						
-						<form class="safetext-edit-contact-form" method="post" action="/webclient/contactadd">
+						<form class="safetext-edit-contact-form" style="margin:14px;width:97%" method="post" action="/webclient/contactadd">
 							<ul data-role="listview" data-inset="true">
 								<li data-role="list-divider" style="white-space:normal;"><?php echo $this->t('Search for contacts by full name or Safe-Text username'); ?>:</li>
 								<li class="ui-field-contain">
-								    <input type="search" name="q" value="<?php echo $this->getValue('q'); ?>">
+								    <input type="text" name="q" value="<?php echo $this->getValue('q'); ?>">
 								</li>
 								<li class="ui-field-contain">
 									<fieldset class="center">
@@ -61,7 +59,7 @@
 								<li class="w96">
 								<div data-role="content" class="ui-body-c">
 								<div class="safetext-content">
-					                            <p class="redctext"><?php echo $this->t("No results found"); ?></p>
+					                            <p class="redctext"><?php echo $this->t("No Contact Found"); ?></p>
 					                        </div> 
 					                        </div> 
 					                        </li>

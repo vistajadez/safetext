@@ -1,16 +1,20 @@
 <!-- header - with web client conversation view nav -->
 <div data-role="header" class="safetext-header" data-position="fixed">
+<div class="toparea">
 	<h1><?php echo $this->title; ?></h1>
-	
+    <div class="logoDiv"></div>
+    <div class="userDiv">
+        	<p>Welcome</p>
+            <a href="/webclient/messages" data-transition="fade"><?php echo $this->getValue('user')->username; ?></a>
+	</div>
 	<div class="safetext-nav clearfix">
         <ul class="clearfix">
-           <li><a href="/webclient/messages" data-transition="fade"><?php echo $this->getValue('user')->username; ?></a></li>  
 		   <li><a href="/settings" data-transition="fade"><?php echo $this->t('Settings'); ?></a></li>  
 		   <li><a href="<?php if ($this->getValue('user')->subscription_level > 0) echo '/settings/payments'; else echo '/settings/subscribe'; ?>" data-transition="fade"><?php if ($this->getValue('user')->subscription_level > 0) echo $this->t('Payments'); else echo $this->t('Subscribe'); ?></a></li>
 		   <li><a href="/auth/logout" data-ajax="false"><?php echo $this->t('Logout'); ?></a></li>
         </ul>
     </div>
-	
+	</div>
     <a data-role="button" href="/webclient/contacts" data-icon="carat-l"
 		data-iconpos="notext" class="ui-btn-left">Back</a>
 </div>

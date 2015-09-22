@@ -1,27 +1,100 @@
+<style>
+.safetext-message-settings-popup2 {height:300px;width:400px;overflow:auto}
+@media only screen and (min-width: 480px) and (max-width: 767px) {
+ .safetext-message-settings-popup2 {height:400px;width:400px;overflow:auto}
+}
+@media only screen and (max-width: 767px) {
+ .safetext-message-settings-popup2 {height:280px;width:284px}
+}
+.dtpicker-components {
+overflow: hidden;
+margin: 1em 1em;
+font-size: 1.4em;
+}
+.dtpicker-components .dtpicker-compOutline {
+display: inline-block;
+float: left;
+}
+.dtpicker-components .dtpicker-comp {
+margin: 2%;
+text-align: center;
+}
+.dtpicker-components .dtpicker-compButton {
+background: #FFFFFF;
+font-size: 140%;
+cursor: pointer;
+}
+.dtpicker-components .dtpicker-compButtonEnable {
+opacity: 1;
+}
+.dtpicker-components .dtpicker-compValue {
+margin: 0em 0em;
+width: 100%;
+border: none;
+font-size: 71%;
+-webkit-appearance: none;
+}
+.dtpicker-comp2 {
+width: 50%;
+}
+.dtpicker-components .dtpicker-comp > * {
+display: block;
+height: 30px;
+color: #2980B9;
+text-align: center;
+line-height: 30px;
+}
+.dtpicker-components .dtpicker-comp > *:hover {
+color: #2980B9;
+}
+
+
+.safetext-bubble {height:250px;width:300px;overflow:auto}
+.safetext-bubble li{list-style:none; border-bottom:1px solid dashed; padding:0 0 10px 0; cursor:pointer}
+
+
+.safetext-language {width:300px;overflow:auto}
+.safetext-language li{list-style:none; border-bottom:1px solid dashed; padding:0 0 10px 0; cursor:pointer}
+
+.safetext-delay {width:300px;overflow:auto}
+.safetext-delay li{list-style:none; border-bottom:1px solid dashed; padding:0 0 10px 0; cursor:pointer}
+</style>
 <div data-role="page" class="safetext-page safetext-settings" data-title="<?php echo $this->t('Settings'); ?>">
-		
+		<div class="heaver-img"></div>	
 		<?php echo $this->render('webclient/_leftpanel.phtml'); ?>
 		<?php echo $this->render('webclient/_header.phtml'); ?>
 	
 	    <div data-role="content" class="safetext-content" data-theme="a">
-	    	
-            <div class="ui-corner-all safetext-rounded-corners">
-                  <div class="ui-bar ui-bar-a">
-                    <h3><?php echo $this->t('Settings'); ?></h3>
-                  </div>
-                  <div class="ui-body ui-body-b">
-                        <form class="safetext-settings-form">
+         <div class="safetext-client-grid">
+		    	<!-- Left-hand Folder Column -->
+			    <div class="safetext-block-a">
+			    	<div class="ui-body ui-body-d">
+					    <?php echo $this->render('webclient/_foldermenu.phtml'); ?>
+					</div>
+			    </div>	    	
+            <div class="safetext-block-b">
+
+		<div class="ui-grid-a safetext-mobile-hidden">
+			<div class="ui-block-a" style="width:99%;float:left;clear:none"><a href="" class="ui-btn ui-corner-all ui-btn-icon-left ui-icon-gear ui-btn-active">Settings</a></div>
+			
+		</div>
+                  
+                  <div class="settingWrapper">
+                        <form class="safetext-settings-form" style="margin:14px;width:97%">
+                        <input type="hidden" name="user_id" id="user_id" value="<?php echo $this->getValue('user')->id; ?>">
                             <ul data-role="listview" data-inset="true" data-theme="a">
-                            	<li data-role="list-divider"><?php echo $this->t('Account'); ?></li>
-                                <li class="ui-field-contain">
+                            	<li data-role="list-divider" class="ui-li-divider ui-bar-inherit ui-first-child"><?php echo $this->t('Settings'); ?></li>
+                                <li class="ui-field-contain w50 fl">
                                     <label for="username"><?php echo $this->t('Username'); ?>:</label>
                                     <input type="text" name="username" value="<?php echo $this->getValue('user')->username; ?>" data-clear-btn="true">
                                 </li>
-                                <li class="ui-field-contain">
+								
+                                <li class="ui-field-contain w50 fl">
                                     <label for="email"><?php echo $this->t('Email'); ?>:</label>
                                     <input type="text" name="email" value="<?php echo $this->getValue('user')->email; ?>" data-clear-btn="true">
                                 </li>
-                                <li class="ui-field-contain">
+								
+                                <li class="ui-field-contain w50 fullbtn">
                                     <label for="pass"><?php echo $this->t('Change Password'); ?>: <a href="#safetext-password-info" data-rel="popup" data-transition="pop" class="safetext-tooltip-btn ui-btn ui-alt-icon ui-nodisc-icon ui-btn-inline ui-icon-info ui-btn-icon-notext ui-corner-all">Info</a></label>
                                     <input type="password" name="pass" value="" data-clear-btn="true">
                                     <div data-role="popup" id="safetext-password-info" class="ui-content" data-theme="a" style="max-width:350px;">
@@ -29,28 +102,30 @@
 								      <p><?php echo $this->t('Last updated'); ?>: <?php echo date('M jS, Y', strtotime($this->getValue('user')->last_pass_update)); ?></p>
 								    </div>
                                 </li>
-                                
-                                <li class="ui-field-contain">
+                                <!--
+                                <li class="ui-field-contain w50 fl">
                                     <label for="pass"><?php echo $this->t('Security Code'); ?>: <a href="#safetext-code-info" data-rel="popup" data-transition="pop" class="safetext-tooltip-btn ui-btn ui-alt-icon ui-nodisc-icon ui-btn-inline ui-icon-info ui-btn-icon-notext ui-corner-all">Info</a></label>
                                     <input type="text" disabled value="<?php echo MD5('seCURityCode' . $this->getValue('user')->id); ?>">
                                     <div data-role="popup" id="safetext-code-info" class="ui-content" data-theme="a" style="max-width:350px;">
 								      <a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>					  <p>Use this code to authenticate your account for third-party applications. To use, copy and paste into the "Security Code" field of the application requesting Safe-Text access. This is a hashcode based on your user ID can cannot be changed.</p>
 								    </div>
-                                </li>
+                                </li>-->
                                 
-                                <li class="ui-field-contain">
+                                <li class="ui-field-contain w50 fl">
                                     <label for="firstname"><?php echo $this->t('First Name'); ?>:</label>
                                     <input type="text" name="firstname" value="<?php echo $this->getValue('user')->firstname; ?>" data-clear-btn="true">
                                 </li>
-                                <li class="ui-field-contain">
+                                <li class="ui-field-contain w50 fl">
                                     <label for="lastname"><?php echo $this->t('Last Name'); ?>:</label>
                                     <input type="text" name="lastname" value="<?php echo $this->getValue('user')->lastname; ?>" data-clear-btn="true">
                                 </li>
-                                <li class="ui-field-contain">
+								<!--
+                                <li class="ui-field-contain w50 fl">
                                     <label for="phone"><?php echo $this->t('Phone'); ?>:</label>
                                     <input type="text" name="phone" value="<?php echo $this->getValue('user')->phone; ?>" data-clear-btn="true">
                                 </li>
-                                <li class="ui-field-contain">
+								-->
+                                <li class="ui-field-contain w50 fl">
                                     <label for="notifications_on"><?php echo $this->t('Notifications'); ?>: <a href="#safetext-notifications-info" data-rel="popup" data-transition="pop" class="safetext-tooltip-btn ui-btn ui-alt-icon ui-nodisc-icon ui-btn-inline ui-icon-info ui-btn-icon-notext ui-corner-all">Info</a></label>
 									<select name="notifications_on" data-role="slider">
 						                <option value="0"><?php echo $this->t('No'); ?></option>
@@ -58,10 +133,11 @@
 						            </select>
 						            <div data-role="popup" id="safetext-notifications-info" class="ui-content" data-theme="a" style="max-width:350px;">
 								      <a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
-								      <p><?php echo $this->t('If enabled, activity notifications will be sent to your device'); ?></p>
+								      <p><?php echo $this->t('If enabled, activity notifications will be sent to your device(s).'); ?></p>
 								    </div>
                                 </li>
-                                <li class="ui-field-contain">
+								<!--
+                                <li class="ui-field-contain w50 fl">
                                     <label for="whitelist_only"><?php echo $this->t('Whitelist Only'); ?>: <a href="#safetext-whitelist-info" data-rel="popup" data-transition="pop" class="safetext-tooltip-btn ui-btn ui-alt-icon ui-nodisc-icon ui-btn-inline ui-icon-info ui-btn-icon-notext ui-corner-all">Info</a></label>
 									<select name="whitelist_only" data-role="slider">
 						                <option value="0"><?php echo $this->t('No'); ?></option>
@@ -72,20 +148,63 @@
 								      <p><?php echo $this->t('If enabled, only users from your whitelist can see and contact you'); ?></p>
 								    </div>
                                 </li>
-                                <li class="ui-field-contain">
+								-->
+                                <li class="ui-field-contain w50 fl">
                                     <label for="enable_panic"><?php echo $this->t('Panic Button'); ?>:</label>
 									<select name="enable_panic" data-role="slider">
 						                <option value="0"><?php echo $this->t('No'); ?></option>
 						                <option value="1"<?php if ($this->getValue('user')->enable_panic === '1') echo ' selected'; ?>><?php echo $this->t('Yes'); ?></option>
 						            </select>
                                 </li>
-                                <li>
+                                <li class="clearDivider fullbtn" style="height:auto">
+                                	<label for="enable_panic">Notes:</label>
+                                	<textarea name="notes" id="notes"><?php echo $this->getValue('notes'); ?></textarea>
+                                </li>
+								<!--
+                                <li class="clearDivider fullbtn">
                                 	<input type="hidden" name="language" value="en" />
-                                	<button class="ui-btn ui-corner-all ui-btn-a safetext-apply-button ui-icon-check ui-btn-icon-left">Apply</button>
+                                	<button class="fullButton safetext-settings-apply">Apply</button>
+                                </li>
+								-->
+                                <li class="clearDivider fullbtn">
+                                <button class="msg_setting_button">Message Default Time ( <span id="lifetime_value">
+                                <?php 
+                                if($this->getValue('lifetime')!="") 
+                                { 
+                                	$hour = intval($this->getValue('lifetime')/60);
+                                	$minute = fmod($this->getValue('lifetime'),60);
+                                	echo $hour.' Hours '.$minute.' Minutes'; 
+                                } 
+                                else 
+                                { echo '24 Hours'; }
+                                ?>
+                                </span> )</button>
+                                </li>
+
+                                <li class="clearDivider fullbtn">
+                                	<button class="fullButton language_btn">Language ( English )</button>
+                                </li>
+
+
+				<li class="clearDivider fullbtn">
+                                	<button class="fullButton delay_btn">Send Delay</button>
+                                </li>
+
+								
+				<li class="clearDivider fullbtn">
+                                <button class="bubble_color">Bubble Color ( <span id="bubble_page_value">
+                                <?php 
+                                if($this->getValue('color')!="") 
+                                { 
+                                	echo $this->getValue('color');
+                                } 
+                                else 
+                                { echo 'Default'; }
+                                ?>
+                                </span> )</button>
                                 </li>
                                 
-                                
-                                <li data-role="list-divider"><?php echo $this->t('Membership Status'); ?></li>
+                                <li data-role="list-divider" class="clearDivider p6"><?php echo $this->t('Membership Status'); ?></li>
                                 <li data-icon="gear">
                                		<a href="#" class="safetext-membership-options-button">
                                         <h2><?php if ($this->getValue('user')->subscription_level < 1) echo $this->t('Not Active'); else echo $this->t('Active'); ?></h2>
@@ -150,7 +269,111 @@
             </ul>
         </div>
 	<!-- /subscription options popup -->
+	<style>
+	.w50{
+	margin: 5px !important;
+	float: left;
+	width: 44.8%;
+	clear:none;
+	height: 70px;
+	}
+	
+	.safetext-settings-form .clearDivider{
+	display: block;
+clear: both;
+float: none;
+width: auto;
+	}
+	
+	.ui-field-contain div.ui-slider-switch, .ui-field-contain.ui-hide-label div.ui-slider-switch, html .ui-popup .ui-field-contain div.ui-slider-switch {
+display: inline-block;
+width: 5.8em !important;
+}
+	
+	.ui-slider-track .ui-btn.ui-slider-handle{
+
+	border-radius: 55px !important;
+}
+	div.ui-slider-switch{
+	height: 34px;
+
+	margin-top: 5px !important;
+	}
+	.p6{padding:6px !important}
+	</style>
 	    
 	<?php echo $this->render('webclient/_footer.phtml'); ?>
 		
 </div> <!--/page-->
+
+<!-- settings popup menu -->
+<div data-role="popup" data-theme="a" class="safetext-message-settings-popup2 ui-corner-all">
+	
+    <form class="safetext-message-settings-form">
+        <div style="padding:10px 20px;">
+        <a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
+		<div align="center"><h3><?php echo $this->t('Message Settings'); ?></h3></div>
+		
+		<div class="dtpicker-components"><div class="dtpicker-compOutline dtpicker-comp2"><div class="dtpicker-comp hour"><a class="dtpicker-compButton increment_hour dtpicker-compButtonEnable">+</a><input type="text" id="setting_hour" class="dtpicker-compValue" value="24" readonly><a class="dtpicker-compButton decrement_hour dtpicker-compButtonEnable">-</a></div></div><div class="dtpicker-compOutline dtpicker-comp2"><div class="dtpicker-comp minutes"><a class="dtpicker-compButton increment_minute dtpicker-compButtonEnable">+</a><input type="text" id="setting_minute" class="dtpicker-compValue" value="0"><a class="dtpicker-compButton decrement_minute dtpicker-compButtonEnable">-</a></div></div></div>
+        
+        <a href="#" class="safetext-message-settings-apply-button2 ui-btn ui-corner-all ui-shadow"><?php echo $this->t('Apply'); ?></a>    
+            
+        </div>
+    </form>
+</div>
+<!-- /settings -->
+
+<!---Bubble Color --->
+
+<div data-role="popup" data-theme="a" class="safetext-bubble ui-corner-all">
+	
+    <form class="safetext-bubble-form">
+    <input type="hidden" name="user_id" id="user_id" value="<?php echo $this->getValue('user')->id; ?>">
+        <div style="padding:10px 20px;">
+        
+        <ul>
+        <li class="bubble_value">Default</li>
+        <li class="bubble_value">Blue</li>
+        <li class="bubble_value">Green</li>
+        <li class="bubble_value">Orange</li>
+        <li class="bubble_value">Pink</li>
+        <li class="bubble_value">Yellow</li>
+        </ul> 
+            
+        </div>
+    </form>
+</div>
+
+
+<!---Language Popup--->
+
+<div data-role="popup" data-theme="a" class="safetext-language ui-corner-all">
+	
+    <form class="safetext-language-form">
+        <div style="padding:10px 20px;">
+        
+        <ul>
+        <li class="language_value">English</li>
+        </ul> 
+            
+        </div>
+    </form>
+</div>
+
+<!---Delay Popup--->
+
+<div data-role="popup" data-theme="a" class="safetext-delay ui-corner-all">
+	
+    <form class="safetext-delay-form">
+        <div style="padding:10px 20px;">
+        
+        <ul>
+        <li class="delay_value">5</li>
+	<li class="delay_value">10</li>
+	<li class="delay_value">15</li>
+	<li class="delay_value">20</li>
+        </ul> 
+            
+        </div>
+    </form>
+</div>

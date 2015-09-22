@@ -19,8 +19,10 @@
 			    <!-- Main Content Column -->
 			    <div class="safetext-block-b">
 			    	<div class="ui-body ui-body-d">
-				    		<div class="ui-grid-b safetext-mobile-hidden">
-						    <div class="ui-block-a" style="width:99% !important;"><a href="/webclient/messages" class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-mail ui-btn-active">Messages</a></div>
+				    	<div class="ui-grid-b safetext-mobile-hidden">
+						    <div class="ui-block-a"><a href="/webclient/messages" class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-mail ui-btn-active">Messages</a></div>
+						    <div class="ui-block-b"><a href="/webclient/contacts" class="ui-btn ui-corner-all ui-btn-icon-left ui-icon-user">Contacts</a></div>
+						    <div class="ui-block-c"><a href="/settings" class="ui-btn ui-corner-all ui-btn-icon-left ui-icon-gear">Settings</a></div>
 						</div>
 						
 						<div class="msgListWrapper">
@@ -45,8 +47,6 @@
 							    	}
 							    	
 							    	// get time to expire
-                                  				date_default_timezone_set("Europe/Berlin");
-
 							    	$secsLeft = strtotime($this_message->expire_date) - time();
 							    	if ($secsLeft < 0) $secsLeft = 0;
 							    	$minsLeft = round($secsLeft /60, 0, PHP_ROUND_HALF_DOWN);
@@ -102,17 +102,15 @@
 							    	}
 								?>
 								<li>
-								
 								<?php
-									$url = "/webclient/groupconversation/group_id/".$this_group_message['group_id']."/participants_id/".$this_group_message['participants_id'];
+									echo $url = "/webclient/groupconversation/group_id/".$this_group_message['group_id']."/participants_id/".$this_group_message['participants_id'];
 								?>
-								
-								<a href="#" onclick="group_timezone('<?php echo $url;?>');" class="message">
+								<a href="#" onclick="group_timezone(<?php echo $url;?>);" class="message">
 								<p style="white-space:normal;"><strong><em><?php echo $sender_name; ?> To <?php echo $this_group_message['group_name']; ?></em></strong></p>
 								<p><?php echo $this_group_message['content']; ?></p>
 								<p>sent <?php echo $this_group_message['sent_date']; ?></p>
 								<p class="ui-li-aside"><strong><?php echo $this->t('time left'); ?>: <?php echo $timeLeft; ?></strong></p>
-								<a href="#" data-safetext-message-id="<?php echo $this_group_message[0]['message_id']; ?>" class="<?php echo 'safetext-delete-button'; ?>"></a>
+								<a href="#" data-safetext-message-id="<?php echo $this_group_message->id; ?>" class="<?php echo 'safetext-delete-button'; ?>"></a>
 								</a>
 								</li>
 								<?php }
@@ -186,14 +184,19 @@ function timezone(cont_id) {
 
 function group_timezone(redirect_url) {
 
-	
+	alert(1);
 	var tz = jstz.determine(); 
-	var timezone1 = tz.name();
-	
+	var timezone1 = tz.name(); 
+	//var timezone = timezone1.replace("/","-");	
 	var timezone2 = timezone1.split("/");
 	var timezone = timezone2[0]+"-"+timezone2[1];
+	//var contact_id1 = $(this).attr("id");
+	//var contact_id2 = contact_id1.split("_");
 	
+	
+	//alert(contact);
 	var url = redirect_url+"/timezone/"+timezone;
 	window.location.href = url;
+	
 }
 </script>

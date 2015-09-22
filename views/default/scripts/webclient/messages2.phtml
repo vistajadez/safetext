@@ -20,8 +20,59 @@
 							    			else $recipient = 'Unknown';
 							    	}
 							    	
+
 							    	// get time to expire
+								date_default_timezone_set("Europe/Berlin");
+
 							    	$secsLeft = strtotime($this_message->expire_date) - time();
+							    	if ($secsLeft < 0) $secsLeft = 0;
+							    	$minsLeft = round($secsLeft/60);
+							    	$hrsLeft = round($minsLeft/60);
+							    	
+							    	if ($hrsLeft < 1) {
+							    		$timeLeft = $minsLeft . ' ' . $this->t('min');
+							    		if ($minsLeft > 1 || $minsLeft === 0) $timeLeft .= 's';
+							    	} else {
+							    		$timeLeft = $hrsLeft . ' ' . $this->t('hr');
+							    		if ($hrsLeft > 1) $timeLeft .= 's';
+							    	}
+
+						    	?>
+						    		<li class="<?php if ($this_message->image_name != '') {?>ui-li-has-alt ui-li-has-thumb ui-first-child <?php } else {?>ui-li-has-alt ui-first-child ui-last-child<?php }?> ">
+									
+						    		<a href="#" onclick="timezone(<?php echo $contact->contact_user_id;?>);" class="ui-btn">
+						    			<?php if ($this_message->image_name != ''): ?>
+									
+						    				<img src="/assets/images/users/<?php echo $this_message->image_name; ?>-s.jpg"/>
+										
+						    			<?php endif; ?>
+						    			<?php if ($this->getValue('folder') !== 'sent' && $this->getValue('folder') !== 'drafts' && $this_message->is_read === '0') : ?>
+						    				<p style="white-space:normal;"><strong><em><?php echo $sender; ?></em> <?php echo $this->t('to'); ?> <em><?php echo $recipient; ?></em></strong></p>
+						    			<?php else: ?>
+						    				<p style="white-space:normal;"><em><?php echo $sender; ?></em> <?php echo $this->t('to'); ?> <em><?php echo $recipient; ?></em></p>
+						    			<?php endif; ?>
+						    			<p><?php echo $this_message->content; ?></p>
+						    			<p style="font-size:.68em;">sent <?php echo $this_message->sent_date; ?></p>
+						    			<p class="ui-li-aside"><strong><?php echo $this->t('time left'); ?>: <?php echo $timeLeft; ?></strong></p></a>
+						    			<a href="#" data-safetext-message-id="<?php echo $this_message->id; ?>" class="safetext-delete-button ui-btn ui-btn-icon-notext ui-icon-delete"></a>
+										
+										
+						    		</li>
+									
+						    	<?php endforeach; ?>
+								
+								<?php foreach($this->getValue('groupmessages') as $this_group_message) {
+								
+								if($this_group_message['group_name'] !="") {
+								if ($this_group_message['sender_id'] === $this->getValue('user')->id) {
+							    	$sender_name = 'Me';
+							    }
+								else {
+									$sender_name = $this_group_message['sender_name'];
+								}
+								
+								// get time to expire
+							    	$secsLeft = strtotime($this_group_message['expire_date']) - time();
 							    	if ($secsLeft < 0) $secsLeft = 0;
 							    	$minsLeft = round($secsLeft /60, 0, PHP_ROUND_HALF_DOWN);
 							    	$hrsLeft = round($minsLeft /60, 0, PHP_ROUND_HALF_DOWN);
@@ -33,22 +84,20 @@
 							    		$timeLeft = $hrsLeft . ' ' . $this->t('hr');
 							    		if ($hrsLeft > 1) $timeLeft .= 's';
 							    	}
-						    	?>
-						    		<li class="ui-li-has-alt ui-first-child ui-last-child">
-						    		<a href="/webclient/conversation/contact/<?php echo $contact->contact_user_id; ?>" class="ui-btn">
-						    			<?php if ($this_message->image_name != ''): ?>
-						    				<img src="/assets/images/users/<?php echo $this_message->image_name; ?>-s.jpg" />
-						    			<?php endif; ?>
-						    			<?php if ($this->getValue('folder') !== 'sent' && $this->getValue('folder') !== 'drafts' && $this_message->is_read === '0') : ?>
-						    				<p style="white-space:normal;"><strong><em><?php echo $sender; ?></em> <?php echo $this->t('to'); ?> <em><?php echo $recipient; ?></em></strong></p>
-						    			<?php else: ?>
-						    				<p style="white-space:normal;"><em><?php echo $sender; ?></em> <?php echo $this->t('to'); ?> <em><?php echo $recipient; ?></em></p>
-						    			<?php endif; ?>
-						    			<p><?php echo $this_message->content; ?></p>
-						    			<p style="font-size:.68em;">sent <?php echo $this_message->sent_date; ?></p>
-						    			<p class="ui-li-aside"><strong><?php echo $this->t('time left'); ?>: <?php echo $timeLeft; ?></strong></p></a>
-						    			<a href="#" data-safetext-message-id="<?php echo $this_message->id; ?>" class="safetext-delete-button ui-btn ui-btn-icon-notext ui-icon-delete"></a>
-						    		</li>
-						    	<?php endforeach; ?>
+								?>
+								<li class="ui-li-has-alt ui-first-child ui-last-child">
+								<?php
+									$url = "/webclient/groupconversation/group_id/".$this_group_message['group_id']."/participants_id/".$this_group_message['participants_id'];
+								?>
+								<a href="#" onclick="group_timezone('<?php echo $url;?>');" class="ui-btn">
+								<p style="white-space:normal;"><strong><em><?php echo $sender_name; ?> To <?php echo $this_group_message['group_name']; ?></em></strong></p>
+								<p><?php echo $this_group_message['content']; ?></p>
+								<p>sent <?php echo $this_group_message['sent_date']; ?></p>
+								<p class="ui-li-aside"><strong><?php echo $this->t('time left'); ?>: <?php echo $timeLeft; ?></strong></p>
+								<a href="#" data-safetext-message-id="<?php echo $this_group_message[0]['message_id']; ?>" class="<?php echo 'safetext-delete-button ui-btn ui-btn-icon-notext ui-icon-delete'; ?>"></a>
+								</a>
+								</li>
+								<?php }
+								}?>
 </ul>
 </div>

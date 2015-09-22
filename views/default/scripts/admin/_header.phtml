@@ -1,144 +1,7 @@
 <!-- header - with web client nav -->
 <!-- fixed header -->
-
-<!-- auto logout after 30 min -->
-
-<script>
-$(document).ready(function() {
-
-	function getCookie(c_name) {
-			var i, x, y, ARRcookies = document.cookie.split(";");
-			for (i = 0; i < ARRcookies.length; i++) {
-				x = ARRcookies[i].substr(0, ARRcookies[i].indexOf("="));
-				y = ARRcookies[i].substr(ARRcookies[i].indexOf("=") + 1);
-				x = x.replace(/^\s+|\s+$/g, "");
-				if (x == c_name) {
-					return unescape(y);
-				}
-			}
-	}
-
-	var remember = getCookie('remember');
-	
-	//alert(remember);
-	
-	if(remember=='false') {
-	
-		function createCookie(name, value) {
-		   var date = new Date();
-		   date.setTime(date.getTime()+((30*60)*1000));
-		   var expires = "; expires="+date.toGMTString();
-
-		   document.cookie = name+"="+value+expires+"; path=/";
-		}
-
-		createCookie('timelimit',"test");
-		
-		setInterval(checkcookie, 5000);
-		
-		function checkcookie() {
-		
-			function getCookie(c_name) {
-				var i, x, y, ARRcookies = document.cookie.split(";");
-				for (i = 0; i < ARRcookies.length; i++) {
-					x = ARRcookies[i].substr(0, ARRcookies[i].indexOf("="));
-					y = ARRcookies[i].substr(ARRcookies[i].indexOf("=") + 1);
-					x = x.replace(/^\s+|\s+$/g, "");
-					if (x == c_name) {
-						return unescape(y);
-					}
-				}
-			}
-			
-			var getCookie = getCookie('timelimit');
-			
-			if(getCookie!="test") {
-				window.location.href = "/auth/logout";
-			}
-			
-			//alert(getCookie);
-			
-		}
-		
-		$(".safetext-new-message-button").click(function() {
-			function createCookie(name, value) {
-			   var date = new Date();
-			   date.setTime(date.getTime()+((30*60)*1000));
-			   var expires = "; expires="+date.toGMTString();
-
-			   document.cookie = name+"="+value+expires+"; path=/";
-			}
-
-			createCookie('timelimit',"test");
-		});
-		
-		$(".safetext-new-group-message-button").click(function() {
-			function createCookie(name, value) {
-			   var date = new Date();
-			   date.setTime(date.getTime()+((30*60)*1000));
-			   var expires = "; expires="+date.toGMTString();
-
-			   document.cookie = name+"="+value+expires+"; path=/";
-			}
-
-			createCookie('timelimit',"test");
-		});
-	
-	}
-	
-	
-    $("a").click(function () {
-        window.onbeforeunload = null;
-	});	
-	
-	
-	
-	window.onbeforeunload = function (event) {
-		
-		/*var message = '';
-		if (typeof event == 'undefined') {
-			event = window.event;
-		}
-		if (event) {
-			event.returnValue = message;
-		}*/
-
-		var url = "/auth/logout/";
-		
-		$.post(url , function( data ) {
-				
-		});
-		
-		//return message;
-	};
-	
-	
-});	
-
-
-
-</script>
-
-<!-- end -->
-
 <script src="/assets/js/classie.js"></script>
-<script>
-    function init() {
-        window.addEventListener('scroll', function(e){
-            var distanceY = window.pageYOffset || document.documentElement.scrollTop,
-                shrinkOn = 300,
-                header = document.querySelector("header");
-            if (distanceY > shrinkOn) {
-                classie.add(header,"smaller");
-            } else {
-                if (classie.has(header,"smaller")) {
-                    classie.remove(header,"smaller");
-                }
-            }
-        });
-    }
-    window.onload = init();
-</script>
+
 <!-- end -->
 <header data-role="header" class="safetext-header" data-position="fixed">
 
@@ -149,11 +12,9 @@ $(document).ready(function() {
 	<div class="topbar">
 	<a href="#"><img src="https://safe-text.com/wp-content/uploads/2015/02/logoHeader1.png" alt=""></a>
 	<ul>
-		<li><a href="https://safe-text.com/" class="homeicon"><img src="https://safe-text.com/wp-content/uploads/2015/02/home.png" alt=""></a></li>
-		<li class="company"><a href="https://safe-text.com/the-company/" style="padding-top:40px !important;">The Company</a></li>
-		<li class="app"><a href="https://safe-text.com/the-app/" style="padding-top:40px !important;">The App</a></li>
-		<li class="difference"><a href="https://safe-text.com/the-difference/" style="padding-top:40px !important;">The Difference</a></li>
-		<li class="join"><a href="/auth/logout" style="padding-top:40px !important;">Logout</a></li>
+		<li><a href="/admin/users" class="homeicon"><img src="https://safe-text.com/wp-content/uploads/2015/02/home.png" alt=""></a></li>
+		<li class="app"><a href="/admin/account" style="padding-top:40px !important;">Change Password</a></li>
+		<li class="join"><a href="/admin/logout" style="padding-top:40px !important;">Logout</a></li>
 	</ul>
 	</div>
 	</div>
@@ -218,7 +79,7 @@ background: transparent;
   max-width: inherit !important;
 }
 .topbar ul li:first-child {
-  margin: 0 215px 0 0;
+  margin: 0 560px 0 0;
   padding-top: 0;
 }
 .topbar a {
@@ -271,3 +132,16 @@ background: transparent;
   border:none !important;
 }
 </style>
+
+<?php
+/* set cookie for logout */										
+/*end*/
+/*if($_COOKIE["timelimit"]=="") {
+    echo "Cookie named '" . $_COOKIE["timelimit"] . "' is not set!";
+	header("location:/auth/logout");
+} else {
+    echo "Cookie '" . $_COOKIE["timelimit"] . "' is set!<br>";
+    echo "Value is: " . $_COOKIE["timelimit"];
+}*/
+	
+?>

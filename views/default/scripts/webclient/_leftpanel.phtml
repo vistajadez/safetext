@@ -3,13 +3,14 @@
 <!-- left panel - webclient mobile nav  -->
 <div data-role="panel" class="leftpanel" data-position="left" data-display="reveal" data-theme="b">
 	<div>
-		<p><?php if ($this->getValue('user') instanceof SafetextUser) echo $this->getValue('user')->username; ?></p>
+		<p><strong><?php if ($this->getValue('user') instanceof SafetextUser) echo $this->getValue('user')->username; ?></strong></p>
 		
 		<ul data-role="listview">
 			<!--<li><a href="/webclient/messages" data-transition="fade"><?php echo $this->t('Messages'); ?></a></li>-->
-			<li><a href="/webclient/messages/folder/inbox" data-transition="fade"><?php echo $this->t('Messages'); ?> <span class="ui-li-count safetext-inbox-counter"><?php echo $folderStats['inbox']; ?></span></a></li>
+			<li><a href="/webclient/messages" data-transition="fade"><?php echo $this->t('Messages'); ?> <span class="ui-li-count safetext-inbox-counter"><?php echo $this->getValue('unread_msg'); ?></span></a></li>
+			<li><a href="/webclient/groupmessages"><?php echo $this->t('Groups'); ?> <span class="ui-li-count"><?php echo $this->getValue('count_group'); ?></span></a></li>
 			<!--<li><a href="/webclient/messages/folder/important" data-transition="fade"><?php echo $this->t('Important'); ?> <span class="ui-li-count safetext-important-counter"><?php echo $folderStats['important']; ?></span></a></li>-->
-			<li><a href="/webclient/messages/folder/sent" data-transition="fade"><?php echo $this->t('Sent'); ?> <span class="ui-li-count safetext-sent-counter"><?php echo $folderStats['sent']; ?></span></a></li>
+			<!--<li><a href="/webclient/messages/sent" data-transition="fade"><?php echo $this->t('Sent'); ?> <span class="ui-li-count safetext-sent-counter"><?php echo $folderStats['sent']; ?></span></a></li>-->
 			<!--<li><a href="/webclient/messages/folder/drafts" data-transition="fade"><?php echo $this->t('Drafts'); ?> <span class="ui-li-count safetext-drafts-counter"><?php echo $folderStats['drafts']; ?></span></a></li>-->
 			<li><a href="/webclient/contacts" data-transition="fade"><?php echo $this->t('Contacts'); ?> <span class="ui-li-count"><?php echo $folderStats['contacts']; ?></span></a></li>
 			<li><a href="/settings" data-transition="fade"><?php echo $this->t('Settings'); ?></a></li>

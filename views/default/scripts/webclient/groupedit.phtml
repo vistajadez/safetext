@@ -1,0 +1,130 @@
+<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js">
+</script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jstimezonedetect/1.0.4/jstz.min.js">
+</script>
+<style>
+.ser .ui-filterable{ display:none; }
+</style>
+<div data-role="page" class="safetext-page safetext-contacts" data-title="<?php if ($this->getValue('filter') === 'blocked') echo $this->t('Blocked'); ?> <?php echo $this->t('Contacts'); ?>">
+		
+		<?php echo $this->render('webclient/_leftpanel.phtml'); ?>
+		<?php echo $this->render('webclient/_header.phtml'); ?>
+	
+	    <div data-role="content" class="safetext-content" data-theme="a">
+	    	
+		    <div class="safetext-client-grid">
+		    	<!-- Left-hand Folder Column -->
+			    <div class="safetext-block-a">
+			    	<div class="ui-body ui-body-d">
+					    <div><a href="/webclient/contactadd" class="safetext-add-contact-button ui-btn ui-icon-plus ui-btn-icon-left ui-corner-all ui-shadow"><?php echo $this->t('Add Contact'); ?></a></div>
+					    <?php echo $this->render('webclient/_foldermenu.phtml'); ?>
+					</div>
+			    </div>
+			    
+			    <!-- Main Content Column -->
+			    <div class="safetext-block-b">
+			    	<div class="ui-body ui-body-d">
+
+				    		<div class="ui-grid-a safetext-mobile-hidden">
+						    <div class="ui-block-a" style="width:100%"><a href="/webclient/groupmessages" class="ui-shadow ui-btn ui-corner-all ui-btn-icon-left ui-icon-user ui-btn-active">Groups</a></div>
+						</div>
+						
+						<div class="contactListWrapper ser">
+						
+						<form id="edit_group_form">
+						
+						    <input type="text" name="group_name" id="group_name" placeholder="Group Name" value="<?php echo $this->getValue('group_name'); ?>">
+							
+							<input type="hidden" name="o_group_name" id="o_group_name" value="<?php echo $this->getValue('group_name'); ?>">
+							
+							<input type="hidden" name="group_id" id="group_id" value="<?php echo $this->getValue('group_id'); ?>">
+							
+							<input type="hidden" name="user_id" id="user_id" value="<?php echo $this->getValue('user_id'); ?>">
+							
+							
+						    
+						    <ul data-role="listview" data-autodividers="true" data-icon="null" data-filter="true" data-inset="true">
+						    	<?php foreach ($this->getValue('contacts') as $this_contact) : ?>
+						    		<?php if (($this->getValue('filter') === 'blocked' && $this_contact->is_blocked==='1') || ($this->getValue('filter') === '' && $this_contact->is_blocked === '0')) : ?>
+						    		<li><a href="" style="cursor:default">
+						    			<h2><?php echo $this_contact->label(); ?></h2>
+										<p style="margin-right:5px;">
+						    			<?php if ($this_contact->notes !== '') { ?>
+						    				<strong><?php echo $this->t('Note'); ?>:</strong> <?php echo $this_contact->notes; ?>
+						    			<?php } else { echo "&nbsp"; }?> 
+										</p>
+						    			<?php /*?><?php if ($this_contact->phone !== '') : ?>
+						    				<p style="margin-right:5px;"><strong><?php echo $this->t('Tel'); ?>:</strong> <?php echo $this_contact->phone; ?></p>
+						    			<?php endif; ?>
+						    			<?php if ($this_contact->email !== '') : ?>
+						    				<p><strong><?php echo $this->t('Email'); ?>:</strong> <?php echo $this_contact->email; ?></p>
+						    			<?php endif; ?><?php */?></a>
+						    				<input type="checkbox" value="<?php echo $this_contact->contact_user_id; ?>" <?php if(in_array($this_contact->contact_user_id,$this->getValue('group_member'))) { echo "checked"; } ?> name="group_contact" id="group_contact" class="group_contact group_checkbox" style="cursor:pointer">
+										<!--<a href="/webclient/contact/id/<?php echo $this_contact->contact_user_id; ?>"></a>-->
+						    		</li>
+						    		<?php endif; ?>
+								<?php endforeach; ?>
+								<?php
+							$participants = implode(",",$this->getValue('group_member'));
+							?>
+							<!--<input type="text" name="old_participants" id="old_participants" value="<?php echo $participants;?>">-->
+							
+						   </ul>
+						   <input type="submit" value="Remove Group" id="safetext-group-remove" class="safetext-group-remove">
+						   <input type="submit" value="Done" id="safetext-group-edit" class="safetext-group-edit">
+						  
+						  </form>
+						   
+						</div>
+						    
+			    	</div>
+			    </div>
+
+			</div>
+	    
+	    </div><!-- /content -->
+	
+	<?php echo $this->render('webclient/_footer.phtml'); ?>
+		
+</div> <!--/page-->
+
+<script>
+/*$(document).ready(function() {
+
+$('.group_contact').click(function() {	
+
+	var old_participants = $("#old_participants").val();
+	
+	if($(this).is(":checked")) {
+	
+		var id = $(this).val();
+		var add_id = ","+id;
+		$("#old_participants").val(old_participants+add_id);
+	
+	}
+	else {
+		var cur_participants = $("#old_participants").val();
+		var array_part = cur_participants.split(",");
+		var id = $(this).val();
+		var str = "";
+		for(var i=0;i<array_part.length;i++) {
+			if(array_part[i]!=id) {
+				str = str+array_part[i];
+				if(i!=(array_part.length-1)) {
+					str = str+"," 
+				}
+			}
+		}
+		$("#old_participants").val(str);
+		
+		
+	}
+	
+	
+	
+	
+	
+	
+});
+});*/
+</script>

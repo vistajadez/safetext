@@ -80,23 +80,70 @@ class SafetextDevice extends SafetextModel {
 											"','$name','$email','$phone','$is_whitelist','$is_blocked')");
 										
 										// if we're blocking the contact, delete this user as the blockee's contact, if exists
-										if ($is_blocked == '1') $this->db->call("syncContactDelete('" . $values['key'] . "', '" . $this->getValue('user_id') . "')");
+										//if ($is_blocked == '1') $this->db->call("syncContactDelete('" . $values['key'] . "', '" . $this->getValue('user_id') . "')");
+										if ($is_blocked == '1') $this->db->call("syncBlockContactDelete('" . $values['key'] . "', '" . $this->getValue('user_id') . "')");
 									}
 								} else if ($table === 'messages') {
 									// push a message
-									if (array_key_exists('is_deleted', $values) && $values['is_deleted'] == '1') {
-										// stored procedure call for deleting a message
-										$this->config['log']->write('This is a DELETE');
-										$this->db->call("syncMessageDelete('" . $values['key'] . "')");
-									} else if (array_key_exists('is_updated', $values) && $values['is_updated'] == '1') {
-										// stored procedure for updating a message
-										$this->config['log']->write('This is an UPDATE');
-										array_key_exists('is_important', $values)? $is_important = $values['is_important']: $is_important = '0';
-										array_key_exists('is_draft', $values)? $is_draft = $values['is_draft']: $is_draft = '0';
-										array_key_exists('is_read', $values)? $is_read = $values['is_read']: $is_read = '0';
-										$this->db->call("syncMessage('" . $this->getValue('user_id') . "','" . $values['key'] . 
-											"','$is_important','$is_draft','$is_read')");
-									}									
+									if(!array_key_exists('group_id', $values) || $values['group_id'] == "") {
+									
+										if (array_key_exists('is_deleted', $values) && $values['is_deleted'] == '1') {
+											// stored procedure call for deleting a message
+											$this->config['log']->write('This is a DELETE');
+											$this->db->call("syncMessageDelete('" . $values['key'] . "')");
+										} else if (array_key_exists('is_updated', $values) && $values['is_updated'] == '1') {
+											// stored procedure for updating a message
+											$this->config['log']->write('This is an UPDATE');
+											array_key_exists('is_important', $values)? $is_important = $values['is_important']: $is_important = '0';
+											array_key_exists('is_draft', $values)? $is_draft = $values['is_draft']: $is_draft = '0';
+											array_key_exists('is_read', $values)? $is_read = $values['is_read']: $is_read = '0';
+											$this->db->call("syncMessage('" . $this->getValue('user_id') . "','" . $values['key'] . 
+												"','$is_important','$is_draft','$is_read')");
+										}	
+										
+									}	
+									else if(array_key_exists('group_id', $values) || $values['group_id'] != ""){
+									
+										if (array_key_exists('is_deleted', $values) && $values['is_deleted'] == '1') {
+											// stored procedure call for deleting a message
+											$this->config['log']->write('This is a DELETE');
+											$count_participants = $this->db->call("getCountParticipants('" . $values['group_id'] . "')");
+											
+											$this->db->call("syncGroupMessageDelete('" . $values['key'] . "','".$count_participants[0]['participants_id']."')");
+										} else if (array_key_exists('is_updated', $values) && $values['is_updated'] == '1') {
+											// stored procedure for updating a message
+											$this->config['log']->write('This is an UPDATE');
+											array_key_exists('is_important', $values)? $is_important = $values['is_important']: $is_important = '0';
+											array_key_exists('is_draft', $values)? $is_draft = $values['is_draft']: $is_draft = '0';
+											array_key_exists('is_read', $values)? $is_read = $values['is_read']: $is_read = '0';
+											array_key_exists('sender', $values)? $sender = $values['sender']: $sender = '0';											
+											
+											$count_participants = $this->db->call("getCountParticipants('" . $values['group_id'] . "')");
+											$receipients = explode(",",$count_participants[0]['participants_id']);
+											$tot_receipients = count($receipients);	
+											
+												
+											
+											$sender_id = $this->db->call("getGroupsenderId('" . $values['key'] . "')");	
+											
+											$last_msg_id = $this->db->call("getGroupLastMessage('" . $values['group_id'] . "')");	
+											
+											$this->db->call("UpdateCountIsRead('".$values['key']."','".$this->getValue('user_id')."','".$sender_id[0]['sender_id']."')");																											
+											if($sender_id[0]['sender_id']!=$this->getValue('user_id')) {
+											
+											$this->db->call("syncResponseGroupMessage('".$values['group_id']."','".$values['key'].
+												"','$is_important','$is_draft','$is_read','$tot_receipients','".$count_participants[0]['participants_id']."','".$sender_id[0]['sender_id']."','".$sender_id[0]['username']."','".$this->getValue('user_id')."')");
+											
+											}	
+																																												
+											$this->db->call("syncGroupMessage('".$values['group_id']."','".$values['key'].
+												"','$is_important','$is_draft','$is_read','$tot_receipients','".$count_participants[0]['participants_id']."','".$sender_id[0]['sender_id']."','".$sender_id[0]['username']."')");
+												
+												
+										}
+										
+									}
+																
 								}
 					
 							} // end if table is supported
@@ -110,26 +157,26 @@ class SafetextDevice extends SafetextModel {
 		if ($this->getValue('is_initialized') !== '1') $arrayOut = $this->init(); // if device isn't yet initialized, pull ALL messages and contacts
 			else $arrayOut = array();
 		
+		
 		$pullRecords = $this->db->call("syncPull('" . $this->getValue('user_id') . "','" . $this->getValue('id') . "')");
 		if (sizeof($pullRecords) > 0) $this->config['log']->write('PULL SYNC: ' . sizeof($pullRecords) . ' records pulled');
 		
 		// package pull sync results in correct array structure for JSON output
 		$cipher = new SafetextCipher($this->config['hashSalt']);
+
 		foreach ($pullRecords as $this_record) {
 			if (array_key_exists('pk', $this_record) && $this_record['pk'] > 0) {
 				if (array_key_exists('vals', $this_record) && $this_record['vals'] != '') {
 					if (array_key_exists('tablename', $this_record) && $this_record['tablename'] != '') {
 						$this->config['log']->write('PULLING RECORD - pk: ' . $this_record['pk'] . ', table: ' . $this_record['tablename'] . ', vals: ' . $this_record['vals']);
 						$values = json_decode($this_record['vals'], true);
-						$values['key'] = $this_record['pk'];
-						
+						$values['key'] = $this_record['pk'];						
 						// if this is a message, we need to decrypt the content string
 						if ($this_record['tablename'] === 'messages') {
 							if (array_key_exists('content', $values)) {
 								$values['content'] = $cipher->decrypt($values['content']);
 							}
-						}
-						
+						}						
 						$arrayOut[] = array('table' => $this_record['tablename'], 'values' => $values);
 					} else {
 						$this->config['log']->write('FAIL: missing tablename');
@@ -141,7 +188,8 @@ class SafetextDevice extends SafetextModel {
 				$this->config['log']->write('FAIL: missing pk');
 			}
 		}
-		
+		//$arrayOut[] = array('table' =>  $this->getValue('user_id'),'device' =>  $this->getValue('id'), 'values' => $pullRecords);
+		//$resultOut = array_unique($arrayOut);
 		return $arrayOut;
 	}
 	
@@ -156,11 +204,16 @@ class SafetextDevice extends SafetextModel {
 	{
 		$array_out = array();
 		$messages = $this->db->call("messages('" . $this->getValue('user_id') . "','','0','999999')");
-		$contacts = $this->db->call("contacts('" . $this->getValue('user_id') . "','name','0','999999')");
+		$contacts = $this->db->call("contacts('" . $this->getValue('user_id') . "')");
+		$groups = $this->db->call("getGroupDetails('" . $this->getValue('user_id') . "')");
+		$group_messages = $this->db->call("getGroupMessages('" . $this->getValue('user_id') . "')");
+		
+		
 		$this->config['log']->write('Initializing new device with ' . sizeof($messages) . ' existing messages and ' . sizeof($contacts) . ' existing contacts');
 		
 		// format returning records as queue entries
 		$cipher = new SafetextCipher($this->config['hashSalt']);
+		
 		foreach ($messages as $this_message) {
 			$recipientsArray = array($this_message['recipient']);
 			unset($this_message['recipient']);
@@ -186,6 +239,101 @@ class SafetextDevice extends SafetextModel {
 			$array_out[] = array('table' => 'contacts', 'values' => $this_contact);
 		}
 		
+		foreach ($groups as $this_group) {
+		    $username = "";
+			//$arr_username = array();
+			$user_group_name = $this->db->call("checkGroupname('".$this_group['id']."','".$this->getValue('user_id')."')");
+			if($user_group_name[0]['group_name']!="") {
+				$group['group_name'] = $user_group_name[0]['group_name'];
+			}
+			else {
+				$group['group_name'] = $this_group['group_name'];
+			}
+			$group['group_id'] = $this_group['id'];
+			$group['participants_id'] = array($this_group['participants_id']);
+			
+			$participants = explode(",",$this_group['participants_id']);
+			$key = array_search($this->getValue('user_id'), $participants);
+			unset($participants[$key]);
+							
+			$participants = array_values($participants);
+			$count_p = count($participants);
+			
+			for($i=0;$i<$count_p;$i++) {
+			
+				$f_username = $this->db->call("getGroupUsername('".$participants[$i]."','".$this->getValue('user_id')."')");
+				if($f_username[0]['name']!="")
+				$username .= $f_username[0]['name'];
+				else
+				$username .= $f_username[0]['username'];
+				if($i<($count_p-1))
+				$username .= ",";
+			}
+			//$username = implode(",",$arr_username);
+			
+			$group['participants_name'] = $username;
+			
+			$array_out[] = array('table' => 'groups', 'values' => $group);
+		}
+		
+		foreach ($group_messages as $this_group_messages) {
+			//$group_message['group_name'] = $this_group_messages['group_name'];
+			//$group_message['sender_id'] = $this_group_messages['sender_id'];
+			
+			$message = $this->db->call("getMessageDetails('" . $this_group_messages['message_id'] . "')");
+			
+			if($message[0]['id']!="") {
+						
+			$group_message['group_id'] = $this_group_messages['id'];
+			$group_message['content'] = @$cipher->decrypt($message[0]['content']);
+			$group_message['image'] = $message[0]['image'];
+			
+			$chk_is_read = $this->db->call("CheckIsreadUser('".$this_group_messages['message_id']."','".$this->getValue('user_id')."')");
+			
+			if($message[0]['is_read']==0) {
+				if($chk_is_read[0]['count_read']==0) {			
+				$group_message['is_read'] = "0";
+				}
+				else {
+				$group_message['is_read'] = "1";
+				}
+			}
+			else {
+				$group_message['is_read'] = $message[0]['is_read'];
+			}	
+			$group_message['is_important'] = $message[0]['is_important'];
+			$group_message['is_draft'] = $message[0]['is_draft'];
+			$group_message['sent_date'] = $message[0]['sent_date'];
+			$group_message['read_date'] = $message[0]['read_date'];
+			$group_message['expire_date'] = $message[0]['expire_date'];
+			
+			
+			$group_message['sender'] = $this_group_messages['sender_id'];
+			//$sender_name = $this->db->call("getSenderName('" . $this_group_messages['sender_id'] . "')");
+			$f_sendername = $this->db->call("getGroupUsername('".$this_group_messages['sender_id']."','".$this->getValue('user_id')."')");
+			if($f_sendername[0]['name']!="")
+			$sendername = $f_sendername[0]['name'];
+			else
+			$sendername = $f_sendername[0]['username'];
+			$group_message['sender_name'] = $sendername;
+			$group_message['recipients'] = array($this_group_messages['participants_id']);
+			/*
+			$f_username = $this->db->call("getGroupUsername('".$this_group_messages['participants_id']."')");
+			foreach($f_username as $this_username) {
+					$arr_username[] = $this_username['username'];
+			}
+			$username = implode(",",$arr_username);
+			$group_message['participants_name'] = $username;*/
+			
+			$group_message['key'] = $this_group_messages['message_id'];
+			$group_message['is_updated'] = '0';
+			$group_message['is_deleted'] = '0';
+			
+			$array_out[] = array('table' => 'messages', 'values' => $group_message);
+			
+			}
+		}
+
 		
 		return $array_out;
 	}
@@ -240,7 +388,7 @@ class SafetextDevice extends SafetextModel {
 	  * @return void
 	  *
 	  */
-	public function sendNotification($content)
+	public function sendNotification($content,$count="",$rcv_id="")
 	{
 		if ($this->ios_id === '' && $this->android_id === '') return;
 		if ($this->is_initialized !== '1' || $this->token === '') return;
@@ -250,18 +398,20 @@ class SafetextDevice extends SafetextModel {
 		if (strlen($content) < 5) return;
 		$content = substr($content, 0, 256);
 	
+		$badge = intval($count);
 		
 		if ($this->ios_id != '') {
 			// **** iOS device ****
 			$this->config['log']->write('Sending iOS notification to device #' . $this->id);
 			
 			// structure payload
-			// Edited By Jayanta on 29.12.2014
 			$body = array();
 			$body['aps'] = array(
 				//'alert' => $content, 
-				'alert' => 'You have a new Safe Text message',
-				'sound' => 'default'
+				'alert' => $content,
+				'badge' => $badge,
+				'sound' => 'default',
+				'content-available' => 1				
 			);
 			$payload = json_encode($body);
 			if (strlen($payload) < 10) {
@@ -317,7 +467,7 @@ class SafetextDevice extends SafetextModel {
 			// structure the alerts
 			$fields = array(
 	            'registration_ids' => array($this->android_id),
-	            'data' => array("m" => 'You have a new Safe Text message')
+	            'data' => array("m" => $content)
 	        );
 			
 			$headers = array(

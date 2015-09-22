@@ -19,7 +19,7 @@
                   <div class="ui-body ui-body-b">
                         <form class="safetext-subscribe-form">
                             <ul data-role="listview" data-inset="true" data-theme="a">
-                            	<li class="ui-field-contain">
+                            	<li class="ui-field-contain" >
                                     <label for="subscriptionlevel" class="select"><?php if ($this->getValue('user')->subscription_level === '0') echo $this->t('Subscribe'); else echo $this->t('Extend'); ?> <?php echo $this->t('For'); ?>:</label>
                                     <select name="subscriptionlevel">
                                         <?php foreach ($this->getValue('subscription_levels') as $this_subscriptionLevel) : ?>
@@ -33,7 +33,7 @@
                                 
                                 <?php if ($this->getValue('user')->payment_token === '') echo $this->render('settings/_card-form-fields.phtml'); ?>
                                                                    
-                                <li class="ui-body ui-body-b">
+                                <li class="ui-field-contain" style="width:95%; height: 60px;">
                                     <fieldset class="ui-grid-a">
                                             <button type="button" class="ui-btn ui-corner-all ui-btn-a safetext-subscribe-button"><?php if ($this->getValue('user')->subscription_level === '0') echo $this->t('Subscribe'); else echo $this->t('Extend'); ?></button>
                                     </fieldset>

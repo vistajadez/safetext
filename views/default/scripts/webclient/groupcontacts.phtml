@@ -1,6 +1,12 @@
-<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
-<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jstimezonedetect/1.0.4/jstz.min.js"></script>
+<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js">
+</script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jstimezonedetect/1.0.4/jstz.min.js">
+</script>
+<style>
+.ser .ui-filterable{ display:none; }
 
+.group_checkbox { float:right !important; left:0 !important; margin-right:36px !important;margin-top:-51px !important;position:relative !important; width:30px !important;   }
+</style>
 <div data-role="page" class="safetext-page safetext-contacts" data-title="<?php if ($this->getValue('filter') === 'blocked') echo $this->t('Blocked'); ?> <?php echo $this->t('Contacts'); ?>">
 		
 		<?php echo $this->render('webclient/_leftpanel.phtml'); ?>
@@ -21,35 +27,43 @@
 			    <div class="safetext-block-b">
 			    	<div class="ui-body ui-body-d">
 				    		<div class="ui-grid-a safetext-mobile-hidden">
-						<?php if ($this->getValue('filter') === 'blocked') {?>
-						    <div class="ui-block-a" style="width:99%;float:left;clear:none"><a href="" class="ui-btn ui-corner-all ui-btn-icon-left ui-icon-user ui-btn-active">Blocked List</a></div>
-						<?php } else {?>    
-						    <div class="ui-block-a" style="width:49.5%;float:left;clear:none"><a href="/webclient/contacts" class="ui-btn ui-corner-all ui-btn-icon-left ui-icon-user ui-btn-active">Contacts</a></div>
-						    <div class="ui-block-a" style="width:49.5%;float:left;clear:none"><a href="/webclient/groupmessages" class="ui-btn ui-corner-all ui-btn-icon-left ui-icon-user">Groups</a></div>
-						<?php }?>
-						</div>
+						    <div class="ui-block-a" style="width:99%;float:left;clear:none"><a href="" class="ui-btn ui-corner-all ui-btn-icon-left ui-icon-user ui-btn-active">Group</a></div>
+					 	</div>
 						
-						<div class="contactListWrapper">
-						    <ul data-role="listview" data-autodividers="true" data-split-icon="edit" data-filter="true" data-inset="true">
+						<div class="contactListWrapper ser">
+						
+						<form id="add_group_form">
+						
+						    <input type="text" name="group_name" id="group_name" placeholder="Group Name">
+							
+							<input type="hidden" name="user_id" id="user_id" value="<?php echo $this->getValue('user_id'); ?>">
+						    
+						    <ul data-role="listview" data-autodividers="true" data-icon="null" data-filter="true" data-inset="true">
 						    	<?php foreach ($this->getValue('contacts') as $this_contact) : ?>
 						    		<?php if (($this->getValue('filter') === 'blocked' && $this_contact->is_blocked==='1') || ($this->getValue('filter') === '' && $this_contact->is_blocked === '0')) : ?>
-						    		<li><a href="#" onclick="timezone(<?php echo $this_contact->contact_user_id;?>);">
+						    		<li><a href="" style="cursor:default">
 						    			<h2><?php echo $this_contact->label(); ?></h2>
-										<?php if ($this_contact->notes !== '') : ?>
-						    				<p style="margin-right:5px;"><strong><?php echo $this->t('Note'); ?>:</strong> <?php echo $this_contact->notes; ?></p>
-						    			<?php endif; ?>
-
+										<p style="margin-right:5px;">
+						    			<?php if ($this_contact->notes !== '') { ?>
+						    				<strong><?php echo $this->t('Note'); ?>:</strong> <?php echo $this_contact->notes; ?>
+						    			<?php } else { echo "&nbsp"; }?> 
+										</p>
 						    			<?php /*?><?php if ($this_contact->phone !== '') : ?>
 						    				<p style="margin-right:5px;"><strong><?php echo $this->t('Tel'); ?>:</strong> <?php echo $this_contact->phone; ?></p>
 						    			<?php endif; ?>
 						    			<?php if ($this_contact->email !== '') : ?>
 						    				<p><strong><?php echo $this->t('Email'); ?>:</strong> <?php echo $this_contact->email; ?></p>
 						    			<?php endif; ?><?php */?></a>
-										<a href="/webclient/contact/id/<?php echo $this_contact->contact_user_id; ?>"></a>
+						    				<input class="group_checkbox" type="checkbox" value="<?php echo $this_contact->contact_user_id; ?>" name="group_contact" id="group_contact" style="cursor:pointer">
+										<!--<a href="/webclient/contact/id/<?php echo $this_contact->contact_user_id; ?>"></a>-->
 						    		</li>
 						    		<?php endif; ?>
 						    	<?php endforeach; ?>
-							</ul>
+						   </ul>
+						   <input type="submit" value="Done" id="safetext-group-add" class="safetext-group-add">
+						  
+						  </form>
+						   
 						</div>
 						    
 			    	</div>
@@ -62,21 +76,3 @@
 	<?php echo $this->render('webclient/_footer.phtml'); ?>
 		
 </div> <!--/page-->
-<script type="text/javascript">
-function timezone(cont_id) {
-
-	var tz = jstz.determine(); 
-	var timezone1 = tz.name(); 
-	//var timezone = timezone1.replace("/","-");	
-	var timezone2 = timezone1.split("/");
-	var timezone = timezone2[0]+"-"+timezone2[1];
-	//var contact_id1 = $(this).attr("id");
-	//var contact_id2 = contact_id1.split("_");
-	var contact = cont_id;
-	
-	//alert(contact);
-	var url = "/webclient/conversation/contact/"+contact+"/timezone/"+timezone;
-	window.location.href = url;
-	
-}
-</script>
